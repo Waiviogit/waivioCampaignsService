@@ -1,0 +1,105 @@
+{
+  "production" : {
+    "db": {
+      "host": "localhost",
+      "port": 27017,
+      "database": "waivio"
+    },
+    "currenciesDB": {
+      "host": "localhost",
+      "port": 27017,
+      "database": "Currencies"
+    },
+    "redis": {
+      "notifications" : 0,
+      "lastBlock": 2,
+      "campaigns": 6,
+      "demoPosts": 8
+    },
+    "waivio_app_name": "waivio",
+    "blackListApp": "waiviodev",
+    "steemConnectUrl": "http://app.steemconnect.com/api/broadcast",
+    "nodeUrl": "https://anyx.io/",
+    "waivioUrl": "https://www.waivio.com/",
+    "withdrawUrl": "https://waiviodev.com/",
+    "swaggerHost": "www.waivio.com"
+  },
+
+  "staging" : {
+    "db": {
+      "host": "localhost",
+      "port": 27017,
+      "database": "waivio"
+    },
+    "currenciesDB": {
+      "host": "localhost",
+      "port": 27017,
+      "database": "Currencies"
+    },
+    "redis": {
+      "notifications" : 0,
+      "lastBlock": 2,
+      "campaigns": 6,
+      "demoPosts": 8
+    },
+    "waivio_app_name": "waiviodev",
+    "blackListApp": "waivio",
+    "steemConnectUrl": "http://app.steemconnect.com/api/broadcast",
+    "nodeUrl": "https://anyx.io/",
+    "waivioUrl": "https://waiviodev.com/",
+    "swaggerHost": "waiviodev.com",
+    "withdrawUrl": "https://www.waivio.com/"
+  },
+
+  "development": {
+    "db": {
+      "host": "localhost",
+      "port": 27017,
+      "database": "waivio"
+    },
+    "currenciesDB": {
+      "host": "localhost",
+      "port": 27017,
+      "database": "Currencies"
+    },
+    "redis": {
+      "notifications" : 0,
+      "lastBlock": 2,
+      "campaigns": 6,
+      "demoPosts": 8
+    },
+    "waivio_app_name": "waiviodev",
+    "steemConnectUrl": "http://app.steemconnect.com/api/broadcast",
+    "nodeUrl": "https://anyx.io/",
+    "blackListApp": "test",
+    "waivioUrl": "https://waiviodev.com/",
+    "swaggerHost": "localhost:8099",
+    "withdrawUrl": "http://localhost:8099/"
+  },
+
+  "test": {
+    "db": {
+      "host": "localhost",
+      "port": 27017,
+      "database": "waiviotest"
+    },
+    "currenciesDB": {
+      "host": "localhost",
+      "port": 27017,
+      "database": "Currencies"
+    },
+    "redis": {
+      "notifications" : 14,
+      "lastBlock": 14,
+      "campaigns": 14,
+      "demoPosts": 14
+    },
+    "waivio_app_name": "waiviodev",
+    "steemConnectUrl": "http://app.steemconnect.com/api/broadcast",
+    "waivio_index_fee_acc": "waivio.index",
+    "nodeUrl": "https://anyx.io/",
+    "blackListApp": "test",
+    "waivioUrl": "https://waiviodev.com/",
+    "withdrawUrl": "http://localhost:8099/"
+  }
+}

@@ -1,0 +1,17 @@
+module.exports = {
+  campaignModel: require('./campaignModel'),
+  blacklistModel: require('./blacklistModel'),
+  paymentHistoryModel: require('./paymentHistoryModel'),
+  matchBotModel: require('./matchBotModel'),
+  botUpvoteModel: require('./botUpvoteModel'),
+  postModel: require('./postModel'),
+  internalExchangeModel: require('./internalExchangeModel'),
+  appModel: require('./appModel'),
+  userModel: require('./userModel'),
+  wobjectModel: require('./wobjectModel'),
+  withdrawFundsModel: require('./withdrawFundsModel'),
+  Subscriptions: require('./SubscriptionModel'),
+  reservationCurrencyModel: require('./reservationCurrencyModel'),
+  currenciesStatiscticModel: require('./currenciesStatisticModel'),
+  wobjectSubscriptions: require('./wobjectSubscriptionModel'),
+};
