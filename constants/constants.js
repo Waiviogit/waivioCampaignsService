@@ -109,6 +109,10 @@ const SORT_TYPES = {
   RECENCY: 'recency',
   EXPIRY: 'expiry',
 };
+const NOTIFICATIONS_ID = {
+  ACTIVATION_CAMPAIGN: 'activationCampaign',
+  BELL_WOBJ_REWARDS: 'bellWobjectRewards',
+};
 
 module.exports = {
   SORT_TYPES,
@@ -131,4 +135,5 @@ module.exports = {
   WALLET_TYPES_FOR_PARSE,
   GUEST_WALLET_OPERATIONS,
   CAMPAIGN_STATUSES_FOR_ON_HOLD,
+  NOTIFICATIONS_ID,
 };
