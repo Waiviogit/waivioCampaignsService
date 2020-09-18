@@ -5,7 +5,6 @@ const {
 const {
   CampaignFactory, PaymentHistoryFactory, BotUpvoteFactory, UserFactory,
 } = require('test/factories');
-const { waivioHpowerAcc } = require('constants/constants');
 
 describe('expirationHelper', async () => {
   describe('expire campaign payment data', async () => {
@@ -37,7 +36,7 @@ describe('expirationHelper', async () => {
     beforeEach(async () => {
       await dropDatabase();
       postStub = {
-        total_payout_value: '3.34 SBD', beneficiaries: [{ account: 'waivio.hpower', weight: 10000 }], curator_payout_value: '3.34 SBD', json_metadata: JSON.stringify({ comment: { userId: 'demoUser' } }),
+        total_payout_value: '3.34 SBD', beneficiaries: [{ account: process.env.POWER_ACC_NAME, weight: 10000 }], curator_payout_value: '3.34 SBD', json_metadata: JSON.stringify({ comment: { userId: 'demoUser' } }),
       };
       sinon.stub(steemHelper, 'getPostInfo').returns(Promise.resolve(postStub));
       sinon.stub(steemHelper, 'getPostAuthorReward').returns(Promise.resolve(2));
@@ -119,7 +118,7 @@ describe('expirationHelper', async () => {
         total_payout_value: '3.34 SBD',
         curator_payout_value: '3.34 SBD',
         json_metadata: JSON.stringify({ comment: { userId: user } }),
-        beneficiaries: [{ account: 'waivio.hpower', weight: 5000 }],
+        beneficiaries: [{ account: process.env.POWER_ACC_NAME, weight: 5000 }],
       };
       sinon.stub(steemHelper, 'getPostInfo').returns(Promise.resolve(postStub));
       sinon.stub(steemHelper, 'getPostAuthorReward').returns(Promise.resolve(2));
@@ -149,7 +148,7 @@ describe('expirationHelper', async () => {
         total_payout_value: '3.34 SBD',
         curator_payout_value: '3.34 SBD',
         json_metadata: JSON.stringify({ comment: { userId: user } }),
-        beneficiaries: [{ account: 'waivio', weight: 2000 }, { account: waivioHpowerAcc.userName, weight: 8000 }],
+        beneficiaries: [{ account: 'waivio', weight: 2000 }, { account: process.env.POWER_ACC_NAME, weight: 8000 }],
       };
       sinon.stub(steemHelper, 'getPostInfo').returns(Promise.resolve(postStub));
       sinon.stub(steemHelper, 'getPostAuthorReward').returns(Promise.resolve(2));

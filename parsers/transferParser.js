@@ -2,7 +2,6 @@ const _ = require('lodash');
 const { paymentsHelper, transferHelper } = require('utilities/helpers');
 const { notificationsRequest } = require('utilities/requests');
 const { userModel, paymentHistoryModel } = require('models');
-const { demoTransferBot } = require('constants/constants');
 const config = require('config');
 
 const parse = async (data, transactionId) => {
@@ -88,7 +87,7 @@ const parseGuestTransfers = async ({
   let remaining = 0, payed = false, updated = false, result;
   const { user: demoUser } = await userModel.findOne(memoJson.to);
 
-  if (to === demoTransferBot.userName && demoUser) {
+  if (to === process.env.WALLET_ACC_NAME && demoUser) {
     const blacklisted = memoJson.id === 'guest_reward'
       ? memoJson.app && memoJson.app === config.blackListApp
       : false;

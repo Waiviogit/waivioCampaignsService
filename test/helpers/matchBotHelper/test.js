@@ -1,5 +1,5 @@
 const {
-  matchBotHelper, expect, sinon, dropDatabase, moment, _, Constants,
+  matchBotHelper, expect, sinon, dropDatabase, moment, _,
   steemHelper, BotUpvote, PaymentHistory, MatchBot, faker,
 } = require('test/testHelper');
 const {
@@ -436,7 +436,7 @@ describe('matchBotHelper', async () => {
       expiredAt = moment().utc().add(1, 'days').startOf('date')
         .toDate();
       accsStub = [
-        { posting: { account_auths: [[0, Constants.upvoteBot.userName]] } },
+        { posting: { account_auths: [[0, process.env.UPVOTE_BOT_NAME]] } },
         { posting: { account_auths: [] } },
       ];
     });
@@ -716,7 +716,7 @@ describe('matchBotHelper', async () => {
       sponsor2 = 'sponsor2';
       expiredAt = moment().utc().add(1, 'days').startOf('date')
         .toDate();
-      account_auths = [[0, Constants.upvoteBot.userName]];
+      account_auths = [[0, process.env.UPVOTE_BOT_NAME]];
 
       await MatchBotFactory.Create({
         bot_name: bot1,

@@ -16,7 +16,7 @@ describe('update account Parser', async () => {
       bot2 = 'bot2';
       sponsor1 = 'sponsor1';
       sponsor2 = 'sponsor2';
-      accountAuths = [[0, Constants.upvoteBot.userName], [0, 'bla']];
+      accountAuths = [[0, process.env.UPVOTE_BOT_NAME], [0, 'bla']];
       const matchBot = await MatchBotFactory.Create({ bot_name: bot1, sponsor: sponsor1, enabled: true });
       await MatchBot.updateOne({ _id: matchBot._id }, { $push: { sponsors: { sponsor_name: sponsor2, voting_percent: 1, enabled: true } } });
       await MatchBotFactory.Create({ bot_name: bot2, sponsor: sponsor1, enabled: true });

@@ -2,7 +2,6 @@ const {
   PaymentHistory, transferParser, paymentsHelper, dropDatabase, expect, sinon, paymentHistoryModel,
 } = require('test/testHelper');
 const { UserFactory } = require('test/factories');
-const { demoTransferBot } = require('constants/constants');
 const { getMocksData } = require('./mocks');
 
 describe('transfer Parser', async () => {
@@ -101,7 +100,7 @@ describe('transfer Parser', async () => {
         const memo = JSON.stringify({ id: 'guest_reward', to: 'demoUser' });
         const { operation } = await getMocksData({
           from: 'sender',
-          to: demoTransferBot.userName,
+          to: process.env.WALLET_ACC_NAME,
           amount: '5 HIVE',
           memo,
         });
@@ -119,7 +118,7 @@ describe('transfer Parser', async () => {
         const memo = JSON.stringify({ id: 'guest_reward', to: 'demoUser' });
         const { operation } = await getMocksData({
           from: 'sender',
-          to: demoTransferBot.userName,
+          to: process.env.WALLET_ACC_NAME,
           amount: '0.25 HIVE',
           memo,
         });
@@ -190,7 +189,7 @@ describe('transfer Parser', async () => {
         const memo = JSON.stringify({ id: 'user_to_guest_transfer', to: 'demoUser' });
         const { operation } = await getMocksData({
           from: 'sender',
-          to: demoTransferBot.userName,
+          to: process.env.WALLET_ACC_NAME,
           amount: '5 HIVE',
           memo,
         });
@@ -208,7 +207,7 @@ describe('transfer Parser', async () => {
         const memo = JSON.stringify({ id: 'user_to_guest_transfer', to: 'demoUser' });
         const { operation } = await getMocksData({
           from: 'sender',
-          to: demoTransferBot.userName,
+          to: process.env.WALLET_ACC_NAME,
           amount: '5 HIVE',
           memo,
         });
@@ -253,7 +252,7 @@ describe('transfer Parser', async () => {
         const memo = JSON.stringify({ id: 'user_to_guest_transfer', to: 'demoUser' });
         const { operation } = await getMocksData({
           from: 'sender',
-          to: demoTransferBot.userName,
+          to: process.env.WALLET_ACC_NAME,
           amount: '5 HIVE',
           memo,
         });

@@ -1,11 +1,13 @@
 const express = require('express');
+const dotenv = require('dotenv');
+
+dotenv.config({ path: `env/${process.env.NODE_ENV || 'development'}.env` });
 const { routes } = require('routes');
 const { startExpiredListener } = require('utilities/helpers/expirationHelper');
 
 const app = express();
 
 global._ = require('lodash');
-
 
 require('./jobs/matchBotsJob');
 require('./jobs/campaignsStatusJob');

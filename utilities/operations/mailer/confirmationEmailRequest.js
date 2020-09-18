@@ -1,8 +1,7 @@
 const _ = require('lodash');
 const {
-  MAILER_FROM, MAILER_API_KEY, DEFAULT_MAIL_TTL_TIME,
-  CONFIRMATION_TEMPLATE, DEFAULT_TRANSACTION_TTL_TIME, TRANSACTION_TEMPLATE, redirectIds,
-  DEFAULT_TRANSACTION_REDIS_TTL_TIME, UNLINK_TEMPLATE,
+  DEFAULT_MAIL_TTL_TIME, DEFAULT_TRANSACTION_TTL_TIME, redirectIds,
+  DEFAULT_TRANSACTION_REDIS_TTL_TIME,
 } = require('constants/mailer');
 const { withdrawFundsModel, userModel } = require('models');
 const config = require('config');
@@ -21,14 +20,14 @@ module.exports = async ({
   });
   if (error) return { error: { response: { status: error.status, statusText: error.message } } };
   const data = {
-    from: MAILER_FROM,
+    from: process.env.MAILER_FROM,
     to: oldEmail || email,
     userName,
     templateId,
     templateData,
   };
   const headers = {
-    'mail-api-key': MAILER_API_KEY,
+    'mail-api-key': process.env.MAILER_API_KEY,
   };
   isGuest ? headers['waivio-auth'] = accessToken : headers['access-token'] = accessToken;
   return mailerRequests.send(data, headers);
@@ -43,13 +42,13 @@ const dataSwitcher = async ({
       const { user } = await userModel.findOne(userName, '+privateEmail');
       if (_.get(user, 'privateEmail')) return { error: { status: 409, message: 'Email exist, untie it first' } };
       expiresIn = DEFAULT_MAIL_TTL_TIME;
-      templateId = CONFIRMATION_TEMPLATE;
+      templateId = process.env.CONFIRMATION_TEMPLATE;
       token = jwt.sign({ email, userName, transactionData },
         process.env.CRYPTO_KEY, { expiresIn });
       return {
         templateId,
         templateData: {
-          from: MAILER_FROM,
+          from: process.env.MAILER_FROM,
           userLink: `${config.waivioUrl}@${userName}`,
           userName,
           baseLink: `${config.waivioUrl}campaigns-api/mailer/confirm-email-response?userName=${userName}&email=${email}&id=${token}&type=confirm`,
@@ -63,7 +62,7 @@ const dataSwitcher = async ({
       });
       if (error) return { error };
       expiresIn = DEFAULT_TRANSACTION_TTL_TIME;
-      templateId = TRANSACTION_TEMPLATE;
+      templateId = process.env.TRANSACTION_TEMPLATE;
 
       const { withdraw } = await withdrawFundsModel.create({
         commission,
@@ -82,7 +81,7 @@ const dataSwitcher = async ({
       return {
         templateId,
         templateData: {
-          from: MAILER_FROM,
+          from: process.env.MAILER_FROM,
           userLink: `${config.waivioUrl}@${userName}`,
           userName,
           baseLink,
@@ -98,14 +97,14 @@ const dataSwitcher = async ({
       const { user: User } = await userModel.findOne(userName, '+privateEmail');
       if (!_.get(User, 'privateEmail')) return { error: { status: 409, message: 'Email not exist, confirm it first' } };
       expiresIn = DEFAULT_MAIL_TTL_TIME;
-      templateId = UNLINK_TEMPLATE;
+      templateId = process.env.UNLINK_TEMPLATE;
       token = jwt.sign({ email, userName, transactionData },
         process.env.CRYPTO_KEY, { expiresIn });
       return {
         templateId,
         oldEmail: User.privateEmail,
         templateData: {
-          from: MAILER_FROM,
+          from: process.env.MAILER_FROM,
           userLink: `${config.waivioUrl}@${userName}`,
           userName,
           baseLink: `${config.waivioUrl}campaigns-api/mailer/confirm-email-response?userName=${userName}&id=${token}&type=unlink`,

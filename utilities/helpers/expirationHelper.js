@@ -7,8 +7,6 @@ const {
 } = require('models');
 const steemHelper = require('utilities/helpers/steemHelper');
 const matchBotHelper = require('utilities/helpers/matchBotHelper');
-const { waivioHpowerAcc } = require('constants/constants');
-const { blockTradesCredentials } = require('constants/withdraw');
 const { getSession, getTransactions } = require('utilities/requests/blocktradesRequests');
 const { redisSetter, redis, redisGetter } = require('utilities/redis');
 const notificationsRequest = require('utilities/requests/notificationsRequest');
@@ -131,7 +129,7 @@ const expireWithdrawTransaction = async (_id) => {
 const expireWithdrawRequest = async (_id) => {
   const { result } = await withdrawFundsModel.findOne({ _id });
   if (!result) return;
-  const { result: session } = await getSession(blockTradesCredentials);
+  const { result: session } = await getSession({ email: process.env.BLOCKTRADES_EMAIL, password: process.env.BLOCKTRADES_PASSWORD });
   if (!session) return redisSetter.saveTTL(`expire:withdrawRequest|${_id}`, 15);
 
   const { result: transactions } = await getTransactions(session.token);
@@ -181,7 +179,7 @@ const suspendedWarning = async (permlink, days) => {
 };
 
 const expirePowerDown = async () => {
-  const account = await steemHelper.getAccountInfo(waivioHpowerAcc.userName);
+  const account = await steemHelper.getAccountInfo(process.env.POWER_ACC_NAME);
   const avail = _.round(parseFloat(account.vesting_shares) - parseFloat(account.delegated_vesting_shares), 6) - 0.000001;
   const { props } = await steemHelper.getCurrentPriceInfo();
   const vestHive = parseFloat(props.total_vesting_fund_steem) * (avail / parseFloat(props.total_vesting_shares));
@@ -193,7 +191,7 @@ const expirePowerDown = async () => {
       vesting_shares: `${avail} VESTS`,
     },
   ];
-  await steemHelper.sendOperations(op, waivioHpowerAcc.activeKey);
+  await steemHelper.sendOperations(op, process.env.POWER_ACC_KEY);
   return redisSetter.saveTTL('expire:claimRewardJob', 605400, 'data');
 };
 
@@ -209,10 +207,10 @@ const expireDemoPost = async ({ author, permlink }) => {
   const steemAmount = await steemHelper.getPostAuthorReward(
     { reward_price: parseFloat(post.total_payout_value) + parseFloat(post.curator_payout_value) },
   );
-  if (steemAmount > 0 && _.find(post.beneficiaries, { account: waivioHpowerAcc.userName })) {
+  if (steemAmount > 0 && _.find(post.beneficiaries, { account: process.env.POWER_ACC_NAME })) {
     let reward = steemAmount / 2;
     if (_.get(post, 'beneficiaries', []).length) {
-      const hPower = _.find(post.beneficiaries, (bnf) => bnf.account === waivioHpowerAcc.userName);
+      const hPower = _.find(post.beneficiaries, (bnf) => bnf.account === process.env.POWER_ACC_NAME);
       if (hPower) reward = (steemAmount / 2) * (hPower.weight / 10000);
       else reward = (steemAmount / 2) * (1 - (_.sumBy(post.beneficiaries, 'weight') / 10000));
     }

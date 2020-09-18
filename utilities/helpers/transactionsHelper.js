@@ -1,6 +1,6 @@
 const _ = require('lodash');
 const moment = require('moment');
-const { blockTradesCredentials, dailyLimit } = require('constants/withdraw');
+const { dailyLimit } = require('constants/withdraw');
 const { cryptoCoins } = require('constants/withdraw');
 const { guestRequests, blocktradesRequests, currencyRequest } = require('utilities/requests');
 const { getDemoDebtHistory } = require('utilities/operations/paymentHistory');
@@ -32,7 +32,9 @@ const getDataForTransaction = async (data, onlyValidate, checkEmail) => {
   const {
     result: session,
     error: sessionError,
-  } = await blocktradesRequests.getSession(blockTradesCredentials);
+  } = await blocktradesRequests.getSession(
+    { email: process.env.BLOCKTRADES_EMAIL, password: process.env.BLOCKTRADES_PASSWORD },
+  );
   if (sessionError) return { error: { status: 403, message: 'Forbidden' } };
 
   const {

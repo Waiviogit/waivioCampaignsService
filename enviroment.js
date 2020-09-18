@@ -1,4 +1,5 @@
 const logger = require('morgan');
+const _ = require('lodash');
 const { runStream, runStreamRest } = require('processor/processor');
 const swaggerUi = require('swagger-ui-express');
 const swaggerDocument = require('swagger');
@@ -27,13 +28,13 @@ module.exports = function (app, express) {
   }
 
   // ### Sentry enviroments ###
-  if (process.env.NODE_ENV !== 'test') {
-    Sentry.init({ dsn: 'https://3187cbd06c924c7aae2fb97a528d2e23@sentry.io/1804927' });
+  if (!_.includes(['development', 'test'], process.env.NODE_ENV)) {
+    Sentry.init({ dsn: process.env.SENTRY_DNS });
     app.use(Sentry.Handlers.requestHandler());
     app.use(Sentry.Handlers.errorHandler({
       shouldHandleError(error) {
-        // Capture all 404 and 500 errors
-        if (error.status === 404 || error.status === 500) {
+        // Capture 500 errors
+        if (error.status === 500) {
           return true;
         }
         return false;

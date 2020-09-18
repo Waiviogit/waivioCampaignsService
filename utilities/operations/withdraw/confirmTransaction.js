@@ -1,6 +1,5 @@
 const _ = require('lodash');
 const { withdrawFundsModel, paymentHistoryModel } = require('models');
-const { demoTransferBot } = require('constants/constants');
 const { guestRequests } = require('utilities/requests');
 const { validateTransaction } = require('utilities/helpers/transactionsHelper');
 const steemHelper = require('utilities/helpers/steemHelper');
@@ -24,8 +23,8 @@ module.exports = async (_id, accessToken) => {
   if (valid) {
     const { data, error: transactionError } = await steemHelper.transfer({
       amount: result.amount,
-      from: demoTransferBot.userName,
-      activeKey: demoTransferBot.activeKey,
+      from: process.env.WALLET_ACC_NAME,
+      activeKey: process.env.WALLET_ACC_KEY,
       to: result.receiver,
       memo: result.memo,
     });

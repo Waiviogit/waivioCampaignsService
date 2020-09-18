@@ -1,5 +1,5 @@
 const {
-  customJsonParser, dropDatabase, expect, sinon, steemHelper, Constants, moment, MatchBot,
+  customJsonParser, dropDatabase, expect, sinon, steemHelper, moment, MatchBot,
 } = require('test/testHelper');
 const { MatchBotFactory } = require('test/factories');
 const { matchBotModel } = require('models');
@@ -23,7 +23,7 @@ describe('custom json Parser', async () => {
       expiredAt = moment().utc().add(1, 'days').startOf('date')
         .toDate();
       accsStub = [
-        { posting: { account_auths: [[0, Constants.upvoteBot.userName]] } },
+        { posting: { account_auths: [[0, process.env.UPVOTE_BOT_NAME]] } },
         { posting: { account_auths: [] } },
       ];
     });

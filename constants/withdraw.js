@@ -22,11 +22,6 @@ exports.availableCrypto = [
   'ethereum', 'bitcoin', 'bitcoin_cash_abc', 'dash', 'dogecoin', 'litecoin', 'monero',
 ];
 
-exports.blockTradesCredentials = {
-  email: 'olegcigulev@gmail.com',
-  password: 'Oleg28101974',
-};
-
 exports.dailyLimit = 1745;
 
 exports.cryptoCoins = {

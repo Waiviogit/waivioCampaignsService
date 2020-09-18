@@ -76,7 +76,7 @@ const executeUpvotes = async () => {
           author: upvote.author,
           permlink: upvote.permlink,
           weight,
-          key: Constants.upvoteBot.postingKey,
+          key: process.env.UPVOTE_BOT_KEY,
         });
         if (vote) {
           await updateDataAfterVote({ upvote, voteWeight, weight });
@@ -183,7 +183,7 @@ const setRule = async ({
   if (!botAcc || !sponsorAcc) return { result: false };
 
   // eslint-disable-next-line max-len
-  enabled = enabled && _.flattenDepth(botAcc.posting.account_auths).includes(Constants.upvoteBot.userName);
+  enabled = enabled && _.flattenDepth(botAcc.posting.account_auths).includes(process.env.UPVOTE_BOT_NAME);
   return {
     result: await matchBotModel.setMatchBot({
       bot_name, sponsor, voting_percent, note, enabled, expiredAt,
@@ -192,7 +192,7 @@ const setRule = async ({
 };
 
 const checkDisable = async ({ bot_name: botName, account_auths: accountAuths }) => {
-  if (!_.flattenDepth(accountAuths).includes(Constants.upvoteBot.userName)) {
+  if (!_.flattenDepth(accountAuths).includes(process.env.UPVOTE_BOT_NAME)) {
     const bots = await matchBotModel.getMatchBots({ bot_name: botName, limit: 1 });
 
     if (!_.isEmpty(bots.results)) {
@@ -205,7 +205,7 @@ const removeVote = async ({ botName, author, permlink }) => {
   const enabled = await checkForEnable(botName);
   if (!enabled) return true;
   await steemHelper.likePost({
-    key: Constants.upvoteBot.postingKey, weight: 0, permlink, author, voter: botName,
+    key: process.env.UPVOTE_BOT_KEY, weight: 0, permlink, author, voter: botName,
   });
   return true;
 };
@@ -236,7 +236,7 @@ const lookForDownVotes = async (post, bots, voteWeight) => {
 const checkForEnable = async (botName) => {
   const [botAcc] = await steemHelper.getAccountsInfo([botName]);
   if (!botAcc) return false;
-  return !!_.flattenDepth(botAcc.posting.account_auths).includes(Constants.upvoteBot.userName);
+  return !!_.flattenDepth(botAcc.posting.account_auths).includes(process.env.UPVOTE_BOT_NAME);
 };
 
 const removeVotes = async (user, reservationPermlink) => {
@@ -494,7 +494,7 @@ const reVoteOnReview = async (upvote, newAmountToVote) => {
       author: upvote.author,
       permlink: upvote.permlink,
       weight,
-      key: Constants.upvoteBot.postingKey,
+      key: process.env.UPVOTE_BOT_KEY,
     });
     if (vote) {
       await botUpvoteModel.update({ _id: upvote._id },

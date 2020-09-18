@@ -4,7 +4,7 @@ const { PAYMENT_HISTORIES_TYPES, RESERVATION_STATUSES } = require('constants/con
 const {
   commentParser, paymentHistoryModel, paymentsHelper, dropDatabase, _,
   expect, ObjectID, redis, sinon, currencyRequest, Campaign, faker, redisSetter,
-  BotUpvote, Constants, steemHelper, PaymentHistory, campaignActivation, reservationOps,
+  BotUpvote, steemHelper, PaymentHistory, campaignActivation, reservationOps,
 } = require('test/testHelper');
 const {
   CampaignFactory, WobjectFactory, UserFactory,
@@ -1209,7 +1209,7 @@ describe('parseRejectReservationByGuide', async () => {
       describe('On success', async () => {
         let histories;
         beforeEach(async () => {
-          sinon.stub(steemHelper, 'getAccountsInfo').returns(Promise.resolve([{ posting: { account_auths: [[Constants.upvoteBot.userName, 1]] } }]));
+          sinon.stub(steemHelper, 'getAccountsInfo').returns(Promise.resolve([{ posting: { account_auths: [[process.env.UPVOTE_BOT_NAME, 1]] } }]));
           await commentParser.parse(comment);
           ({ result: histories } = await paymentHistoryModel.find(
             { 'details.reservation_permlink': reservationPermlink },
@@ -1220,7 +1220,7 @@ describe('parseRejectReservationByGuide', async () => {
         });
         it('should like post with correct data', async () => {
           expect(steemHelper.likePost.args[0][0]).to.be.deep.eq({
-            key: Constants.upvoteBot.postingKey,
+            key: process.env.UPVOTE_BOT_KEY,
             voter: matchBot.bot_name,
             author: user.name,
             permlink: reviewPermlink,
@@ -1264,7 +1264,7 @@ describe('parseRejectReservationByGuide', async () => {
       describe('On success', async () => {
         let histories;
         beforeEach(async () => {
-          sinon.stub(steemHelper, 'getAccountsInfo').returns(Promise.resolve([{ posting: { account_auths: [[Constants.upvoteBot.userName, 1]] } }]));
+          sinon.stub(steemHelper, 'getAccountsInfo').returns(Promise.resolve([{ posting: { account_auths: [[process.env.UPVOTE_BOT_NAME, 1]] } }]));
           await commentParser.parse(comment);
           ({ result: histories } = await paymentHistoryModel.find(
             { 'details.reservation_permlink': reservationPermlink },
@@ -1278,13 +1278,13 @@ describe('parseRejectReservationByGuide', async () => {
         });
         it('should like with second bot with correct params', async () => {
           expect(steemHelper.likePost.args).to.be.deep.eq([[{
-            key: Constants.upvoteBot.postingKey,
+            key: process.env.UPVOTE_BOT_KEY,
             voter: matchBot.bot_name,
             author: user.name,
             permlink: reviewPermlink,
             weight: 0,
           }], [{
-            key: Constants.upvoteBot.postingKey,
+            key: process.env.UPVOTE_BOT_KEY,
             voter: matchBot1.bot_name,
             author: user.name,
             permlink: reviewPermlink,
@@ -1481,7 +1481,7 @@ describe('parseRejectReservationByGuide', async () => {
       beforeEach(async () => {
         sinon.restore();
         sinon.spy(steemHelper, 'likePost');
-        sinon.stub(steemHelper, 'getAccountsInfo').returns(Promise.resolve([{ posting: { account_auths: [[Constants.upvoteBot.userName, 1]] } }]));
+        sinon.stub(steemHelper, 'getAccountsInfo').returns(Promise.resolve([{ posting: { account_auths: [[process.env.UPVOTE_BOT_NAME, 1]] } }]));
 
         await PaymentHistory.updateOne(
           { type: 'beneficiary_fee', userName: beneficiaries[0].account },
@@ -1537,7 +1537,7 @@ describe('parseRejectReservationByGuide', async () => {
       describe('with downvotes', async () => {
         beforeEach(async () => {
           sinon.restore();
-          sinon.stub(steemHelper, 'getAccountsInfo').returns(Promise.resolve([{ posting: { account_auths: [[Constants.upvoteBot.userName, 1]] } }]));
+          sinon.stub(steemHelper, 'getAccountsInfo').returns(Promise.resolve([{ posting: { account_auths: [[process.env.UPVOTE_BOT_NAME, 1]] } }]));
           sinon.stub(steemHelper, 'getPostInfo').returns(Promise.resolve({
             created: moment.utc().subtract(8, 'day').toString(),
             author: user.name,
@@ -1571,7 +1571,7 @@ describe('parseRejectReservationByGuide', async () => {
         beforeEach(async () => {
           sinon.restore();
           sinon.stub(steemHelper, 'getPostInfo').returns(Promise.resolve({ author: '' }));
-          sinon.stub(steemHelper, 'getAccountsInfo').returns(Promise.resolve([{ posting: { account_auths: [[Constants.upvoteBot.userName, 1]] } }]));
+          sinon.stub(steemHelper, 'getAccountsInfo').returns(Promise.resolve([{ posting: { account_auths: [[process.env.UPVOTE_BOT_NAME, 1]] } }]));
           await commentParser.parse(comment);
           ({ result: histories } = await paymentHistoryModel.find(
             { 'details.reservation_permlink': reservationPermlink },

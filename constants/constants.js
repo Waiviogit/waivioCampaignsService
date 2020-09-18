@@ -1,20 +1,7 @@
-// const accountsData = JSON.parse( process.env.ACCOUNTS_DATA ) ;
-const upvoteBot = {
-  userName: 'waiviocampaigns',
-  postingKey: '5Jnq2paHzr6nLk8NJaQPQBGW4iEUj4p713Qsdv3VKX9poV1aoiB',
-};
+const dotenv = require('dotenv');
 
-const demoTransferBot = {
-  userName: 'waivio.hive',
-  activeKey: '5KWtq96kmYuMJTUwSgdKgYzdF3YDqkNoZiYFeCDW9gLSRjoBZ5d',
-};
-
-const waivioHpowerAcc = {
-  userName: 'waivio.hpower',
-  activeKey: '5Je2cTWSA2HRdWJ4a5hbfUA886Grv2j1FSxB2viEz5kLRgugKJq',
-};
-
-const specialTransferBeneficiaries = ['waivio.hive', 'waivio.cold'];
+dotenv.config({ path: `env/${process.env.NODE_ENV || 'development'}.env` });
+const specialTransferBeneficiaries = process.env.SPECIAL_BENEFICIARIES.split(',');
 
 const match_bots_settings = {
   min_vote_power: 9000,
@@ -136,12 +123,9 @@ module.exports = {
   maxMapRadius,
   minCountMapCampaigns,
   voteCoefficients,
-  demoTransferBot,
-  upvoteBot,
   votingPowerLimit,
   maxCampaignsAssign,
   match_bots_settings,
-  waivioHpowerAcc,
   specialTransferBeneficiaries,
   activeCampaignStatuses,
   WALLET_TYPES_FOR_PARSE,
