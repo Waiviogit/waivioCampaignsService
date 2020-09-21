@@ -3,7 +3,7 @@ const dotenv = require('dotenv');
 
 dotenv.config({ path: `env/${process.env.NODE_ENV || 'development'}.env` });
 const { routes } = require('routes');
-const { startExpiredListener } = require('utilities/helpers/expirationHelper');
+const { startExpiredListener } = require('utilities/redis/expireListener');
 
 const app = express();
 

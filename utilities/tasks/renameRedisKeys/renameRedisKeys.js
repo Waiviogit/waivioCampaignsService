@@ -1,4 +1,4 @@
-const { redis } = require('utilities/redis');
+const redis = require('utilities/redis/redis');
 const { campaignModel } = require('models');
 
 module.exports = async () => {

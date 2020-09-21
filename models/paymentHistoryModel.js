@@ -4,7 +4,7 @@ const currencyRequest = require('utilities/requests/currencyRequest');
 
 const addPaymentHistory = async ({
   // eslint-disable-next-line camelcase
-  type, review_permlink, object_permlink, userReservationPermlink, requiredObject,
+  type, review_permlink, object_permlink, userReservationPermlink, requiredObject, post,
   transfer_permlink = null, userName, sponsor, app, payable, hiveCurrency, transactionId,
   owner_account: owner, memo = '', beneficiaries = [], commission, matchBot, payed = false, remaining, withdraw = null,
 }) => {
@@ -39,6 +39,14 @@ const addPaymentHistory = async ({
         payableInDollars: usdCurrency * payable,
       };
       if (transactionId) details.transactionId = transactionId;
+      break;
+    case 'demo_post':
+      details = {
+        post_permlink: review_permlink,
+        title: post.title,
+        post_parent_author: post.parent_author,
+        post_parent_permlink: post.parent_permlink,
+      };
       break;
   }
   try {

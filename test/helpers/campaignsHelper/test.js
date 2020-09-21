@@ -260,7 +260,7 @@ describe('on CampaignsHelper', async () => {
       let status;
       beforeEach(async () => {
         permlink = faker.random.string();
-        status = _.sample(_.filter(CAMPAIGN_STATUSES, (s) => s !== CAMPAIGN_STATUSES.ON_HOLD));
+        status = _.sample(_.filter(CAMPAIGN_STATUSES, (s) => s !== CAMPAIGN_STATUSES.ON_HOLD && s !== CAMPAIGN_STATUSES.PENDING));
         await dropDatabase();
         await CampaignFactory.Create({
           status,

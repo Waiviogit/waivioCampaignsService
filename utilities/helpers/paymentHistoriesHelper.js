@@ -2,6 +2,7 @@ const _ = require('lodash');
 const {
   paymentHistoryModel, userModel, wobjectModel, campaignModel,
 } = require('models');
+const steemHelper = require('./steemHelper');
 
 const withoutWrapPipeline = (data) => {
   const pipeline = [
@@ -79,7 +80,7 @@ const withoutWrapperPayables = async ({
         break;
       case 'transfer':
       case 'demo_debt':
-     //   history.amount = _.round(history.amount, 4);
+        //   history.amount = _.round(history.amount, 4);
         history.balance = payable - history.amount;
         payable = history.balance;
         break;

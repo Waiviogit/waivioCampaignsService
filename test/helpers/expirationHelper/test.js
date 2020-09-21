@@ -1,6 +1,6 @@
 const {
-  expirationHelper, expect, sinon, dropDatabase, ObjectID,
-  steemHelper, PaymentHistory, faker, BotUpvote, _, Campaign, moment, redisSetter,
+  expect, sinon, dropDatabase, ObjectID, paymentsExpiration, expireMatchBotRecount,
+  steemHelper, PaymentHistory, faker, BotUpvote, _, Campaign, redisSetter, recalculateDebt,
 } = require('test/testHelper');
 const {
   CampaignFactory, PaymentHistoryFactory, BotUpvoteFactory, UserFactory,
@@ -47,29 +47,29 @@ describe('expirationHelper', async () => {
       sinon.restore();
     });
     it('check payment type', async () => {
-      await expirationHelper.expireDemoPost({ author, permlink });
+      await paymentsExpiration.expireDemoPost({ author, permlink });
       const paymentHistories = await PaymentHistory.find();
       expect(paymentHistories.length).to.be.eq(1);
       expect(paymentHistories[0].is_demo_account).to.be.eq(true);
       expect(paymentHistories[0].type).to.be.eq('demo_post');
     });
     it('check payment amount', async () => {
-      await expirationHelper.expireDemoPost({ author, permlink });
+      await paymentsExpiration.expireDemoPost({ author, permlink });
       const paymentHistories = await PaymentHistory.find();
       expect(paymentHistories[0].amount).to.be.exist;
     });
     it('check payment user name', async () => {
-      await expirationHelper.expireDemoPost({ author, permlink });
+      await paymentsExpiration.expireDemoPost({ author, permlink });
       const paymentHistories = await PaymentHistory.find();
       expect(paymentHistories[0].userName).to.be.eq('demoUser');
     });
     it('check payment sponsor', async () => {
-      await expirationHelper.expireDemoPost({ author, permlink });
+      await paymentsExpiration.expireDemoPost({ author, permlink });
       const paymentHistories = await PaymentHistory.find();
       expect(paymentHistories[0].sponsor).to.be.eq('author');
     });
     it('check payment details', async () => {
-      await expirationHelper.expireDemoPost({ author, permlink });
+      await paymentsExpiration.expireDemoPost({ author, permlink });
       const paymentHistories = await PaymentHistory.find();
       expect(paymentHistories[0].details.post_permlink).to.be.eq('permlink');
     });
@@ -79,7 +79,7 @@ describe('expirationHelper', async () => {
       postStub.total_payout_value = '0.00 SBD';
       sinon.stub(steemHelper, 'getPostInfo').returns(Promise.resolve(postStub));
       sinon.stub(steemHelper, 'getPostAuthorReward').returns(Promise.resolve(0));
-      await expirationHelper.expireDemoPost({ author, permlink });
+      await paymentsExpiration.expireDemoPost({ author, permlink });
       const paymentHistories = await PaymentHistory.find();
       expect(paymentHistories.length).to.be.eq(0);
     });
@@ -101,7 +101,7 @@ describe('expirationHelper', async () => {
       sinon.restore();
     });
     it('should not create debt with realHive account', async () => {
-      await expirationHelper.expireDemoPost(
+      await paymentsExpiration.expireDemoPost(
         { author: faker.name.firstName(), permlink: faker.random.string() },
       );
       const paymentHistories = await PaymentHistory.find();
@@ -122,7 +122,7 @@ describe('expirationHelper', async () => {
       };
       sinon.stub(steemHelper, 'getPostInfo').returns(Promise.resolve(postStub));
       sinon.stub(steemHelper, 'getPostAuthorReward').returns(Promise.resolve(2));
-      await expirationHelper.expireDemoPost(
+      await paymentsExpiration.expireDemoPost(
         { author: faker.name.firstName(), permlink: faker.random.string() },
       );
     });
@@ -152,7 +152,7 @@ describe('expirationHelper', async () => {
       };
       sinon.stub(steemHelper, 'getPostInfo').returns(Promise.resolve(postStub));
       sinon.stub(steemHelper, 'getPostAuthorReward').returns(Promise.resolve(2));
-      await expirationHelper.expireDemoPost(
+      await paymentsExpiration.expireDemoPost(
         { author: faker.name.firstName(), permlink: faker.random.string() },
       );
     });
@@ -226,7 +226,7 @@ describe('expirationHelper', async () => {
           vote = _.random(1, 10);
           percent = _.random(1000, 10000);
           sinon.stub(steemHelper, 'getVoteValue').returns(Promise.resolve({ weight: percent, voteValue: vote }));
-          await expirationHelper.expireMatchBotRecount(reqData);
+          await expireMatchBotRecount(reqData);
           result = await BotUpvote.findOne({ status: 'upvoted', author: user, permlink: paymentData.reviewPermlink });
         });
         it('should create upvote record with positive voteWeight', async () => {
@@ -250,7 +250,7 @@ describe('expirationHelper', async () => {
         beforeEach(async () => {
           percent = _.random(-1000, -10000);
           sinon.stub(steemHelper, 'getVoteValue').returns(Promise.resolve({ weight: percent, voteValue: -1 }));
-          await expirationHelper.expireMatchBotRecount(reqData);
+          await expireMatchBotRecount(reqData);
           result = await BotUpvote.findOne({ status: 'upvoted', author: user, permlink: paymentData.reviewPermlink });
         });
         it('should not create record with downvote', async () => {
@@ -281,7 +281,7 @@ describe('expirationHelper', async () => {
           percent = _.random(1000, 10000);
           vote = _.random(1, 10);
           sinon.stub(steemHelper, 'getVoteValue').returns(Promise.resolve({ weight: percent, voteValue: vote }));
-          await expirationHelper.expireMatchBotRecount(reqData);
+          await expireMatchBotRecount(reqData);
           result = await BotUpvote.findOne({ status: 'upvoted', author: user, permlink: paymentData.reviewPermlink });
         });
         it('should find current vote', async () => {
@@ -303,7 +303,7 @@ describe('expirationHelper', async () => {
           percent = _.random(-1000, -10000);
           vote = _.random(-1);
           sinon.stub(steemHelper, 'getVoteValue').returns(Promise.resolve({ weight: percent, voteValue: vote }));
-          await expirationHelper.expireMatchBotRecount(reqData);
+          await expireMatchBotRecount(reqData);
           result = await BotUpvote.findOne({ status: 'upvoted', author: user, permlink: paymentData.reviewPermlink });
         });
         it('should delete botUpvote data', async () => {
@@ -337,7 +337,7 @@ describe('expirationHelper', async () => {
           vote = _.random(2, 10);
           percent = _.random(2000, 10000);
           sinon.stub(steemHelper, 'getVoteValue').returns(Promise.resolve({ weight: percent, voteValue: vote }));
-          await expirationHelper.expireMatchBotRecount(reqData);
+          await expireMatchBotRecount(reqData);
           result = await BotUpvote.findOne({ status: 'upvoted', author: user, permlink: paymentData.reviewPermlink });
         });
         it('should check that old upvote amount not eq with new record', async () => {
@@ -359,7 +359,7 @@ describe('expirationHelper', async () => {
           percent = _.random(-2000, -10000);
           vote = -1;
           sinon.stub(steemHelper, 'getVoteValue').returns(Promise.resolve({ weight: percent, voteValue: vote }));
-          await expirationHelper.expireMatchBotRecount(reqData);
+          await expireMatchBotRecount(reqData);
           result = await BotUpvote.findOne({ status: 'upvoted', author: user, permlink: paymentData.reviewPermlink });
         });
         it('should delete botUpvote data', async () => {
@@ -393,7 +393,7 @@ describe('expirationHelper', async () => {
             secondVote = _.random(2, 10);
             secondPercent = _.random(3000, 10000);
             sinon.stub(steemHelper, 'getVoteValue').returns(Promise.resolve({ weight: secondPercent, voteValue: secondVote }));
-            await expirationHelper.expireMatchBotRecount(reqData);
+            await expireMatchBotRecount(reqData);
             secondResult = await BotUpvote.findOne({
               status: 'upvoted', author: user, permlink: paymentData.reviewPermlink, botName: secondUpvote.botName,
             });
@@ -409,7 +409,7 @@ describe('expirationHelper', async () => {
           let firstResult, secondResult;
           beforeEach(async () => {
             sinon.stub(steemHelper, 'getVoteValue').returns(Promise.resolve({ weight: -1000, voteValue: -1 }));
-            await expirationHelper.expireMatchBotRecount(reqData);
+            await expireMatchBotRecount(reqData);
             secondResult = await BotUpvote.findOne({
               status: 'upvoted', author: user, permlink: paymentData.reviewPermlink, botName: secondUpvote.botName,
             });
@@ -460,7 +460,7 @@ describe('expirationHelper', async () => {
           percent = _.random(2000, 10000);
           vote = _.random(2, 10);
           sinon.stub(steemHelper, 'getVoteValue').returns(Promise.resolve({ weight: percent, voteValue: vote }));
-          await expirationHelper.expireMatchBotRecount(reqData);
+          await expireMatchBotRecount(reqData);
           result = await BotUpvote.findOne({ status: 'upvoted', author: user, permlink: paymentData.reviewPermlink });
           reviewHistory = await PaymentHistory.findOne({ _id: reviewPayment._id });
           benefHistory = await PaymentHistory.findOne({ _id: benefPayment._id });
@@ -489,7 +489,7 @@ describe('expirationHelper', async () => {
         let result, reviewHistory, benefHistory, compensationHistory;
         beforeEach(async () => {
           sinon.stub(steemHelper, 'getVoteValue').returns(Promise.resolve({ weight: -1000, voteValue: -1 }));
-          await expirationHelper.expireMatchBotRecount(reqData);
+          await expireMatchBotRecount(reqData);
           result = await BotUpvote.findOne({ status: 'upvoted', author: user, permlink: paymentData.reviewPermlink });
           reviewHistory = await PaymentHistory.findOne({ _id: reviewPayment._id });
           benefHistory = await PaymentHistory.findOne({ _id: benefPayment._id });
@@ -596,59 +596,59 @@ describe('expirationHelper', async () => {
       });
       describe('without payout', async () => {
         it('should not change status (payed) of review payment if transfer && remaining > votesAmount', async () => {
-          await expirationHelper.recalculateDebt(author, permlink);
+          await recalculateDebt(author, permlink);
           const result = await PaymentHistory.findOne({ _id: reviewPmnt._id });
           expect(result.payed).to.be.true;
         });
         it('should remove votes amount from review payment', async () => {
-          await expirationHelper.recalculateDebt(author, permlink);
+          await recalculateDebt(author, permlink);
           const result = await PaymentHistory.findOne({ _id: reviewPmnt._id });
           expect(result.details.votesAmount).to.be.eq(0);
         });
         it('should add debt from votesAmount to amount at review payment', async () => {
-          await expirationHelper.recalculateDebt(author, permlink);
+          await recalculateDebt(author, permlink);
           const result = await PaymentHistory.findOne({ _id: reviewPmnt._id });
           expect(_.round(result.amount, 3))
             .to.be.eq(_.round(reviewPmnt.amount + reviewPmnt.details.votesAmount, 3));
         });
         it('should change remaining at transfer payment', async () => {
-          await expirationHelper.recalculateDebt(author, permlink);
+          await recalculateDebt(author, permlink);
           const result = await PaymentHistory.findOne({ _id: transfer._id });
           expect(_.round(result.details.remaining, 3))
             .to.be.eq(_.round(transfer.details.remaining - reviewPmnt.details.votesAmount, 3));
         });
         it('should change status (payed) at beneficiary debt if it was payed and no transfer remaining', async () => {
-          await expirationHelper.recalculateDebt(author, permlink);
+          await recalculateDebt(author, permlink);
           const result = await PaymentHistory.findOne({ _id: benenifiaryFee._id });
           expect(result.payed).to.be.not.eq(benenifiaryFee.payed);
         });
         it('should remove compensation fee if it not payed', async () => {
-          await expirationHelper.recalculateDebt(author, permlink);
+          await recalculateDebt(author, permlink);
           const result = await PaymentHistory.findOne({ _id: compensationFee._id });
           expect(result).to.be.null;
         });
         it('should change status to not payed if transfer remaining < votesAmount', async () => {
           await PaymentHistory.updateOne({ _id: transfer._id }, { 'details.remaining': 0.1 });
-          await expirationHelper.recalculateDebt(author, permlink);
+          await recalculateDebt(author, permlink);
           const result = await PaymentHistory.findOne({ _id: reviewPmnt._id });
           expect(result.payed).to.be.false;
         });
         it('should not change remaining if transfer remaining < votesAmount', async () => {
           await PaymentHistory.updateOne({ _id: transfer._id }, { 'details.remaining': 0.1 });
-          await expirationHelper.recalculateDebt(author, permlink);
+          await recalculateDebt(author, permlink);
           const result = await PaymentHistory.findOne({ _id: transfer._id });
           expect(result.details.remaining).to.be.eq(0.1 + reviewPmnt.amount);
         });
         it('should change status of transfer if remaining eq votesAmount', async () => {
           await PaymentHistory.updateOne({ _id: transfer._id }, { 'details.remaining': 0.97 });
-          await expirationHelper.recalculateDebt(author, permlink);
+          await recalculateDebt(author, permlink);
           const result = await PaymentHistory.findOne({ _id: transfer._id });
           expect(result.payed).to.be.true;
         });
         it('should recount transfer remaining if compensation fee is payed (not payed transfer)', async () => {
           await PaymentHistory.updateOne({ _id: compensationFee._id }, { payed: true });
           const payment = await PaymentHistoryFactory.Create({ userName: compensationFee.userName, sponsor: compensationFee.sponsor, type: 'transfer' });
-          await expirationHelper.recalculateDebt(author, permlink);
+          await recalculateDebt(author, permlink);
           const result = await PaymentHistory.findOne({ _id: payment._id });
           expect(result.details.remaining).to.be.eq(compensationFee.amount);
         });
@@ -657,7 +657,7 @@ describe('expirationHelper', async () => {
           const payment = await PaymentHistoryFactory.Create({
             userName: compensationFee.userName, sponsor: compensationFee.sponsor, type: 'transfer', payed: true,
           });
-          await expirationHelper.recalculateDebt(author, permlink);
+          await recalculateDebt(author, permlink);
           const result = await PaymentHistory.findOne({ _id: payment._id });
           expect(result.details.remaining).to.be.eq(compensationFee.amount);
         });
@@ -666,7 +666,7 @@ describe('expirationHelper', async () => {
           const payment = await PaymentHistoryFactory.Create({
             userName: compensationFee.userName, sponsor: compensationFee.sponsor, type: 'transfer', payed: true,
           });
-          await expirationHelper.recalculateDebt(author, permlink);
+          await recalculateDebt(author, permlink);
           const result = await PaymentHistory.findOne({ _id: payment._id });
           expect(result.payed).to.be.false;
         });
@@ -685,38 +685,38 @@ describe('expirationHelper', async () => {
         sinon.stub(steemHelper, 'getCurrentPriceInfo').returns(Promise.resolve({ currentPrice: 1 }));
       });
       it('should update compensation fee with correct amount', async () => {
-        await expirationHelper.recalculateDebt(author, permlink);
+        await recalculateDebt(author, permlink);
         const result = await PaymentHistory.findOne({ _id: compensationFee._id });
         expect(result.amount).to.be.eq(newVoteValue);
       });
       it('should recount transfer remaining', async () => {
-        await expirationHelper.recalculateDebt(author, permlink);
+        await recalculateDebt(author, permlink);
         const result = await PaymentHistory.findOne({ _id: transfer._id });
         expect(result.details.remaining)
           .to.be.eq(transfer.details.remaining - (1 - newVoteValue) * 0.97);
       });
       it('should recount review votesAmount', async () => {
-        await expirationHelper.recalculateDebt(author, permlink);
+        await recalculateDebt(author, permlink);
         const result = await PaymentHistory.findOne({ _id: reviewPmnt._id });
         expect(result.details.votesAmount)
           .to.be.eq(_.round((1 - (1 - newVoteValue)) * 0.97, 4));
       });
       it('should recount review amount', async () => {
-        await expirationHelper.recalculateDebt(author, permlink);
+        await recalculateDebt(author, permlink);
         const result = await PaymentHistory.findOne({ _id: reviewPmnt._id });
         expect(_.round(result.amount, 2))
           .to.be.eq(_.round(reviewPmnt.amount + (1 - newVoteValue) * 0.97, 2));
       });
       it('should change payed status if transfer remaining < count difference', async () => {
         await PaymentHistory.updateOne({ _id: transfer._id }, { 'details.remaining': 0.01 });
-        await expirationHelper.recalculateDebt(author, permlink);
+        await recalculateDebt(author, permlink);
         const result = await PaymentHistory.findOne({ _id: reviewPmnt._id });
         expect(result.payed).to.be.false;
       });
       it('should add to transfer remaining payed part if remaining < count difference', async () => {
         const newRemaining = 0.01;
         await PaymentHistory.updateOne({ _id: transfer._id }, { 'details.remaining': newRemaining });
-        await expirationHelper.recalculateDebt(author, permlink);
+        await recalculateDebt(author, permlink);
         const result = await PaymentHistory.findOne({ _id: transfer._id });
         expect(result.details.remaining).to.be.eq(newRemaining + reviewPmnt.amount);
       });
