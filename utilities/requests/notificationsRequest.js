@@ -102,7 +102,7 @@ const getWobjectName = async (permlink) => {
     app: config.waivio_app_name,
     returnArray: false,
   });
-  return { objectName: processedWobj.name };
+  return { objectName: processedWobj.name || wobject.default_name };
 };
 
 module.exports = { custom, activateCampaign };
