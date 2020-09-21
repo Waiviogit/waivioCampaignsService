@@ -22,6 +22,5 @@ module.exports = {
     Subscriptions: require('./schemas/SubscriptionSchema'),
     ObjectType: require('./schemas/ObjectTypeSchema'),
     WobjectSubscriptions: require('./schemas/WobjectSubscriptionSchema'),
-    BellWobject: require('./schemas/BellWobjectSchema'),
   },
 };

@@ -6,7 +6,7 @@ const { NOTIFICATIONS_ID } = require('constants/constants');
 const { processWobjects } = require('utilities/helpers/wobjectHelper');
 const { HOST, BASE_URL, SET_NOTIFICATION } = require('constants/appData').notificationsApi;
 const {
-  campaignModel, userModel, wobjectModel, Subscriptions, wobjectSubscriptions, bellWobjectModel,
+  campaignModel, userModel, wobjectModel, Subscriptions, wobjectSubscriptions,
 } = require('models');
 
 const URL = HOST + BASE_URL + SET_NOTIFICATION;
@@ -76,7 +76,7 @@ const activateCampaign = async (campaignId) => {
 
 const sendBellNotification = async ({ objects, primaryObject, guideName }) => {
   for (const object of objects) {
-    const { users } = await bellWobjectModel.getFollowers({ following: object });
+    const { users } = await wobjectSubscriptions.getBellFollowers({ following: object });
     if (_.isEmpty(users)) continue;
     const { objectName } = await getWobjectName(object);
     const operation = {
