@@ -105,10 +105,7 @@ const removeVoteDebt = async (author, permlink, campaign) => {
 const findHistories = async ({ campaign, author, permlink }) => {
   const payment = _.find(campaign.payments, { userName: author, postPermlink: permlink, status: 'active' });
 
-  const user = _.find(campaign.users,
-    (record) => record.name === author && record.status === 'completed'
-      && Math.trunc(record.completedAt.valueOf() / 10000)
-      === Math.trunc(payment.createdAt.valueOf() / 10000));
+  const user = _.find(campaign.users, (record) => record._id.toString() === payment.reservationId.toString());
   if (!user) return [];
 
   const { result: histories } = await paymentHistoryModel.find(

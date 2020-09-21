@@ -531,7 +531,6 @@ module.exports = {
   updatePaymentHistories,
   removeVotes,
   checkDisable,
-  expireMatchBotRecount,
   setRule,
   executeRecount,
   checkForGuest,

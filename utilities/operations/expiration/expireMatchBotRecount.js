@@ -10,7 +10,7 @@ module.exports = async ({ author, permlink, voter }) => {
     { author, permlink, voter },
   );
   const guestAuthor = mathBotHelper.checkForGuest('', metadata);
-  const campaign = await campaignModel.findOne(
+  const { result: campaign } = await campaignModel.findOne(
     { payments: { $elemMatch: { userName: guestAuthor || author, postPermlink: permlink } } },
   );
   if (!campaign) return;
@@ -63,10 +63,7 @@ const createBotUpvoteRecord = async ({
     (record) => record.userName === (guestAuthor || author) && record.postPermlink === permlink);
   if (!payment) return;
 
-  const user = _.find(campaign.users,
-    (record) => record.name === (guestAuthor || author) && record.status === 'completed'
-      && Math.trunc(record.completedAt.valueOf() / 10000)
-      === Math.trunc(payment.createdAt.valueOf() / 10000));
+  const user = _.find(campaign.users, (record) => record._id.toString() === payment.reservationId.toString());
   if (!user) return;
 
   const { result: anotherUpvote } = await botUpvoteModel.findOne({ author, permlink });

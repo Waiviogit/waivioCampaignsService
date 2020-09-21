@@ -3,7 +3,6 @@ module.exports = {
   internalExchangeHelper: require('./internalExchangeHelper'),
   preValidationHelper: require('./preValidationHelper'),
   transactionsHelper: require('./transactionsHelper'),
-  expirationHelper: require('./expirationHelper'),
   blackListHelper: require('./blackListHelper'),
   demoUsersHelper: require('./demoUsersHelper'),
   campaignHelper: require('./campaignsHelper'),

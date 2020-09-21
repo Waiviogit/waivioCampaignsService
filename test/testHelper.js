@@ -48,6 +48,7 @@ module.exports = {
   ...require('utilities/helpers'),
   ...require('models'),
   ...require('utilities/operations/parsers/commentParser'),
+  ...require('utilities/operations/expiration'),
   Constants,
   ...models,
   Mongoose,

@@ -1,9 +1,7 @@
 const {
-  expireDebtStatus, expirePowerDown, expireWithdrawRequest,
-  expireWithdrawTransaction, suspendedWarning,
-} = require('utilities/helpers/expirationHelper');
-const { campaignHelper, paymentHistoriesHelper, matchBotHelper } = require('utilities/helpers');
-const { recalculateDebt } = require('utilities/operations/expiration');
+  recalculateDebt, expireMatchBotRecount, campaignExpiration,
+  paymentsExpiration, withdrawExpiration, expirePowerDown, suspendedExpiration,
+} = require('utilities/operations/expiration');
 const { DEMOPOST, MATCH_BOT_VOTE, DOWNVOTE_ON_REVIEW } = require('constants/ttlData');
 const redis = require('./redis');
 
@@ -16,10 +14,10 @@ const subscribeCampaignsEx = async (chan, msg) => {
   const data = msg.split('_');
   switch (data[0]) {
     case 'expire:campaign':
-      await campaignHelper.expireCampaign(msg);
+      await campaignExpiration.expireCampaign(msg);
       break;
     case 'expire:assign':
-      await campaignHelper.expireAssinged(msg);
+      await campaignExpiration.expireAssinged(msg);
       break;
   }
 };
@@ -31,10 +29,10 @@ const subscribeDemoPostsEx = async (chan, msg) => {
   const permlink = data[2];
   switch (data[0]) {
     case `expire:${DEMOPOST}`:
-      await paymentHistoriesHelper.expireDemoPost({ author, permlink });
+      await paymentsExpiration.expireDemoPost({ author, permlink });
       break;
     case `expire:${MATCH_BOT_VOTE}`:
-      await matchBotHelper.expireMatchBotRecount({
+      await expireMatchBotRecount({
         author, permlink, voter: data[3], percent: data[4],
       });
       break;
@@ -44,24 +42,24 @@ const subscribeDemoPostsEx = async (chan, msg) => {
       }
       break;
     case 'expire:paymentDebt':
-      await expireDebtStatus(id);
+      await suspendedExpiration.expireDebtStatus(id);
       break;
     case 'expire:withdrawTransaction':
-      await expireWithdrawTransaction(id);
+      await withdrawExpiration.expireWithdrawTransaction(id);
       break;
     case 'expire:suspendedWarning':
       const reservationPermlink = data[1];
       const days = data[2];
-      await suspendedWarning(reservationPermlink, days);
+      await suspendedExpiration.suspendedWarning(reservationPermlink, days);
       break;
     case 'expire:recalculationDebt':
       await recalculateDebt(author, permlink);
       break;
     case 'expire:withdrawRequest':
-      await expireWithdrawRequest(id);
+      await withdrawExpiration.expireWithdrawRequest(id);
       break;
     case 'expire:pendingTransfer':
-      await paymentHistoriesHelper.expirePendingTransfer(id);
+      await paymentsExpiration.expirePendingTransfer(id);
       break;
     case `expire:${DOWNVOTE_ON_REVIEW}`:
       break;
