@@ -1,10 +1,15 @@
+const { CAMPAIGN_STATUSES, RESERVATION_STATUSES } = require('constants/constants');
 const { campaignModel } = require('models');
+const campaignsHelper = require('utilities/helpers/campaignsHelper');
 const { redisGetter, redisSetter } = require('utilities/redis');
 
 /** Listen redis ttl and expire campaigns */
 exports.expireCampaign = async (data) => {
   const _id = data.replace('expire:campaign_', '');
-  const { result } = await campaignModel.updateOne({ _id, status: { $in: ['active', 'reachedLimit'] } }, { status: 'expired' });
+  const { result } = await campaignModel.updateOne(
+    { _id, status: { $in: [CAMPAIGN_STATUSES.ACTIVE, CAMPAIGN_STATUSES.REACHED_LIMIT] } },
+    { status: 'expired' },
+  );
 
   if (result) console.log(`Campaign expired: ${_id}`);
   else console.log(`Campaign not expired: ${_id}`);
@@ -27,12 +32,12 @@ exports.expireAssinged = async (data) => {
     users: {
       $elemMatch: {
         name: assignData.user_name,
-        status: 'assigned',
+        status: RESERVATION_STATUSES.ASSIGNED,
         permlink: assignData.assign_permlink,
       },
     },
   },
-  { $set: { 'users.$.status': 'expired' } });
+  { $set: { 'users.$.status': RESERVATION_STATUSES.EXPIRED } });
 
   if (result) {
     /** Not need now */
@@ -43,6 +48,6 @@ exports.expireAssinged = async (data) => {
     // });
     await redisSetter.deleteCampaignsData(assignPermlink);
     console.log(`User: ${assignData.user_name} assign expired in campaign permlink: ${assignData.campaign_permlink}`);
-    await this.checkOnHoldStatus(assignData.campaign_permlink);
+    await campaignsHelper.checkOnHoldStatus(assignData.campaign_permlink);
   }
 };

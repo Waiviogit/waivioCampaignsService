@@ -31,6 +31,11 @@ const CAMPAIGN_STATUSES = {
   SUSPENDED: 'suspended',
 };
 
+const BOT_UPVOTE_STATUSES = {
+  UPVOTED: 'upvoted',
+  PENDING: 'pending',
+};
+
 const activeCampaignStatuses = [CAMPAIGN_STATUSES.ACTIVE, CAMPAIGN_STATUSES.REACHED_LIMIT];
 
 const CAMPAIGN_STATUSES_FOR_ON_HOLD = [
@@ -52,6 +57,13 @@ const PAYMENT_HISTORIES_TYPES = {
   COMPENSATION_FEE: 'compensation_fee',
   OVERPAYMENT_REFUND: 'overpayment_refund',
 };
+
+const TRANSFER_TYPES = [
+  PAYMENT_HISTORIES_TYPES.TRANSFER,
+  PAYMENT_HISTORIES_TYPES.DEMO_DEBT,
+];
+
+
 
 const votingPowerLimit = 6500;
 const maxCampaignsAssign = 500;
@@ -113,8 +125,10 @@ const SORT_TYPES = {
 module.exports = {
   SORT_TYPES,
   REFERRAL_TYPES,
+  TRANSFER_TYPES,
   SUSPENDED_DAYS,
   REFERRAL_STATUSES,
+  BOT_UPVOTE_STATUSES,
   RESERVATION_STATUSES,
   CAMPAIGN_STATUSES,
   CAMPAIGN_TYPES,

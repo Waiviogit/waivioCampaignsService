@@ -2,14 +2,17 @@ const _ = require('lodash');
 const { campaignModel, paymentHistoryModel } = require('models');
 const mathBotHelper = require('utilities/helpers/matchBotHelper');
 const steemHelper = require('utilities/helpers/steemHelper');
+const { CAMPAIGN_STATUSES, PAYMENT_HISTORIES_TYPES, TRANSFER_TYPES } = require('constants/constants');
 
 module.exports = async (author, permlink) => {
   const post = await steemHelper.getPostInfo({ author, permlink });
   if (!post.author) return;
   author = mathBotHelper.checkForGuest(author, post.json_metadata);
-  const { result: campaign } = await campaignModel.findOne(
-    { payments: { $elemMatch: { status: 'active', userName: author, postPermlink: permlink } } },
-  );
+  const { result: campaign } = await campaignModel.findOne({
+    payments: {
+      $elemMatch: { status: CAMPAIGN_STATUSES.ACTIVE, userName: author, postPermlink: permlink },
+    },
+  });
   if (!campaign) return;
 
   if (parseFloat(post.total_payout_value) + parseFloat(post.curator_payout_value) === 0) {
@@ -46,13 +49,21 @@ const recountVoteDebt = async ({
   const voteWeight = _.sumBy(histories, (history) => _.get(history, 'details.votesAmount', 0));
   if (voteWeight === payout) return;
 
-  const compensationFee = _.find(histories, (history) => history.type === 'compensation_fee');
+  const compensationFee = _.find(histories,
+    (history) => history.type === PAYMENT_HISTORIES_TYPES.COMPENSATION_FEE);
   if (compensationFee) {
     if (compensationFee.payed) {
       const { result: transfer } = await paymentHistoryModel.findOne({
-        type: { $in: ['transfer', 'demo_debt'] }, payed: false, sponsor: compensationFee.sponsor, userName: compensationFee.userName,
+        type: { $in: TRANSFER_TYPES },
+        payed: false,
+        sponsor: compensationFee.sponsor,
+        userName: compensationFee.userName,
       });
-      let condition = { type: { $in: ['transfer', 'demo_debt'] }, sponsor: compensationFee.sponsor, userName: compensationFee.userName };
+      let condition = {
+        type: { $in: TRANSFER_TYPES },
+        sponsor: compensationFee.sponsor,
+        userName: compensationFee.userName,
+      };
       if (transfer) condition = { _id: transfer._id };
       await paymentHistoryModel.updateOne(condition, { payed: false, $inc: { 'details.remaining': compensationFee.amount - payout } });
     }
@@ -70,14 +81,14 @@ const removeVoteDebt = async (author, permlink, campaign) => {
   campaign = campaign.toObject();
   const { histories } = await findHistories({ author, permlink, campaign });
   for (const history of histories) {
-    const votesAmount = history.type === 'compensation_fee'
+    const votesAmount = history.type === PAYMENT_HISTORIES_TYPES.COMPENSATION_FEE
       ? history.amount
       : _.get(history, 'details.votesAmount', 0);
 
-    if (!votesAmount && history.type !== 'compensation_fee') continue;
+    if (!votesAmount && history.type !== PAYMENT_HISTORIES_TYPES.COMPENSATION_FEE) continue;
 
     const findCondition = {
-      type: { $in: ['transfer', 'demo_debt'] }, payed: false, sponsor: campaign.guideName, userName: history.userName,
+      type: { $in: TRANSFER_TYPES }, payed: false, sponsor: campaign.guideName, userName: history.userName,
     };
     const { result } = await paymentHistoryModel.findOne(findCondition);
     const condition = result ? { _id: result._id } : _.omit(findCondition, ['payed']);
@@ -87,7 +98,7 @@ const removeVoteDebt = async (author, permlink, campaign) => {
     const newPayedStatus = history.payed && remaining >= votesAmount;
     if (history.payed !== newPayedStatus) newRemaining += history.amount;
 
-    if (history.type === 'compensation_fee') {
+    if (history.type === PAYMENT_HISTORIES_TYPES.COMPENSATION_FEE) {
       await paymentHistoryModel.deleteMany({ _id: history._id });
     } else {
       await paymentHistoryModel.updateOne({ _id: history._id }, {
@@ -109,7 +120,15 @@ const findHistories = async ({ campaign, author, permlink }) => {
   if (!user) return [];
 
   const { result: histories } = await paymentHistoryModel.find(
-    { 'details.reservation_permlink': user.permlink, type: { $in: ['review', 'beneficiary_fee', 'compensation_fee'] } },
+    {
+      'details.reservation_permlink': user.permlink,
+      type: {
+        $in: [
+          PAYMENT_HISTORIES_TYPES.REVIEW,
+          PAYMENT_HISTORIES_TYPES.BENEFICIARY_FEE,
+          PAYMENT_HISTORIES_TYPES.COMPENSATION_FEE],
+      },
+    },
   );
   return { histories: histories || [] };
 };

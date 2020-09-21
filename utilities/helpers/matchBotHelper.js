@@ -4,7 +4,6 @@ const {
   botUpvoteModel, postModel, matchBotModel, paymentHistoryModel, campaignModel,
 } = require('models');
 const steemHelper = require('utilities/helpers/steemHelper');
-const { redisGetter, redisSetter } = require('utilities/redis');
 const { Constants } = require('constants/index');
 
 /**
@@ -531,6 +530,7 @@ module.exports = {
   updatePaymentHistories,
   removeVotes,
   checkDisable,
+  getNeededVoteWeight,
   setRule,
   executeRecount,
   checkForGuest,

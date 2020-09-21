@@ -1,5 +1,6 @@
 const mongoose = require('mongoose');
 const db = require('database/db_Connection');
+const { BOT_UPVOTE_STATUSES } = require('constants/constants');
 
 const { Schema } = mongoose;
 
@@ -18,12 +19,14 @@ const BotUpvoteSchema = new Schema({
   reservationPermlink: { type: String, required: true },
   compensationId: { type: String },
   status: {
-    type: String, enum: ['pending', 'upvoted'], required: true, default: 'pending',
+    type: String,
+    enum: Object.values(BOT_UPVOTE_STATUSES),
+    required: true,
+    default: BOT_UPVOTE_STATUSES.PENDING,
   },
   startedAt: { type: Date, required: true },
   expiredAt: { type: Date, required: true },
 }, { timestamps: true });
-
 
 const BotUpvoteModel = db.model('BotUpvote', BotUpvoteSchema, 'bot_upvotes');
 

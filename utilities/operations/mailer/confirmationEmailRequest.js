@@ -9,6 +9,7 @@ const { mailerRequests } = require('utilities/requests');
 const jwt = require('jsonwebtoken');
 const { validateTransaction } = require('utilities/helpers/transactionsHelper');
 const redisSetter = require('utilities/redis/redisSetter');
+const { WITHDRAW_TRANSACTION } = require('constants/ttlData');
 
 module.exports = async ({
   email, userName, accessToken, isGuest, transactionData, type,
@@ -75,7 +76,7 @@ const dataSwitcher = async ({
       });
       if (!withdraw) return { error: { response: { status: 503 } } };
 
-      await redisSetter.saveTTL(`expire:withdrawTransaction|${withdraw._id}`, DEFAULT_TRANSACTION_REDIS_TTL_TIME);
+      await redisSetter.saveTTL(`expire:${WITHDRAW_TRANSACTION}|${withdraw._id}`, DEFAULT_TRANSACTION_REDIS_TTL_TIME);
       const baseLink = checkEmail === 'No email' ? `${config.waivioUrl}campaigns-api/mailer/confirm-email-in-transaction?id=${redirectIds.finalConfirmTransaction}&userName=${userName}&token=${withdraw._id}&reqAmount=${transactionData.amount}&inputCoinType=${transactionData.inputCoinType}&outputCoinType=${transactionData.outputCoinType}&depositAcc=${transactionData.address}&memo=${transaction.memo}&commission=${commission}&email=${email}`
         : `${config.waivioUrl}confirmation?id=${redirectIds.finalConfirmTransaction}&userName=${userName}&token=${withdraw._id}&reqAmount=${transactionData.amount}&inputCoinType=${transactionData.inputCoinType}&outputCoinType=${transactionData.outputCoinType}&depositAcc=${transactionData.address}&memo=${transaction.memo}&commission=${commission}`;
       return {

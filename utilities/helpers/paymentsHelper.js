@@ -7,6 +7,7 @@ const appModel = require('models/appModel');
 const CampaignModel = require('models/campaignModel');
 const { redisSetter, redisGetter } = require('utilities/redis');
 const currencyRequest = require('utilities/requests/currencyRequest');
+const { RECALCULATION_DEBT, SUSPENDED_WARNING, PAYMENT_DEBT } = require('constants/ttlData');
 const { REFERRAL_TYPES } = require('constants/constants');
 const { detectFraudInReview } = require('utilities/helpers/detectFraudHelper');
 const { checkOnHoldStatus } = require('utilities/helpers/campaignsHelper');
@@ -86,10 +87,10 @@ const createReview = async ({
         app,
       });
       if (payment) {
-        await redisSetter.saveTTL(`expire:paymentDebt|${payment._id.toString()}`, 2592000, campaign.campaignId.toString());
+        await redisSetter.saveTTL(`expire:${PAYMENT_DEBT}|${payment._id.toString()}`, 2592000, campaign.campaignId.toString());
       }
     }
-    await redisSetter.saveTTL(`expire:suspendedWarning|${campaign.userReservationPermlink}|5`, 2160000, campaign.campaignId.toString());
+    await redisSetter.saveTTL(`expire:${SUSPENDED_WARNING}|${campaign.userReservationPermlink}|5`, 2160000, campaign.campaignId.toString());
   }
 };
 
@@ -263,8 +264,8 @@ const executeMatchBots = async ({
       { 'sponsors.sponsor_name': campaign.guideName, bot_name: matchBot, 'sponsors.enabled': true },
     ).lean();
     if (bot) {
-      const { result } = await redisGetter.getTTLData(`expire:recalculationDebt|${owner || campaign.userName}|${permlink}`);
-      if (!result) await redisSetter.saveTTL(`expire:recalculationDebt|${owner || campaign.userName}|${permlink}`, 605000);
+      const { result } = await redisGetter.getTTLData(`expire:${RECALCULATION_DEBT}|${owner || campaign.userName}|${permlink}`);
+      if (!result) await redisSetter.saveTTL(`expire:${RECALCULATION_DEBT}|${owner || campaign.userName}|${permlink}`, 605000);
       const sponsorsPermissions = _.find(bot.sponsors, (sponsor) => sponsor.sponsor_name === campaign.guideName);
       const reward = _.round(((campaign.reward / currency) + campaign.rewardRaisedBy) * 2, 3);
       await BotUpvote.create({

@@ -1,8 +1,11 @@
 const {
-  recalculateDebt, expireMatchBotRecount, campaignExpiration,
+  recalculateDebt, expireMatchBotRecount, campaignExpiration, revoteOnPost,
   paymentsExpiration, withdrawExpiration, expirePowerDown, suspendedExpiration,
 } = require('utilities/operations/expiration');
-const { DEMOPOST, MATCH_BOT_VOTE, DOWNVOTE_ON_REVIEW } = require('constants/ttlData');
+const {
+  DEMOPOST, MATCH_BOT_VOTE, DOWNVOTE_ON_REVIEW, RECALCULATION_DEBT, PENDING_TRANSFER,
+  SUSPENDED_WARNING, PAYMENT_DEBT, WITHDRAW_TRANSACTION, WITHDRAW_REQUEST, CLAIM_REWARD,
+} = require('constants/ttlData');
 const redis = require('./redis');
 
 exports.startExpiredListener = () => {
@@ -36,32 +39,33 @@ const subscribeDemoPostsEx = async (chan, msg) => {
         author, permlink, voter: data[3], percent: data[4],
       });
       break;
-    case 'expire:claimRewardJob':
+    case `expire:${CLAIM_REWARD}`:
       if (process.env.NODE_ENV === 'production') {
         await expirePowerDown();
       }
       break;
-    case 'expire:paymentDebt':
+    case `expire:${PAYMENT_DEBT}`:
       await suspendedExpiration.expireDebtStatus(id);
       break;
-    case 'expire:withdrawTransaction':
+    case `expire:${WITHDRAW_TRANSACTION}`:
       await withdrawExpiration.expireWithdrawTransaction(id);
       break;
-    case 'expire:suspendedWarning':
+    case `expire:${SUSPENDED_WARNING}`:
       const reservationPermlink = data[1];
       const days = data[2];
       await suspendedExpiration.suspendedWarning(reservationPermlink, days);
       break;
-    case 'expire:recalculationDebt':
+    case `expire:${RECALCULATION_DEBT}`:
       await recalculateDebt(author, permlink);
       break;
-    case 'expire:withdrawRequest':
+    case `expire:${WITHDRAW_REQUEST}`:
       await withdrawExpiration.expireWithdrawRequest(id);
       break;
-    case 'expire:pendingTransfer':
+    case `expire:${PENDING_TRANSFER}`:
       await paymentsExpiration.expirePendingTransfer(id);
       break;
     case `expire:${DOWNVOTE_ON_REVIEW}`:
+      await revoteOnPost({ author, permlink });
       break;
   }
 };

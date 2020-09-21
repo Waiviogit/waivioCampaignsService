@@ -4,6 +4,7 @@ const { guestRequests } = require('utilities/requests');
 const { validateTransaction } = require('utilities/helpers/transactionsHelper');
 const steemHelper = require('utilities/helpers/steemHelper');
 const redisSetter = require('utilities/redis/redisSetter');
+const { WITHDRAW_REQUEST } = require('constants/ttlData');
 
 module.exports = async (_id, accessToken) => {
   const { result } = await withdrawFundsModel.findOne({ _id });
@@ -39,7 +40,7 @@ module.exports = async (_id, accessToken) => {
       withdraw: _id,
 
     };
-    await redisSetter.saveTTL(`expire:withdrawRequest|${_id}`, 15);
+    await redisSetter.saveTTL(`expire:${WITHDRAW_REQUEST}|${_id}`, 15);
     await paymentHistoryModel.addPaymentHistory(paymentData);
     await guestRequests.createWithdraw(paymentData);
     return { result: updatedWithdraw };
