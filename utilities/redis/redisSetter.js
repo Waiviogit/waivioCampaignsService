@@ -40,14 +40,12 @@ const setExpireAssign = (campaignPermlink, assignPermlink, approvedObject, userN
     campaigns.setexAsync(`expire:assign_${assignPermlink}`, time, '');
     campaigns.setAsync(
       `assign_${assignPermlink}`,
-      JSON.stringify(
-        {
-          campaign_permlink: campaignPermlink,
-          user_name: userName,
-          assign_permlink: assignPermlink,
-          approved_object: approvedObject,
-        },
-      ),
+      JSON.stringify({
+        campaign_permlink: campaignPermlink,
+        user_name: userName,
+        assign_permlink: assignPermlink,
+        approved_object: approvedObject,
+      }),
     );
   }
 };
@@ -66,12 +64,16 @@ const removeExpirationAssign = (assignPermlink) => {
   campaigns.del(`expire:assign_${assignPermlink}`);
 };
 
-const setMatchBotExpire = async ({ author, permlink, voter }) => {
-  await demoPosts.setexAsync(`expire:matchBotVote|${author}|${permlink}|${voter}`, 20, '');
+const setSimpleTtl = async (data, timer) => {
+  await demoPosts.setexAsync(data, timer, '');
 };
 
 const saveTTL = async (data, timer, value = '') => {
   await demoPosts.setAsync(data, value, 'EX', timer);
+};
+
+const deleteCampaignsData = async (key) => {
+  await campaigns.del(key);
 };
 
 module.exports = {
@@ -80,6 +82,7 @@ module.exports = {
   setExpireCampaign,
   setExpireAssign,
   removeExpirationAssign,
-  setMatchBotExpire,
+  setSimpleTtl,
+  deleteCampaignsData,
   saveTTL,
 };

@@ -1,4 +1,4 @@
-const { lastBlockClient, demoPosts } = require('./redis');
+const { lastBlockClient, demoPosts, campaigns } = require('./redis');
 
 const getLastBlockNum = async (data) => {
   const num = await lastBlockClient.getAsync(data);
@@ -15,4 +15,13 @@ const getTTLData = async (key) => {
   }
 };
 
-module.exports = { getLastBlockNum, getTTLData };
+const getTTLCampaignsData = async (key) => {
+  try {
+    const data = await campaigns.getAsync(key);
+    return { result: data };
+  } catch (error) {
+    return { error };
+  }
+};
+
+module.exports = { getLastBlockNum, getTTLData, getTTLCampaignsData };

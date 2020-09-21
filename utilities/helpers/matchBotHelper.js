@@ -4,6 +4,7 @@ const {
   botUpvoteModel, postModel, matchBotModel, paymentHistoryModel, campaignModel,
 } = require('models');
 const steemHelper = require('utilities/helpers/steemHelper');
+const { redisGetter, redisSetter } = require('utilities/redis');
 const { Constants } = require('constants/index');
 
 /**
@@ -516,13 +517,24 @@ const recountDebts = async (user, amount) => {
   }
 };
 
+const checkForGuest = (author, metadata) => {
+  try {
+    metadata = JSON.parse(metadata);
+    return _.get(metadata, 'comment.userId', author);
+  } catch (e) {
+    return author;
+  }
+};
+
 module.exports = {
   removePaymentHistories,
   updatePaymentHistories,
   removeVotes,
   checkDisable,
+  expireMatchBotRecount,
   setRule,
   executeRecount,
+  checkForGuest,
   executeUpvotes,
   updateUpvotedRecord,
   updateCompensationFee,
