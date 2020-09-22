@@ -1,5 +1,9 @@
-const axios = require('axios');
 const _ = require('lodash');
+const axios = require('axios');
+const config = require('config');
+const { FIELDS_NAMES } = require('constants/wobjectsData');
+const { NOTIFICATIONS_ID } = require('constants/constants');
+const { processWobjects } = require('utilities/helpers/wobjectHelper');
 const { HOST, BASE_URL, SET_NOTIFICATION } = require('constants/appData').notificationsApi;
 const {
   campaignModel, userModel, wobjectModel, Subscriptions, wobjectSubscriptions,
@@ -54,7 +58,7 @@ const activateCampaign = async (campaignId) => {
   if (wobjError) return;
 
   const operation = {
-    id: 'activationCampaign',
+    id: NOTIFICATIONS_ID.ACTIVATION_CAMPAIGN,
     data: {
       guide: campaign.guideName,
       users: [...new Set(names)],
@@ -63,18 +67,42 @@ const activateCampaign = async (campaignId) => {
     },
   };
   await sendNotification(operation);
+  await sendBellNotification({
+    objects: campaign.objects,
+    primaryObject: campaign.requiredObject,
+    guideName: campaign.guideName,
+  });
+};
+
+const sendBellNotification = async ({ objects, primaryObject, guideName }) => {
+  for (const object of objects) {
+    const { users } = await wobjectSubscriptions.getBellFollowers({ following: object });
+    if (_.isEmpty(users)) continue;
+    const { objectName } = await getWobjectName(object);
+    const operation = {
+      id: NOTIFICATIONS_ID.BELL_WOBJ_REWARDS,
+      data: {
+        objectName,
+        objectPermlink: object,
+        users,
+        primaryObject,
+        guideName,
+      },
+    };
+    await sendNotification(operation);
+  }
 };
 
 const getWobjectName = async (permlink) => {
   const { result: wobject, error } = await wobjectModel.findOne(permlink);
   if (error || !wobject) return { error: 'Something wrong' };
-  const objectName = _
-    .chain(wobject.fields)
-    .filter((field) => field.name === 'name')
-    .sortBy('weight')
-    .first()
-    .value().body;
-  return { objectName };
+  const processedWobj = await processWobjects({
+    wobjects: [wobject],
+    fields: [FIELDS_NAMES.NAME],
+    app: config.waivio_app_name,
+    returnArray: false,
+  });
+  return { objectName: processedWobj.name || wobject.default_name };
 };
 
 module.exports = { custom, activateCampaign };
