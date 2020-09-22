@@ -63,7 +63,7 @@ const TRANSFER_TYPES = [
   PAYMENT_HISTORIES_TYPES.DEMO_DEBT,
 ];
 
-
+const MIN_TO_VOTE_VALUE = 0.01;
 
 const votingPowerLimit = 6500;
 const maxCampaignsAssign = 500;
@@ -127,6 +127,7 @@ module.exports = {
   REFERRAL_TYPES,
   TRANSFER_TYPES,
   SUSPENDED_DAYS,
+  MIN_TO_VOTE_VALUE,
   REFERRAL_STATUSES,
   BOT_UPVOTE_STATUSES,
   RESERVATION_STATUSES,

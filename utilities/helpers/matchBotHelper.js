@@ -4,7 +4,7 @@ const {
   botUpvoteModel, postModel, matchBotModel, paymentHistoryModel, campaignModel,
 } = require('models');
 const steemHelper = require('utilities/helpers/steemHelper');
-const { Constants } = require('constants/index');
+const { voteCoefficients } = require('constants/constants');
 
 /**
  * Find all expired match bot upvotes and recount sponsors debt to the contractors
@@ -96,7 +96,7 @@ const getNeededVoteWeight = async (totalAmount, upvote) => {
   const maxAmount = (upvote.amountToVote + upvote.amountToVote * 0.005);
   while ((totalAmount > maxAmount || totalAmount < minAmount) && iteration !== 7) {
     idealCoef = _.round(upvote.amountToVote / totalAmount, 3);
-    const realFault = idealCoef > 1 ? idealCoef : Constants.voteCoefficients[_.round(upvote.amountToVote / totalAmount, 1) * 100];
+    const realFault = idealCoef > 1 ? idealCoef : voteCoefficients[_.round(upvote.amountToVote / totalAmount, 1) * 100];
     const realVote = totalAmount * idealCoef * realFault;
     if (!needVotePower)needVotePower = idealCoef + (((totalAmount * idealCoef) - realVote) / totalAmount);
     else needVotePower *= idealCoef > 1 ? idealCoef : (idealCoef * realFault);

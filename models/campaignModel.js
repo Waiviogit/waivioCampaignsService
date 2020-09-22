@@ -1,7 +1,7 @@
 const mongoose = require('mongoose');
 const moment = require('moment');
 const { Campaign } = require('database').models;
-const { Constants } = require('constants/index');
+const { maxCampaignsAssign } = require('constants/constants');
 
 exports.destroyCampaign = async (campaignId) => Campaign.findOneAndDelete({ _id: mongoose.Types.ObjectId(campaignId), status: 'pending' });
 
@@ -18,7 +18,7 @@ exports.changeStatus = async (campaignId, status) => {
   }
 };
 
-exports.canCreateMoreCampaigns = async (userName) => Constants.maxCampaignsAssign >= await Campaign.find({ guideName: userName, status: 'active' }).countDocuments();
+exports.canCreateMoreCampaigns = async (userName) => maxCampaignsAssign >= await Campaign.find({ guideName: userName, status: 'active' }).countDocuments();
 
 exports.updateUserStatus = async ({
   // eslint-disable-next-line camelcase

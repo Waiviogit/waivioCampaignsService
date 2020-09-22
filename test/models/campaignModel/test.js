@@ -7,7 +7,7 @@ const paymentHistory = require('utilities/operations/paymentHistory');
 const {
   CampaignFactory, UserFactory, WobjectFactory, PaymentHistoryFactory,
 } = require('test/factories');
-const { Constants } = require('constants/index');
+const { maxCampaignsAssign } = require('constants/constants');
 const moment = require('moment');
 
 describe('Campaign', async () => {
@@ -760,7 +760,7 @@ describe('Campaign', async () => {
   describe('get can create more campaigns', async () => {
     before(async () => {
       await dropDatabase();
-      for (let i = 0; i < Constants.maxCampaignsAssign - 1; i++) {
+      for (let i = 0; i < maxCampaignsAssign - 1; i++) {
         await CampaignFactory.Create({ guideName: 'name', status: 'active' });
       }
       await CampaignFactory.Create({ guideName: 'name', status: 'pending' });
