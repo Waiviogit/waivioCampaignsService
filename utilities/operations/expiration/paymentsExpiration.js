@@ -1,6 +1,7 @@
 const _ = require('lodash');
 const { paymentHistoryModel } = require('models');
 const steemHelper = require('utilities/helpers/steemHelper');
+const { PAYMENT_HISTORIES_TYPES } = require('constants/constants');
 
 exports.expirePendingTransfer = async (id) => {
   const { result } = await paymentHistoryModel.findOne({ _id: id });
@@ -41,7 +42,7 @@ exports.expireDemoPost = async ({ author, permlink }) => {
       payable: reward,
       userName: metadata.comment.userId,
       sponsor: author,
-      type: 'demo_post',
+      type: PAYMENT_HISTORIES_TYPES.DEMO_POST,
       owner_account: true,
     });
   }

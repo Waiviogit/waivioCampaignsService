@@ -1,3 +1,4 @@
+const { PENDING_TRANSFER } = require('constants/ttlData');
 const { paymentHistoryModel, userModel } = require('models');
 const { redisSetter } = require('utilities/redis');
 
@@ -12,6 +13,6 @@ module.exports = async ({
   });
   if (error) return { error: { status: 503, message: error.message } };
 
-  await redisSetter.saveTTL(`expire:pendingTransfer|${payment._id.toString()}`, 60);
+  await redisSetter.saveTTL(`expire:${PENDING_TRANSFER}|${payment._id.toString()}`, 60);
   return { result: true };
 };

@@ -5,6 +5,7 @@ const {
 const { PaymentHistoryFactory, UserFactory } = require('test/factories');
 const jwt = require('jsonwebtoken');
 const config = require('config');
+const { WITHDRAW_TRANSACTION } = require('../../../constants/ttlData.js');
 
 chai.use(chaiHttp);
 chai.should();
@@ -136,7 +137,7 @@ describe('On mailerController', async () => {
         });
         it('should create TTL for transaction', async () => {
           const withdraw = await WithdrawFunds.findOne({ account: user.name });
-          const { result: TTL } = await redisGetter.getTTLData(`expire:withdrawTransaction|${withdraw._id}`);
+          const { result: TTL } = await redisGetter.getTTLData(`expire:${WITHDRAW_TRANSACTION}|${withdraw._id}`);
           expect(TTL).is.exist;
         });
         it('should call mailer method with correct keys', async () => {
@@ -200,7 +201,7 @@ describe('On mailerController', async () => {
             expect(result.body.message).to.be.eq('Invalid email');
           });
           it('should create not TTL for transaction', async () => {
-            const { result: TTL } = await redisGetter.getTTLData('expire:withdrawTransaction*');
+            const { result: TTL } = await redisGetter.getTTLData(`expire:${WITHDRAW_TRANSACTION}*`);
             expect(TTL).is.not.exist;
           });
           it('should not create withdraw record in DB', async () => {
@@ -230,7 +231,7 @@ describe('On mailerController', async () => {
             expect(result.body.message).to.be.eq('Invalid wallet');
           });
           it('should create not TTL for transaction if wallet not valid', async () => {
-            const { result: TTL } = await redisGetter.getTTLData('expire:withdrawTransaction*');
+            const { result: TTL } = await redisGetter.getTTLData(`expire:${WITHDRAW_TRANSACTION}*`);
             expect(TTL).is.not.exist;
           });
           it('should not create withdraw record in DB if wallet not valid', async () => {
@@ -260,7 +261,7 @@ describe('On mailerController', async () => {
             expect(result.body.message).to.be.eq('Not enough balance');
           });
           it('should create not TTL for transaction if not enough balance', async () => {
-            const { result: TTL } = await redisGetter.getTTLData('expire:withdrawTransaction*');
+            const { result: TTL } = await redisGetter.getTTLData(`expire:${WITHDRAW_TRANSACTION}*`);
             expect(TTL).is.not.exist;
           });
           it('should not create withdraw record in DB if not enough balance', async () => {
@@ -352,7 +353,7 @@ describe('On mailerController', async () => {
       });
       it('should return error id if token incorrect', async () => {
         await User.updateOne({ _id: user._id }, { privateEmail: email });
-        const name = faker.name.firstName()
+        const name = faker.name.firstName();
         result = await chai.request(app)
           .get(`/campaigns-api/mailer/confirm-email-response?userName=${name}&email=${faker.internet.email()}&id=${token}&type=unlink`);
         expect(result.redirects[0]).to.be.eq(`${config.waivioUrl}confirmation?id=unlinkEmailSecretFailed&userName=${name}`);

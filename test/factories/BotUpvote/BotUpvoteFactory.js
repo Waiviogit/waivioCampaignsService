@@ -1,4 +1,5 @@
 const { faker, BotUpvote, moment } = require('test/testHelper');
+const { BOT_UPVOTE_STATUSES } = require('constants/constants');
 
 const Create = async (data = {}) => {
   const botUpvoteData = {
@@ -7,7 +8,7 @@ const Create = async (data = {}) => {
     author: data.author || `${faker.name.firstName()}${faker.random.number()}`,
     sponsor: data.sponsor || `${faker.name.firstName()}${faker.random.number()}`,
     permlink: data.permlink || faker.random.string(10),
-    status: data.status || 'pending',
+    status: data.status || BOT_UPVOTE_STATUSES.PENDING,
     reward: data.reward || 5.23,
     amountToVote: data.amountToVote || 5.23,
     expiredAt: data.expiredAt || moment.utc().add(1, 'days').format(),

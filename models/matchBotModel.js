@@ -179,6 +179,14 @@ const findOne = async (condition) => {
   }
 };
 
+const find = async (condition) => {
+  try {
+    return { result: await MatchBot.find(condition) };
+  } catch (error) {
+    return { error };
+  }
+};
+
 module.exports = {
   inactivateRules,
   updateStatus,
@@ -187,4 +195,5 @@ module.exports = {
   setMatchBot,
   getMatchBots,
   findOne,
+  find,
 };

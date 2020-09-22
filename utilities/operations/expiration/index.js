@@ -6,4 +6,5 @@ module.exports = {
   withdrawExpiration: require('./withdrawExpiration'),
   expirePowerDown: require('./expirePowerDown'),
   suspendedExpiration: require('./suspendedExpiration'),
+  revoteOnPost: require('./revoteOnPost'),
 };

@@ -273,32 +273,7 @@ describe('matchBotHelper', async () => {
         sinon.stub(steemHelper, 'getVotingInfo').returns(Promise.resolve({ currentVotePower: 9500, voteWeight }));
         sinon.stub(steemHelper, 'likePost').returns(Promise.resolve({ result: true }));
       });
-      // describe('Compensation_fee payment', async () => {
-      //   let payment, campaign;
-      //   beforeEach(async () => {
-      //     campaign = await CampaignFactory.Create({
-      //       compensationAccount: faker.name.firstName(),
-      //       users: [{
-      //         name: `${faker.name.firstName()}${faker.random.number()}`,
-      //         status: 'completed',
-      //         object_permlink: 'obj1',
-      //         hiveCurrency: 1,
-      //         permlink: botUpvote1.reservationPermlink,
-      //       }],
-      //     });
-      //     await matchBotHelper.executeUpvotes();
-      //     payment = await PaymentHistory.findOne({ type: 'compensation_fee', 'details.reservation_permlink': botUpvote1.reservationPermlink }).lean();
-      //   });
-      //   it('should create compensation_fee if it not exist', async () => {
-      //     expect(payment).to.be.exist;
-      //   });
-      //   it('should create compensation_fee with right userName', async () => {
-      //     expect(payment.userName).to.be.eq(campaign.compensationAccount);
-      //   });
-      //   it('should create compensation_fee with right amount', async () => {
-      //     expect(payment.amount).to.be.eq(voteWeight / 2);
-      //   });
-      // });
+
       describe('with many Bots', async () => {
         let botUpvote3, matchBot3, campaign, compensationAcc, users;
         beforeEach(async () => {
@@ -324,11 +299,7 @@ describe('matchBotHelper', async () => {
           await matchBotHelper.executeUpvotes();
           expect(steemHelper.likePost.args[1][0].weight).to.be.eq(10000);
         });
-        // it('should not update compensation fee > reward', async () => {
-        //   await matchBotHelper.executeUpvotes();
-        //   const result = await PaymentHistory.findOne({ type: 'compensation_fee', userName: compensationAcc });
-        //   expect(result.amount).to.be.eq(campaign.reward / users[0].hiveCurrency);
-        // });
+
         it('should update payment history by all allowed upvote reward', async () => {
           await matchBotHelper.executeUpvotes();
           await matchBotHelper.executeRecount();

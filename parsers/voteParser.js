@@ -3,7 +3,7 @@ const moment = require('moment');
 const steemHelper = require('utilities/helpers/steemHelper');
 const { MATCH_BOT_VOTE, DOWNVOTE_ON_REVIEW } = require('constants/ttlData');
 const { campaignModel } = require('models');
-const { redisSetter } = require('utilities/redis');
+const { redisSetter, redisGetter } = require('utilities/redis');
 
 exports.parse = async (votes) => {
   let names = [];
@@ -19,10 +19,16 @@ exports.parse = async (votes) => {
       const { result } = await campaignModel.findOne({
         payments: { $elemMatch: { postPermlink: vote.permlink, rootAuthor: vote.author } },
       });
-      if (!result) return;
+      const { result: existedTTL } = await redisGetter.getTTLData(`${DOWNVOTE_ON_REVIEW}|${vote.author}|${vote.permlink}`);
+      if (!result || _.isString(existedTTL)) return;
+
       const post = await steemHelper.getPostInfo({ author: vote.author, permlink: vote.permlink });
       if (!post.author || moment.utc(post.created) < moment.utc().subtract(7, 'days')) return;
-      await redisSetter.setSimpleTtl(`${DOWNVOTE_ON_REVIEW}|${vote.author}|${vote.permlink}|${vote.voter}`, 20);
+
+      const expirationTime = moment.utc(post.created).add(165, 'hours').valueOf();
+      const ttlTime = Math.round((expirationTime - moment.utc().valueOf()) / 1000);
+      if (ttlTime < 0) return;
+      await redisSetter.setSimpleTtl(`${DOWNVOTE_ON_REVIEW}|${vote.author}|${vote.permlink}`, ttlTime);
       /** If voter match-bot - parse manual votes */
     } else {
       const { result } = await campaignModel.findOne({

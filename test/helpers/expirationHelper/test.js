@@ -1,3 +1,4 @@
+const { PAYMENT_DEBT } = require('constants/ttlData');
 const {
   expect, sinon, dropDatabase, ObjectID, paymentsExpiration, expireMatchBotRecount,
   steemHelper, PaymentHistory, faker, BotUpvote, _, Campaign, redisSetter, recalculateDebt,
@@ -16,7 +17,7 @@ describe('expirationHelper', async () => {
       payment = await PaymentHistoryFactory.Create({
         type: 'review', sponsor: campaign.guideName, userName: author, payed: true,
       });
-      await redisSetter.saveTTL(`expire:paymentDebt|${payment._id.toString()}`, 1, campaign._id.toString());
+      await redisSetter.saveTTL(`expire:${PAYMENT_DEBT}|${payment._id.toString()}`, 1, campaign._id.toString());
     });
     it('should not change campaign status if payment payed', async () => {
       await new Promise((resolve) => setTimeout(resolve, 1500));

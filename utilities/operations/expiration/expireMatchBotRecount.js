@@ -3,6 +3,8 @@ const { redisSetter, redisGetter } = require('utilities/redis');
 const { campaignModel, botUpvoteModel } = require('models');
 const mathBotHelper = require('utilities/helpers/matchBotHelper');
 const steemHelper = require('utilities/helpers/steemHelper');
+const { BOT_UPVOTE_STATUSES } = require('constants/constants');
+const { RECALCULATION_DEBT } = require('constants/ttlData');
 
 /** Listen for expire posts for match bot recount */
 module.exports = async ({ author, permlink, voter }) => {
@@ -18,14 +20,14 @@ module.exports = async ({ author, permlink, voter }) => {
   const { result: botUpvote } = await botUpvoteModel.findOne({ botName: voter, author, permlink });
   if (!botUpvote) {
     if (voteWeight <= 0) return;
-    const { result } = await redisGetter.getTTLData(`expire:recalculationDebt|${author}|${permlink}`);
+    const { result } = await redisGetter.getTTLData(`expire:${RECALCULATION_DEBT}|${author}|${permlink}`);
     if (!result) {
       const post = await steemHelper.getPostInfo({ author, permlink });
       if (post.author) {
         const timer = Math.round(new Date(post.cashout_time).valueOf() / 1000)
           - Math.round(new Date().valueOf() / 1000) + 11200;
 
-        await redisSetter.saveTTL(`expire:recalculationDebt|${author}|${permlink}`, timer);
+        await redisSetter.saveTTL(`expire:${RECALCULATION_DEBT}|${author}|${permlink}`, timer);
       }
     }
     return createBotUpvoteRecord({
@@ -39,9 +41,12 @@ module.exports = async ({ author, permlink, voter }) => {
   await botUpvoteModel.update({ author, permlink },
     { $inc: { totalVotesWeight: voteWeight > 0 ? voteWeight - botUpvote.currentVote : -botUpvote.currentVote } });
   await botUpvoteModel.updateStatus({
-    currentVote: _.round(voteWeight, 3), status: 'upvoted', id: botUpvote._id, votePercent: weight,
+    currentVote: _.round(voteWeight, 3),
+    status: BOT_UPVOTE_STATUSES.UPVOTED,
+    id: botUpvote._id,
+    votePercent: weight,
   });
-  if (botUpvote.status === 'upvoted' && botUpvote.executed) {
+  if (botUpvote.status === BOT_UPVOTE_STATUSES.UPVOTED && botUpvote.executed) {
     await mathBotHelper.updateUpvotedRecord({
       botUpvote, voteWeight, votePercent: weight,
     });
@@ -74,7 +79,7 @@ const createBotUpvoteRecord = async ({
   const { result: bot } = await botUpvoteModel.create({
     author,
     permlink,
-    status: 'upvoted',
+    status: BOT_UPVOTE_STATUSES.UPVOTED,
     votePercent: weight,
     botName: voter,
     amountToVote: (campaign.reward / user.hiveCurrency) * 2,
