@@ -252,15 +252,7 @@ describe('Campaign', async () => {
 
       expect(campaign.whitelist_users).to.be.eql(['user1', 'user2']);
     });
-
-    it('should create campaign with geo coordinates', async () => {
-      await WobjectFactory.Create({ author_permlink: 'req_obj1', coordinates: [20, 30] });
-      const { campaign } = await createCampaign(campaignParams);
-      const newCampaign = await Campaign.findOne({ _id: campaign.id });
-
-      expect(newCampaign.map.coordinates).to.be.eql([20, 30]);
-    });
-
+    
     it('should update campaign', async () => {
       const { campaign } = await createCampaign(campaignParams);
 

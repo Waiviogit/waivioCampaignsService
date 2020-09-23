@@ -1,5 +1,5 @@
 const _ = require('lodash');
-const { wobjectModel, campaignModel, userModel } = require('models');
+const { campaignModel, userModel } = require('models');
 const { steemHelper } = require('utilities/helpers');
 const { setExpireCampaign } = require('utilities/redis/redisSetter');
 
@@ -31,12 +31,6 @@ module.exports = async (data) => {
 };
 
 const createParams = async (params) => {
-  const { result: requiredObject } = await wobjectModel.findOne(params.requiredObject);
-
   params.objects = _.filter(params.objects, (object) => object.match(/\S+/));
-  if (_.get(requiredObject, 'map.coordinates', false)) {
-    params.map = { type: 'Point', coordinates: requiredObject.map.coordinates };
-  }
-
   return params;
 };

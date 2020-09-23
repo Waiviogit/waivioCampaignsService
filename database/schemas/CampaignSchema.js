@@ -77,15 +77,6 @@ const campaignSchema = new Schema({
     minFollowers: { type: Number, default: 0 },
     minExpertise: { type: Number, default: 0 },
   },
-  map: {
-    type: {
-      type: String,
-      enum: ['Point'],
-    },
-    coordinates: {
-      type: [Number], // First element - longitude(-180..180), second element - latitude(-90..90)
-    }, // [longitude, latitude]
-  },
   requiredObject: { type: String, required: true },
   objects: { type: [String], validate: /\S+/, required: true },
   users: [userSchema],
@@ -112,7 +103,6 @@ const campaignSchema = new Schema({
   timestamps: true,
 });
 
-campaignSchema.index({ map: '2dsphere' });
 campaignSchema.index({ createdAt: -1 });
 campaignSchema.index({ reward: -1 });
 paymentSchema.index({ userName: 1, postPermlink: 1 });
@@ -131,7 +121,6 @@ campaignSchema.pre('save', function (next) {
 
     return next(error);
   }
-  if (this.map && (!this.map.type || this.map.coordinates === [])) this.map = undefined;
   next();
 });
 
