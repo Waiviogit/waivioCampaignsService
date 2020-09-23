@@ -6,6 +6,7 @@ const cors = require('cors');
 const Sentry = require('@sentry/node');
 
 require('jobs/matchBotsJob');
+const { sendSentryNotification } = require('utilities/requests/telegramNotificationsRequest');
 
 module.exports = function (app, express) {
   Sentry.init({ environment: process.env.NODE_ENV, dsn: process.env.SENTRY_DNS });
@@ -18,29 +19,31 @@ module.exports = function (app, express) {
   if (process.env.NODE_ENV !== 'test') {
     runStream().catch((err) => {
       Sentry.captureException(err);
+      sendSentryNotification();
       console.error(err);
       process.exit(1);
     });
     runStreamRest().catch((err) => {
       Sentry.captureException(err);
+      sendSentryNotification();
       console.error(err);
       process.exit(1);
     });
   }
 
   // ### Sentry enviroments ###
-  if (process.env.NODE_ENV === 'production') {
-    app.use(Sentry.Handlers.requestHandler());
-    app.use(Sentry.Handlers.errorHandler({
-      shouldHandleError(error) {
-        // Capture 500 errors
-        if (error.status === 500) {
-          return true;
-        }
-        return false;
-      },
-    }));
-  }
+
+  app.use(Sentry.Handlers.requestHandler());
+  app.use(Sentry.Handlers.errorHandler({
+    async shouldHandleError(error) {
+      // Capture 500 errors
+      if (error.status === 500) {
+        await sendSentryNotification();
+        return true;
+      }
+      return false;
+    },
+  }));
 
   app.use((err, req, res, next) => {
     // The error id is attached to `res.sentry` to be returned

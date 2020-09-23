@@ -23,6 +23,13 @@ const notificationsApi = {
   },
 };
 
+const telegramApi = {
+  HOST: 'https://waiviodev.com',
+  BASE_URL: '/telegram-api',
+  SENTRY_ERROR: '/sentry',
+
+};
+
 const mailerApi = {
   production: {
     HOST: 'https://www.waivio.com',
@@ -64,6 +71,7 @@ const orderIds = {
 const MIN_DEBT_TO_SUSPENDED = 2;
 
 module.exports = {
+  telegramApi,
   MIN_DEBT_TO_SUSPENDED,
   nodeUrls,
   notificationsApi: notificationsApi[process.env.NODE_ENV || 'development'],

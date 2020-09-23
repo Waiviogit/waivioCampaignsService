@@ -7,6 +7,7 @@ const {
   DEMOPOST, MATCH_BOT_VOTE, DOWNVOTE_ON_REVIEW, RECALCULATION_DEBT, PENDING_TRANSFER,
   SUSPENDED_WARNING, PAYMENT_DEBT, WITHDRAW_TRANSACTION, WITHDRAW_REQUEST, CLAIM_REWARD,
 } = require('constants/ttlData');
+const { sendSentryNotification } = require('utilities/requests/telegramNotificationsRequest');
 const redis = require('./redis');
 
 exports.startExpiredListener = () => {
@@ -27,6 +28,7 @@ const subscribeCampaignsEx = async (chan, msg) => {
     }
   } catch (e) {
     Sentry.captureException(e);
+    await sendSentryNotification();
   }
 };
 
@@ -76,5 +78,6 @@ const subscribeDemoPostsEx = async (chan, msg) => {
     }
   } catch (e) {
     Sentry.captureException(e);
+    await sendSentryNotification();
   }
 };
