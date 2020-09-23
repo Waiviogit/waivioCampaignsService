@@ -37,7 +37,7 @@ module.exports = function (app, express) {
   app.use(Sentry.Handlers.errorHandler({
     async shouldHandleError(error) {
       // Capture 500 errors
-      if (error.status === 500) {
+      if (error.status >= 500) {
         await sendSentryNotification();
         return true;
       }
