@@ -7,11 +7,9 @@ const { startExpiredListener } = require('utilities/redis/expireListener');
 
 const app = express();
 
-global._ = require('lodash');
-
+require('./enviroment.js')(app, express);
 require('./jobs/matchBotsJob');
 require('./jobs/campaignsStatusJob');
-require('./enviroment.js')(app, express);
 
 if (process.env.NODE_ENV === 'production') {
   require('utilities/helpers/createTTLHelper');

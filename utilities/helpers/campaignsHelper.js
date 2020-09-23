@@ -89,7 +89,7 @@ const parseCoordinates = (map) => {
 const fillObjects = (
   campaign, userName, wobjects, obj, radius, area, firstMapLoad = false,
 ) => {
-  let reservation = null, distance = null, reward = null;
+  let reservation = null, distance = null, reward = null, countUsers = 0;
   if (userName) {
     reservation = _.find(campaign.users,
       (user) => user.name === userName
@@ -102,7 +102,10 @@ const fillObjects = (
     }
   }
   const object = _.find(wobjects, (wobj) => wobj.author_permlink === obj);
-
+  if (_.get(campaign.users, 'length')) {
+    countUsers = _.filter(campaign.users,
+      (user) => user.status === 'assigned' && user.object_permlink === obj).length;
+  }
   if (area && !firstMapLoad) {
     const coordinates = object.map ? parseCoordinates(object.map) : null;
     distance = coordinates ? getDistance(area, coordinates) : null;
@@ -112,8 +115,7 @@ const fillObjects = (
     object,
     permlink: _.get(reservation, 'permlink', null),
     author: _.get(reservation, 'rootName', _.get(reservation, 'name', null)),
-    count_users: _.filter(campaign.users,
-      (user) => user.status === 'assigned' && user.object_permlink === obj).length,
+    count_users: countUsers,
     assigned: !!reservation,
     reward,
     reservationCreated: _.get(reservation, 'createdAt', null),

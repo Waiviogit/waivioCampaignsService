@@ -43,7 +43,7 @@ const loadNextBlock = async ({ startBlock, loadBlock, redisTitle }) => {
     await redisSetter.setLastBlockNum(lastBlockNum + 1, redisTitle);
     await loadNextBlock({ loadBlock, redisTitle });
   } else {
-    await setTimeout(async () => await loadNextBlock({ loadBlock, redisTitle }), 2000);
+    await setTimeout(async () => loadNextBlock({ loadBlock, redisTitle }), 2000);
   }
 };
 
@@ -68,7 +68,6 @@ const loadBlock = async (block_num) => {
     return true;
   } return false;
 };
-
 
 const loadBlockRest = async (block_num) => { // return true if block exist and parsed, else - false
   const block = [];

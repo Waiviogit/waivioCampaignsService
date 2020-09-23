@@ -1,5 +1,6 @@
 const schedule = require('node-schedule');
 const MatchBotHelper = require('utilities/helpers/matchBotHelper');
+const sentryHelper = require('utilities/helpers/sentryHelper');
 const MatchBotModel = require('models/matchBotModel');
 
 /**
@@ -7,8 +8,12 @@ const MatchBotModel = require('models/matchBotModel');
  * and upvote reviews with status pending if any
  */
 schedule.scheduleJob('0,30 * * * *', async () => {
-  await MatchBotHelper.executeRecount();
-  await MatchBotHelper.executeUpvotes();
+  try {
+    await MatchBotHelper.executeRecount();
+    await MatchBotHelper.executeUpvotes();
+  } catch (error) {
+    sentryHelper.captureException(error);
+  }
 });
 
 /**
