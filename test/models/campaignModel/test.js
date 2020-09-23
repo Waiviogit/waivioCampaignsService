@@ -252,7 +252,7 @@ describe('Campaign', async () => {
 
       expect(campaign.whitelist_users).to.be.eql(['user1', 'user2']);
     });
-    
+
     it('should update campaign', async () => {
       const { campaign } = await createCampaign(campaignParams);
 
