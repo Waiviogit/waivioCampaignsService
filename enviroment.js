@@ -1,5 +1,6 @@
 const logger = require('morgan');
 const { runStream, runStreamRest } = require('processor/processor');
+const Tracing = require('@sentry/tracing');
 const swaggerUi = require('swagger-ui-express');
 const swaggerDocument = require('swagger');
 const cors = require('cors');
@@ -10,7 +11,16 @@ require('jobs/matchBotsJob');
 const { sendSentryNotification } = require('utilities/requests/telegramNotificationsRequest');
 
 module.exports = function (app, express) {
-  Sentry.init({ environment: process.env.NODE_ENV, dsn: process.env.SENTRY_DNS });
+  Sentry.init({
+    environment: process.env.NODE_ENV,
+    dsn: process.env.SENTRY_DNS,
+    integrations: [
+      // enable HTTP calls tracing
+      new Sentry.Integrations.Http({ tracing: true }),
+      // enable Express.js middleware tracing
+      new Tracing.Integrations.Express({ app }),
+    ],
+  });
   app.use(cors());
   app.use(logger('dev'));
   app.use(express.json());
@@ -39,7 +49,7 @@ module.exports = function (app, express) {
   app.use(Sentry.Handlers.errorHandler({
     shouldHandleError(error) {
       // Capture 500 errors
-      if (error.status >= 500) {
+      if (error.status >= 500 || !error.status) {
         sendSentryNotification();
         return true;
       }
