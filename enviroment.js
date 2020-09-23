@@ -47,6 +47,11 @@ module.exports = function (app, express) {
     },
   }));
 
+  process.on('unhandledRejection', (error) => {
+    sendSentryNotification();
+    Sentry.captureException(error);
+  });
+
   app.use((err, req, res, next) => {
     // The error id is attached to `res.sentry` to be returned
     // and optionally displayed to the user for support.
