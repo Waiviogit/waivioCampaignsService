@@ -8,7 +8,7 @@ const Sentry = require('@sentry/node');
 require('jobs/matchBotsJob');
 
 module.exports = function (app, express) {
-  Sentry.init({ dsn: process.env.SENTRY_DNS });
+  Sentry.init({ environment: process.env.NODE_ENV, dsn: process.env.SENTRY_DNS });
   app.use(cors());
   app.use(logger('dev'));
   app.use(express.json());
@@ -17,16 +17,12 @@ module.exports = function (app, express) {
   // ### STEEM stream ###
   if (process.env.NODE_ENV !== 'test') {
     runStream().catch((err) => {
-      if (process.env.NODE_ENV === 'production') {
-        Sentry.captureException(err);
-      }
+      Sentry.captureException(err);
       console.error(err);
       process.exit(1);
     });
     runStreamRest().catch((err) => {
-      if (process.env.NODE_ENV === 'production') {
-        Sentry.captureException(err);
-      }
+      Sentry.captureException(err);
       console.error(err);
       process.exit(1);
     });

@@ -1,8 +1,8 @@
+const Sentry = require('@sentry/node');
 const {
   recalculateDebt, expireMatchBotRecount, campaignExpiration, revoteOnPost,
   paymentsExpiration, withdrawExpiration, expirePowerDown, suspendedExpiration,
 } = require('utilities/operations/expiration');
-const sentryHelper = require('utilities/helpers/sentryHelper');
 const {
   DEMOPOST, MATCH_BOT_VOTE, DOWNVOTE_ON_REVIEW, RECALCULATION_DEBT, PENDING_TRANSFER,
   SUSPENDED_WARNING, PAYMENT_DEBT, WITHDRAW_TRANSACTION, WITHDRAW_REQUEST, CLAIM_REWARD,
@@ -26,7 +26,7 @@ const subscribeCampaignsEx = async (chan, msg) => {
         break;
     }
   } catch (e) {
-    sentryHelper.captureException(e);
+    Sentry.captureException(e);
   }
 };
 
@@ -75,6 +75,6 @@ const subscribeDemoPostsEx = async (chan, msg) => {
         break;
     }
   } catch (e) {
-    sentryHelper.captureException(e);
+    Sentry.captureException(e);
   }
 };

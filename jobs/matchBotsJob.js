@@ -1,6 +1,6 @@
 const schedule = require('node-schedule');
 const MatchBotHelper = require('utilities/helpers/matchBotHelper');
-const sentryHelper = require('utilities/helpers/sentryHelper');
+const Sentry = require('@sentry/node');
 const MatchBotModel = require('models/matchBotModel');
 
 /**
@@ -12,7 +12,7 @@ schedule.scheduleJob('0,30 * * * *', async () => {
     await MatchBotHelper.executeRecount();
     await MatchBotHelper.executeUpvotes();
   } catch (error) {
-    sentryHelper.captureException(error);
+    Sentry.captureException(error);
   }
 });
 
