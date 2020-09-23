@@ -120,14 +120,6 @@ const parseGuestTransfers = async ({
       }));
     }
   }
-  // if (result || updated) {
-  //   await notificationsRequest.custom('transfer', {
-  //     to: memoJson.to,
-  //     from,
-  //     amount,
-  //     memo: memoJson.message,
-  //   });
-  // }
 };
 
 module.exports = { parse };
