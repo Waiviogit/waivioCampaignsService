@@ -4,6 +4,7 @@ const swaggerUi = require('swagger-ui-express');
 const swaggerDocument = require('swagger');
 const cors = require('cors');
 const Sentry = require('@sentry/node');
+const { routes } = require('routes');
 
 require('jobs/matchBotsJob');
 const { sendSentryNotification } = require('utilities/requests/telegramNotificationsRequest');
@@ -34,11 +35,12 @@ module.exports = function (app, express) {
   // ### Sentry enviroments ###
 
   app.use(Sentry.Handlers.requestHandler());
+  app.use('/', routes);
   app.use(Sentry.Handlers.errorHandler({
-    async shouldHandleError(error) {
+    shouldHandleError(error) {
       // Capture 500 errors
       if (error.status >= 500) {
-        await sendSentryNotification();
+        sendSentryNotification();
         return true;
       }
       return false;
@@ -48,7 +50,7 @@ module.exports = function (app, express) {
   app.use((err, req, res, next) => {
     // The error id is attached to `res.sentry` to be returned
     // and optionally displayed to the user for support.
-    res.statusCode = 500;
+    res.statusCode = err.status || 500;
     res.end(`${res.sentry}\n`);
   });
 };

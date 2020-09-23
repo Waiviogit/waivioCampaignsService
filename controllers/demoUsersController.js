@@ -9,18 +9,22 @@ const validators = require('controllers/validators');
  * then parser parsed record from blockchain and a record is created with
  * type 'demo_user_transfer' in the transfer database.
  */
-const transfer = async (req, res) => {
-  const {
-    params,
-    validationError,
-  } = validators.validate(req.body.data, validators.demoUsers.transferSchema);
+const transfer = async (req, res, next) => {
+  try {
+    const {
+      params,
+      validationError,
+    } = validators.validate(req.body.data, validators.demoUsers.transferSchema);
 
-  if (validationError) return renderError(res, { message: validationError });
-  params.demoUser = req.user.name;
-  const { result, error } = await demoUsersHelper.transfer(params);
+    if (validationError) return renderError(res, { message: validationError });
+    params.demoUser = req.user.name;
+    const { result, error } = await demoUsersHelper.transfer(params);
 
-  if (error) renderError(res, { message: error });
-  else renderSuccess(res, { json: { result } });
+    if (error) renderError(res, { message: error });
+    else renderSuccess(res, { json: { result } });
+  } catch (e) {
+    return next({ status: 500, message: e.message });
+  }
 };
 
 module.exports = {

@@ -18,22 +18,26 @@ Optional fields:
   <days> - with this field return all results $lte (today - days)  (default 0)
   <sort> - valid ['payable', 'date'] sort by valid values -1  (default payable)
  */
-const payableHistory = async (req, res) => {
-  const {
-    params,
-    validationError,
-  } = validators.validate(req.body, validators.payables.payablesSchema);
+const payableHistory = async (req, res, next) => {
+  try {
+    const {
+      params,
+      validationError,
+    } = validators.validate(req.body, validators.payables.payablesSchema);
 
-  if (validationError) return renderError(res, validationError);
-  const {
-    histories, payable, amount, hasMore, error,
-  } = await getPayableHistory(params);
+    if (validationError) return renderError(res, validationError);
+    const {
+      histories, payable, amount, hasMore, error,
+    } = await getPayableHistory(params);
 
-  if (error) renderCustomError(res, error);
-  else {
-    renderSuccess(res, {
-      histories, payable, amount, hasMore,
-    });
+    if (error) renderCustomError(res, error);
+    else {
+      renderSuccess(res, {
+        histories, payable, amount, hasMore,
+      });
+    }
+  } catch (e) {
+    return next({ status: 500, message: e.message });
   }
 };
 
@@ -43,61 +47,77 @@ Return payments history for demo users
   <limit> - limit for data which will be found (default 0)
   <userName> - name of demo user
  */
-const demoDeptHistory = async (req, res) => {
-  const {
-    params,
-    validationError,
-  } = validators.validate(req.query, validators.payables.demoDeptSchema);
-  const accessToken = req.headers['access-token'];
-  if (validationError) return renderError(res, validationError);
-  const {
-    histories, payable, error, hasMore,
-  } = await getDemoDebtHistory(params, accessToken);
+const demoDeptHistory = async (req, res, next) => {
+  try {
+    const {
+      params,
+      validationError,
+    } = validators.validate(req.query, validators.payables.demoDeptSchema);
+    const accessToken = req.headers['access-token'];
+    if (validationError) return renderError(res, validationError);
+    const {
+      histories, payable, error, hasMore,
+    } = await getDemoDebtHistory(params, accessToken);
 
-  if (error) renderError(res, { error });
-  else renderSuccess(res, { histories, payable, hasMore });
-};
-
-const transfersHistory = async (req, res) => {
-  const {
-    params,
-    validationError,
-  } = validators.validate(req.query, validators.payables.demoDeptSchema);
-
-  if (validationError) return renderError(res, validationError);
-  const {
-    wallet, error, hasMore, operationNum,
-  } = await getTransfersHistory(params);
-
-  if (error) renderCustomError(res, error);
-  else {
-    renderSuccess(res, {
-      wallet, operationNum, hasMore,
-    });
+    if (error) renderError(res, { error });
+    else renderSuccess(res, { histories, payable, hasMore });
+  } catch (e) {
+    return next({ status: 500, message: e.message });
   }
 };
 
-const report = async (req, res) => {
-  const {
-    params,
-    validationError,
-  } = validators.validate(req.body, validators.payables.reportSchema);
+const transfersHistory = async (req, res, next) => {
+  try {
+    const {
+      params,
+      validationError,
+    } = validators.validate(req.query, validators.payables.demoDeptSchema);
 
-  if (validationError) return renderError(res, validationError);
-  const { result, error } = await getSingleReport(params);
-  if (error) renderCustomError(res, error);
-  else renderSuccess(res, { ...result });
+    if (validationError) return renderError(res, validationError);
+    const {
+      wallet, error, hasMore, operationNum,
+    } = await getTransfersHistory(params);
+
+    if (error) renderCustomError(res, error);
+    else {
+      renderSuccess(res, {
+        wallet, operationNum, hasMore,
+      });
+    }
+  } catch (e) {
+    return next({ status: 500, message: e.message });
+  }
 };
 
-const setPendingTransfer = async (req, res) => {
-  const {
-    params,
-    validationError,
-  } = validators.validate(req.body, validators.payables.pendingTransfer);
-  if (validationError) return renderError(res, validationError);
-  const { result, error } = await pendingTransfer(params);
-  if (error) renderCustomError(res, error);
-  else renderSuccess(res, { result });
+const report = async (req, res, next) => {
+  try {
+    const {
+      params,
+      validationError,
+    } = validators.validate(req.body, validators.payables.reportSchema);
+
+    if (validationError) return renderError(res, validationError);
+    const { result, error } = await getSingleReport(params);
+    if (error) renderCustomError(res, error);
+    else renderSuccess(res, { ...result });
+  } catch (e) {
+    return next({ status: 500, message: e.message });
+  }
+};
+
+const setPendingTransfer = async (req, res, next) => {
+  try {
+    const {
+      params,
+      validationError,
+    } = validators.validate(req.body, validators.payables.pendingTransfer);
+    if (validationError) return renderError(res, validationError);
+    const { result, error } = await pendingTransfer(params);
+    if (error) renderCustomError(res, error);
+    else renderSuccess(res, { result });
+  } catch (e) {
+    return next({ status: 500, message: e.message });
+  }
 };
 
 module.exports = {
