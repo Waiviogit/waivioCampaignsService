@@ -130,6 +130,7 @@ const filterFieldValidation = (filter, field, locale, ownership) => {
 };
 
 const getFieldsToDisplay = (fields, locale, filter, permlink, ownership) => {
+  locale = locale === 'auto' ? 'en-US' : locale;
   const arrayFields = ['categoryItem', 'listItem', 'tagCategory', 'galleryAlbum', 'galleryItem', 'rating', 'button', 'phone'];
   const winningFields = {};
   const filteredFields = _.filter(fields,
@@ -163,20 +164,6 @@ const getFieldsToDisplay = (fields, locale, filter, permlink, ownership) => {
     if (heaviestField) winningFields[id] = heaviestField.body;
   }
   return winningFields;
-};
-
-/** Get info of wobject parent with specific winning fields */
-const getParentInfo = async (wObject, locale, app) => {
-  if (wObject.parent) {
-    // Temporary solution
-    const { result: fullParent } = await wobjectModel.findOne(wObject.parent);
-    wObject.parent = fullParent;
-
-    wObject.parent = await processWobjects({
-      locale, fields: REQUIREDFIELDS_PARENT, wobjects: [_.omit(wObject.parent, 'parent')], returnArray: false, app,
-    });
-  } else wObject.parent = '';
-  return wObject.parent;
 };
 
 /** Parse wobjects to get its winning */
