@@ -1,9 +1,9 @@
 const _ = require('lodash');
-const { wobjectModel } = require('models');
-const paymentHistoriesHelper = require('utilities/helpers/paymentHistoriesHelper');
-const { processWobjects } = require('utilities/helpers/wobjectHelper');
-const { FIELDS_NAMES } = require('constants/wobjectsData');
 const config = require('config');
+const { wobjectModel } = require('models');
+const { FIELDS_NAMES } = require('constants/wobjectsData');
+const { processWobjects } = require('utilities/helpers/wobjectHelper');
+const paymentHistoriesHelper = require('utilities/helpers/paymentHistoriesHelper');
 
 module.exports = async (data) => {
   const {
