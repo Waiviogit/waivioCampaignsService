@@ -27,6 +27,7 @@ module.exports = async (params) => {
     skip,
     limit,
     userName: name,
+    sort: 'date',
   });
 };
 
@@ -45,7 +46,7 @@ const getPrimaryCampaigns = async ({
     allCampaigns: eligibleCampaigns,
     skip,
     limit,
-    sort: 'date',
+    sort,
     userName,
   });
 };
