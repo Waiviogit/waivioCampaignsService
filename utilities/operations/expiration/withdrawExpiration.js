@@ -18,14 +18,13 @@ exports.expireWithdrawRequest = async (_id) => {
   if (!transactions) return redisSetter.saveTTL(`expire:${WITHDRAW_REQUEST}|${_id}`, 15);
 
   const transaction = _.find(transactions, (doc) => doc.outputAddress.toLowerCase() === result.address.toLowerCase());
-  if (transaction) {
-    return withdrawFundsModel.updateOne({ _id },
-      {
-        transactionId: transaction.transactionId,
-        transactionHash: transaction.outputTransactionHash,
-        usdValue: +transaction.inputUsdEquivalent,
-        outputAmount: +transaction.outputAmount,
-      });
+  if (transaction && transaction.outputTransactionHash) {
+    return withdrawFundsModel.updateOne({ _id }, {
+      transactionId: transaction.transactionId,
+      transactionHash: transaction.outputTransactionHash,
+      usdValue: +transaction.inputUsdEquivalent,
+      outputAmount: +transaction.outputAmount,
+    });
   }
   return redisSetter.saveTTL(`expire:${WITHDRAW_REQUEST}|${_id}`, 15);
 };
