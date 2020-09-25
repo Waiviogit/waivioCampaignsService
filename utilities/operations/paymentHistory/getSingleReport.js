@@ -1,6 +1,9 @@
 const _ = require('lodash');
 const { wobjectModel } = require('models');
 const paymentHistoriesHelper = require('utilities/helpers/paymentHistoriesHelper');
+const { processWobjects } = require('utilities/helpers/wobjectHelper');
+const { FIELDS_NAMES } = require('constants/wobjectsData');
+const config = require('config');
 
 module.exports = async (data) => {
   const {
@@ -55,23 +58,17 @@ const prepareReportData = async ({
   };
 };
 
-
 const getObjectsData = async (permlinks) => {
   const { result: wobjects } = await wobjectModel.find({ author_permlink: { $in: permlinks } });
-  const filteredObjects = [];
-  _
-    .chain(wobjects)
-    .forEach((wobj) => {
-      filteredObjects.push({
-        author_permlink: wobj.author_permlink,
-        object_name: _
-          .chain(wobj.fields)
-          .filter((field) => field.name === 'name')
-          .sortBy('weight')
-          .first()
-          .value().body,
-      });
-    })
-    .value();
-  return { wobjects: filteredObjects };
+
+  const filteredObjects = await processWobjects(
+    { wobjects, fields: FIELDS_NAMES.NAME, app: config.waivio_app_name },
+  );
+
+  return {
+    wobjects: _.map(filteredObjects, (obj) => ({
+      author_permlink: obj.author_permlink,
+      object_name: obj.name,
+    })),
+  };
 };
