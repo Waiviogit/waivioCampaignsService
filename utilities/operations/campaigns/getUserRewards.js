@@ -4,7 +4,7 @@ const { campaignHelper } = require('utilities/helpers');
 
 module.exports = async (params) => {
   const {
-    skip, limit, sort, name,
+    skip, limit, name,
   } = params;
   const { wobjects = [] } = await wobjectSubscriptions.getFollowings({ follower: name });
 
@@ -26,8 +26,8 @@ module.exports = async (params) => {
     allCampaigns: resultArr,
     skip,
     limit,
-    sort,
     userName: name,
+    sort: 'date',
   });
 };
 

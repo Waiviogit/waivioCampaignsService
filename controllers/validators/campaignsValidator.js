@@ -157,5 +157,4 @@ exports.validateUserRewardsSchema = Joi.object().keys({
   name: Joi.string().required(),
   skip: Joi.number().default(0),
   limit: Joi.number().default(10),
-  sort: Joi.string().valid('reward', 'date', 'proximity').default('proximity'),
 }).options(options);
