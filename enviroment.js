@@ -6,6 +6,7 @@ const swaggerDocument = require('swagger');
 const cors = require('cors');
 const Sentry = require('@sentry/node');
 const { routes } = require('routes');
+const { siteUserStatistics } = require('middlewares');
 
 require('jobs/matchBotsJob');
 const { sendSentryNotification } = require('utilities/requests/telegramNotificationsRequest');
@@ -45,6 +46,7 @@ module.exports = function (app, express) {
   // ### Sentry enviroments ###
 
   app.use(Sentry.Handlers.requestHandler({ request: true, user: true }));
+  app.use('/', siteUserStatistics.saveUserIp);
   app.use('/', routes);
   app.use(Sentry.Handlers.errorHandler({
     shouldHandleError(error) {

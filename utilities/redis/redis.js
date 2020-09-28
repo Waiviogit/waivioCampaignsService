@@ -10,11 +10,13 @@ const lastBlockClient = redis.createClient(process.env.REDISCLOUD_URL);
 const demoPosts = redis.createClient(process.env.REDISCLOUD_URL);
 const campaigns = redis.createClient(process.env.REDISCLOUD_URL);
 const notifications = redis.createClient(process.env.REDISCLOUD_URL);
+const appUsersStatistics = redis.createClient(process.env.REDISCLOUD_URL);
 
 lastBlockClient.select(config.redis.lastBlock);
 campaigns.select(config.redis.campaigns);
 notifications.select(config.redis.notifications);
 demoPosts.select(config.redis.demoPosts);
+appUsersStatistics.select(config.redis.appDayUsers);
 
 const campaigsPublisher = redis.createClient({ db: config.redis.campaigns });
 const demoPostsPublisher = redis.createClient({ db: config.redis.matchBotUpvotes });
@@ -40,5 +42,11 @@ const subscribeDemoPostsExpired = (onMessageCallBack) => {
 };
 
 module.exports = {
-  lastBlockClient, campaigns, notifications, demoPosts, subscribeDemoPostsExpired, subscribeCampaignExpired,
+  lastBlockClient,
+  campaigns,
+  notifications,
+  demoPosts,
+  subscribeDemoPostsExpired,
+  subscribeCampaignExpired,
+  appUsersStatistics,
 };

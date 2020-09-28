@@ -1,5 +1,7 @@
 const moment = require('moment');
-const { lastBlockClient, campaigns, demoPosts } = require('./redis');
+const {
+  lastBlockClient, campaigns, demoPosts, appUsersStatistics,
+} = require('./redis');
 
 const setLastBlockNum = async (blockNum, name) => {
   if (blockNum) {
@@ -7,6 +9,11 @@ const setLastBlockNum = async (blockNum, name) => {
     await lastBlockClient.publish(name, blockNum);
   }
 };
+
+/**
+ * Set active users to redis for collect statistics and invoicing
+ */
+exports.addSiteActiveUser = async (key, ip) => appUsersStatistics.saddAsync(key, ip);
 
 /**
  * Set TTL to redis about campaign expiration

@@ -14,7 +14,8 @@
       "notifications" : 0,
       "lastBlock": 2,
       "campaigns": 6,
-      "demoPosts": 8
+      "demoPosts": 8,
+      "appDayUsers": 11
     },
     "waivio_app_name": "waivio",
     "blackListApp": "waiviodev",
@@ -40,7 +41,8 @@
       "notifications" : 0,
       "lastBlock": 2,
       "campaigns": 6,
-      "demoPosts": 8
+      "demoPosts": 8,
+      "appDayUsers": 11
     },
     "waivio_app_name": "waiviodev",
     "blackListApp": "waivio",
@@ -66,7 +68,8 @@
       "notifications" : 0,
       "lastBlock": 2,
       "campaigns": 6,
-      "demoPosts": 8
+      "demoPosts": 8,
+      "appDayUsers": 11
     },
     "waivio_app_name": "waiviodev",
     "steemConnectUrl": "http://app.steemconnect.com/api/broadcast",
@@ -92,7 +95,8 @@
       "notifications" : 14,
       "lastBlock": 14,
       "campaigns": 14,
-      "demoPosts": 14
+      "demoPosts": 14,
+      "appDayUsers": 14
     },
     "waivio_app_name": "waiviodev",
     "steemConnectUrl": "http://app.steemconnect.com/api/broadcast",
