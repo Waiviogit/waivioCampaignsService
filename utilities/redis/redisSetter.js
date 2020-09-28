@@ -13,7 +13,7 @@ const setLastBlockNum = async (blockNum, name) => {
 /**
  * Set active users to redis for collect statistics and invoicing
  */
-exports.addSiteActiveUser = async (key, ip) => appUsersStatistics.saddAsync(key, ip);
+const addSiteActiveUser = async (key, ip) => appUsersStatistics.saddAsync(key, ip);
 
 /**
  * Set TTL to redis about campaign expiration
@@ -89,6 +89,7 @@ module.exports = {
   setExpireCampaign,
   setExpireAssign,
   removeExpirationAssign,
+  addSiteActiveUser,
   setSimpleTtl,
   deleteCampaignsData,
   saveTTL,
