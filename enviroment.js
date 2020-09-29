@@ -46,7 +46,7 @@ module.exports = function (app, express) {
   // ### Sentry enviroments ###
 
   app.use(Sentry.Handlers.requestHandler({ request: true, user: true }));
-  app.use('/', siteUserStatistics.saveUserIp);
+  // app.use('/', siteUserStatistics.saveUserIp);
   app.use('/', routes);
   app.use(Sentry.Handlers.errorHandler({
     shouldHandleError(error) {
