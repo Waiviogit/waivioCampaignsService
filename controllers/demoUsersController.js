@@ -13,7 +13,7 @@ const transfer = async (req, res) => {
   const {
     params,
     validationError,
-  } = validators.validate(req.body.data, validators.demoUsers.transferSchema);
+  } = validators.validate(req.body, validators.demoUsers.transferSchema);
 
   if (validationError) return renderError(res, { message: validationError });
   params.demoUser = req.user.name;
