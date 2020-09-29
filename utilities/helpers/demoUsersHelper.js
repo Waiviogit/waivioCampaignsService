@@ -11,7 +11,7 @@ exports.transfer = async ({
 
   if (data.amount > payable) return { error: 'The amount more than dept' };
   if (data.amount > fromData.balance.match(/.\d*.\d*/)[0]) return { error: 'Not enough balance' };
-  const demoMemo = app ? `{"id":"${id}", "from":"${demoUser}","to":"${data.to}", "message":"${data.memo}", "app": "${app}"`
+  const demoMemo = app ? `{"id":"${id}", "from":"${demoUser}","to":"${data.to}", "message":"${data.memo}", "app": "${app}"}`
     : `{"id":"${id}", "from":"${demoUser}","to":"${data.to}", "message":"${data.memo}"}`;
 
   return steemHelper.transfer({
