@@ -1,4 +1,5 @@
 const mongoose = require('mongoose');
+const db = require('database/db_Connection');
 const _ = require('lodash');
 const { REFERRAL_TYPES } = require('constants/constants');
 
@@ -114,6 +115,6 @@ AppSchema.pre('save', async function (doc) {
   }
 });
 
-const AppModel = mongoose.model('App', AppSchema);
+const AppModel = db.model('App', AppSchema);
 
 module.exports = AppModel;
