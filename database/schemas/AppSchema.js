@@ -1,6 +1,6 @@
 const mongoose = require('mongoose');
 const _ = require('lodash');
-const { REFERRAL_TYPES } = require('constants/referralData');
+const { REFERRAL_TYPES } = require('constants/constants');
 
 const { Schema } = mongoose;
 
