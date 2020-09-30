@@ -55,7 +55,7 @@ module.exports = function (app, express) {
     if (origin) {
       origin = origin.replace('www.', '').replace('https://', '').replace('http://', '');
     } else origin = config.appHost;
-    
+
     session.set('host', origin);
     next();
   });
