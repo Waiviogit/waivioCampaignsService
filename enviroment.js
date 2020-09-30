@@ -51,10 +51,10 @@ module.exports = function (app, express) {
     session.run(() => next());
   });
   app.use((req, res, next) => {
-    let { origin } = req.headers;
+    let { origin, host } = req.headers;
     if (origin) {
       origin = origin.replace('www.', '').replace('https://', '').replace('http://', '');
-    } else origin = config.appHost;
+    } else origin = host;
 
     session.set('host', origin);
     next();
