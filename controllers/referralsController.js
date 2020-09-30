@@ -3,8 +3,7 @@ const { referrals: { getDetails, getStatus, checkBlackList } } = require('utilit
 const { renderSuccess, renderError, renderCustomError } = require('concerns/renderConcern');
 
 const details = async (req, res) => {
-  if (!req.headers.host) return renderError(res, { error: 'Host is required' });
-  const { result, error } = await getDetails(req.headers.host);
+  const { result, error } = await getDetails();
 
   if (error) renderCustomError(res, error);
   else renderSuccess(res, result);

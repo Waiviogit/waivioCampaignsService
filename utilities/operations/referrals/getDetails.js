@@ -1,8 +1,11 @@
 const _ = require('lodash');
+const { getNamespace } = require('cls-hooked');
 const { REFERRAL_TYPES, SUSPENDED_DAYS } = require('constants/constants');
 const { appModel } = require('models');
 
-module.exports = async (host) => {
+module.exports = async () => {
+  const session = getNamespace('request-session');
+  const host = session.get('host');
   const { error, result } = await appModel.findOne(host);
   if (error || !result) return { error: error || { status: 404, message: 'App not found!' } };
   const campaignPercent = _.get(result, 'app_commissions.campaigns_percent', 0.3);
