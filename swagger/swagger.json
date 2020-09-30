@@ -452,13 +452,6 @@
           "application/json"
         ],
         "description": "Get details for referral at rewards page",
-        "parameters": [{
-          "description": "Name of app",
-          "name": "appName",
-            "in": "query",
-            "type": "string",
-            "required": true
-          }],
         "responses": {
           "200": {
             "description": "successful operation",
