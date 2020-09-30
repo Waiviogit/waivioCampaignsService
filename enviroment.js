@@ -50,7 +50,7 @@ module.exports = function (app, express) {
     session.run(() => next());
   });
   app.use((req, res, next) => {
-    session.set('host', req.headers.host.replace('www.', ''));
+    session.set('host', req.headers.origin.replace('www.', '').replace('https://', '').replace('http://', ''));
     next();
   });
 
