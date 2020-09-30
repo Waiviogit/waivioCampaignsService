@@ -1,4 +1,5 @@
 const logger = require('morgan');
+const config = require('config');
 const { runStream, runStreamRest } = require('processor/processor');
 const Tracing = require('@sentry/tracing');
 const swaggerUi = require('swagger-ui-express');
@@ -53,7 +54,8 @@ module.exports = function (app, express) {
     let { origin } = req.headers;
     if (origin) {
       origin = origin.replace('www.', '').replace('https://', '').replace('http://', '');
-    }
+    } else origin = config.appHost;
+    
     session.set('host', origin);
     next();
   });
