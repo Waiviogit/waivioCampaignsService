@@ -26,7 +26,7 @@ const blackList = async (req, res) => {
   const {
     params,
     validationError,
-  } = validators.validate(Object.assign(req.query, { host: req.headers.host }), validators.referrals.blackListSchema);
+  } = validators.validate(req.query, validators.referrals.blackListSchema);
   if (validationError) return renderError(res, { message: validationError });
 
   const { isBlacklisted, error } = await checkBlackList(params);
