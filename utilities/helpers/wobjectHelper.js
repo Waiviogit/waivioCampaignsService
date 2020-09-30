@@ -1,4 +1,5 @@
 const _ = require('lodash');
+const { getNamespace } = require('cls-hooked');
 const { wobjectModel, appModel } = require('models');
 const {
   REQUIREDFIELDS_PARENT, MIN_PERCENT_TO_SHOW_UPGATE,
@@ -204,7 +205,10 @@ const getWobjects = async ({
       _.map(campaigns, 'requiredObject'), forSecondary && needProcess ? _.map(campaigns, 'objects') : [],
     ),
   );
-  const { app } = await appModel.findOne(appName);
+
+  const session = getNamespace('request-session');
+  const host = session.get('host');
+  const { app } = await appModel.findOne(host);
 
   let { result: wobjects } = await wobjectModel.find(
     { author_permlink: { $in: _.uniq(objects) } },

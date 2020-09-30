@@ -23,7 +23,8 @@
     "nodeUrl": "https://anyx.io/",
     "waivioUrl": "https://www.waivio.com/",
     "withdrawUrl": "https://waiviodev.com/",
-    "swaggerHost": "www.waivio.com"
+    "swaggerHost": "www.waivio.com",
+    "appHost": "waivio.com"
   },
 
   "staging" : {
@@ -50,7 +51,8 @@
     "nodeUrl": "https://anyx.io/",
     "waivioUrl": "https://waiviodev.com/",
     "swaggerHost": "waiviodev.com",
-    "withdrawUrl": "https://www.waivio.com/"
+    "withdrawUrl": "https://www.waivio.com/",
+    "appHost": "waiviodev.com"
   },
 
   "development": {
@@ -77,7 +79,8 @@
     "blackListApp": "test",
     "waivioUrl": "https://waiviodev.com/",
     "swaggerHost": "localhost:8099",
-    "withdrawUrl": "http://localhost:8099/"
+    "withdrawUrl": "http://localhost:8099/",
+    "appHost": "waiviodev.com"
   },
 
   "test": {
@@ -104,6 +107,7 @@
     "nodeUrl": "https://anyx.io/",
     "blackListApp": "test",
     "waivioUrl": "https://waiviodev.com/",
-    "withdrawUrl": "http://localhost:8099/"
+    "withdrawUrl": "http://localhost:8099/",
+    "appHost": "waiviodev.com"
   }
 }

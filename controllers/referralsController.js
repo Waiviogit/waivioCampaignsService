@@ -1,10 +1,10 @@
 const validators = require('controllers/validators');
-const { referrals: { getDetails, getStatus } } = require('utilities/operations');
+const { referrals: { getDetails, getStatus, checkBlackList } } = require('utilities/operations');
 const { renderSuccess, renderError, renderCustomError } = require('concerns/renderConcern');
 
 const details = async (req, res) => {
-  if (!req.query.appName) return renderError(res, { error: 'Name of app is required' });
-  const { result, error } = await getDetails(req.query.appName);
+  if (!req.headers.host) return renderError(res, { error: 'Host is required' });
+  const { result, error } = await getDetails(req.headers.host);
 
   if (error) renderCustomError(res, error);
   else renderSuccess(res, result);
@@ -23,4 +23,17 @@ const status = async (req, res) => {
   else renderSuccess(res, { users, hasMore });
 };
 
-module.exports = { details, status };
+const blackList = async (req, res) => {
+  const {
+    params,
+    validationError,
+  } = validators.validate(Object.assign(req.query, { host: req.headers.host }), validators.referrals.blackListSchema);
+  if (validationError) return renderError(res, { message: validationError });
+
+  const { isBlacklisted, error } = await checkBlackList(params);
+
+  if (error) renderCustomError(res, error);
+  else renderSuccess(res, { isBlacklisted });
+};
+
+module.exports = { details, status, blackList };

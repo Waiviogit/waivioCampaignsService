@@ -55,7 +55,7 @@ const campaignSchema = new Schema({
   status: { type: String, enum: Object.values(CAMPAIGN_STATUSES), default: 'pending' },
   note: { type: String, maxlength: 256 },
   compensationAccount: { type: String },
-  campaign_server: { type: String, default: config.waivio_app_name },
+  campaign_server: { type: String, default: config.appHost },
   budget: {
     type: Float, required: true, min: 0.001, max: 10000,
   },

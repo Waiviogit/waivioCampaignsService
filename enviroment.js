@@ -3,6 +3,7 @@ const { runStream, runStreamRest } = require('processor/processor');
 const Tracing = require('@sentry/tracing');
 const swaggerUi = require('swagger-ui-express');
 const swaggerDocument = require('swagger');
+const { createNamespace } = require('cls-hooked');
 const cors = require('cors');
 const Sentry = require('@sentry/node');
 const { routes } = require('routes');
@@ -22,6 +23,7 @@ module.exports = function (app, express) {
       new Tracing.Integrations.Express({ app }),
     ],
   });
+
   app.use(cors());
   app.use(logger('dev'));
   app.use(express.json());
@@ -43,8 +45,16 @@ module.exports = function (app, express) {
     });
   }
 
-  // ### Sentry enviroments ###
+  const session = createNamespace('request-session');
+  app.use((req, res, next) => {
+    session.run(() => next());
+  });
+  app.use((req, res, next) => {
+    session.set('host', req.headers.host.replace('www.', ''));
+    next();
+  });
 
+  // ### Sentry enviroments ###
   app.use(Sentry.Handlers.requestHandler({ request: true, user: true }));
   app.use('/', siteUserStatistics.saveUserIp);
   app.use('/', routes);

@@ -62,5 +62,6 @@ mailerRoutes.route('/confirm-email-request').post(mailerController.confirmEmailR
 
 referralRoutes.route('/details').get(referralsController.details);
 referralRoutes.route('/status').get(referralsController.status);
+referralRoutes.route('/check-user-app-blacklist').get(referralsController.blackList);
 
 module.exports = apiRoutes;

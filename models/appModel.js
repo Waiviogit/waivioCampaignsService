@@ -1,8 +1,8 @@
 const { App } = require('database').models;
 
-exports.findOne = async (name) => {
+exports.findOne = async (host) => {
   try {
-    return { result: await App.findOne({ name }).lean() };
+    return { result: await App.findOne({ host }).lean() };
   } catch (error) {
     return { error };
   }

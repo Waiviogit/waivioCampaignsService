@@ -324,8 +324,8 @@ const commissionRecords = async (reward, commission, server_acc, referralAgent) 
   return payables;
 };
 
-const getCommissions = async (appName) => {
-  const { result } = await appModel.findOne(appName);
+const getCommissions = async (appHost) => {
+  const { result } = await appModel.findOne(appHost);
   const commissions = {
     indexCommission: _.get(result, 'app_commissions.index_percent', 0.2),
     indexAccount: _.get(result, 'app_commissions.index_commission_acc', 'waivio.index'),

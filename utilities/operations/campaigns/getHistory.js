@@ -31,7 +31,7 @@ const getMatchData = ({
 /** In this method we get conversations by user campaign reservation,
  * and fill conversations by some keys, like lastReply, firstAppeal etc. */
 const getConversationsFromHive = async (campaigns) => {
-  const { result: { service_bots = [] } } = await appModel.findOne(config.waivio_app_name);
+  const { result: { service_bots = [] } } = await appModel.findOne(config.appHost);
   const botsArray = _.compact(_.map(service_bots, (bot) => {
     if (_.includes(bot.roles, 'proxyBot')) return bot.name;
   }));
