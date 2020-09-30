@@ -20,7 +20,7 @@ module.exports = async (host) => {
     result: {
       referralDuration: _.get(rewardsReferral, 'duration', 90),
       campaignServerPercent: campaignPercent * 100,
-      indexAbsolutePercent: indexPercent,
+      indexAbsolutePercent: indexPercent * 100,
       indexServerPercent,
       referralServerPercent,
       suspendedTimer: SUSPENDED_DAYS,
