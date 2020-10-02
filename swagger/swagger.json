@@ -443,6 +443,62 @@
         }
       }
     },
+    "/campaign/review-check/{campaignId}" : {
+      "get": {
+        "tags": [
+          "Campaign"
+        ],
+        "produces": [
+          "application/json"
+        ],
+        "description": "Get fields from campaign for review check.\nIf checking on creating review send only **userName** in query.\nIf checking on editing review send **postPermlink** too",
+        "parameters": [
+          {
+            "name": "campaignId",
+            "in": "path",
+            "type": "string",
+            "required": true
+          },{
+            "in": "query",
+            "name": "userName",
+            "description": "authorised user name",
+            "type": "string",
+            "required": true
+          },
+          {
+            "in": "query",
+            "name": "postPermlink",
+            "description": "permlink to review",
+            "type": "string",
+            "required": false
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "successful operation",
+            "schema": {
+              "$ref": "#/definitions/review-check"
+            }
+          },
+          "404": {
+            "description": "Not found",
+            "schema": {
+              "type": "object",
+              "example": {
+                "success": false,
+                "message": "Campaign not found"
+              }
+            }
+          },
+          "500": {
+            "description": "Error",
+            "schema": {
+              "$ref": "#/definitions/serverError"
+            }
+          }
+        }
+      }
+    },
     "/referrals/details": {
       "get": {
         "tags": [
@@ -7283,6 +7339,84 @@
         "createdAt": "2019-08-02T12:26:13.522Z",
         "updatedAt": "2019-08-02T12:26:13.522Z",
         "__v": 0
+      }
+    },
+    "review-check": {
+      "type": "object",
+      "properties": {
+        "campaign": {
+          "type": "object",
+          "properties": {
+            "_id": {
+              "type": "string"
+            },
+            "alias" : {
+              "type": "string"
+            },
+            "app" : {
+              "type": "string"
+            },
+            "name" : {
+              "type": "string"
+            },
+            "guideName" : {
+              "type": "string"
+            },
+            "requiredObject" : {
+              "type": "object",
+              "properties": {
+                "author_permlink": {
+                  "type": "string"
+                },
+                "name": {
+                  "type": "string"
+                },
+                "object_type": {
+                  "type": "string"
+                }
+              }
+            },
+            "secondaryObject" : {
+              "type": "object",
+              "properties": {
+                "author_permlink": {
+                  "type": "string"
+                },
+                "name": {
+                  "type": "string"
+                },
+                "object_type": {
+                  "type": "string"
+                }
+              }
+            },
+            "requirements" : {
+              "type": "object",
+              "properties": {
+                "receiptPhoto": {
+                  "type": "boolean"
+                },
+                "minPhotos": {
+                  "type": "number"
+                }
+              }
+            },
+            "userRequirements" : {
+              "type": "object",
+              "properties": {
+                "minPosts": {
+                  "type": "number"
+                },
+                "minFollowers": {
+                  "type": "number"
+                },
+                "userRequirements": {
+                  "type": "number"
+                }
+              }
+            }
+          }
+        }
       }
     },
     "report200": {
