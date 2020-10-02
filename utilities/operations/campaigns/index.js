@@ -9,4 +9,5 @@ module.exports = {
   getEligibleCampaigns: require('./getEligibleCampaigns'),
   getHistory: require('./getHistory'),
   getUserRewards: require('./getUserRewards'),
+  checkingReview: require('./checkingReview'),
 };
