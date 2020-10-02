@@ -1,5 +1,5 @@
 const rewire = require('rewire');
-const { REFERRAL_TYPES } = require('../../../constants/constants.js');
+const { REFERRAL_TYPES } = require('constants/constants');
 
 const paymentsHelper = rewire('utilities/helpers/paymentsHelper');
 const distributeReward = paymentsHelper.__get__('distributeReward');
@@ -33,7 +33,7 @@ describe('PaymentsHelper', async () => {
 
     it('return with waivio fee and referrals', async () => {
       const { payables } = await distributeReward({
-        reviwer, reward: 10, commission: 0.05, server_acc: app.name,
+        reviwer, reward: 10, commission: 0.05, server_acc: app.host,
       });
       expect(payables.length).to.be.eq(4);
       expect(payables[0].account).to.be.eq(reviwer);
@@ -46,7 +46,7 @@ describe('PaymentsHelper', async () => {
 
     it('return with campaign server fee', async () => {
       const { payables } = await distributeReward({
-        reviwer, reward: 10, server_acc: app.name, commission: 0.05,
+        reviwer, reward: 10, server_acc: app.host, commission: 0.05,
       });
       expect(payables.length).to.be.eq(4);
       expect(payables[0].account).to.be.eq(reviwer);
@@ -74,7 +74,7 @@ describe('PaymentsHelper', async () => {
       const { payables } = await distributeReward({
         reviwer,
         reward: 10,
-        server_acc: app.name,
+        server_acc: app.host,
         referral_acc: referral,
         commission: 0.05,
       });
@@ -96,7 +96,7 @@ describe('PaymentsHelper', async () => {
         },
       });
       const { payables } = await distributeReward({
-        reviwer, reward: 10, server_acc: app1.name, referral_acc: 'app2', commission: 0.05,
+        reviwer, reward: 10, server_acc: app1.host, referral_acc: 'app2', commission: 0.05,
       });
       expect(payables.length).to.be.eq(4);
       expect(payables[0].account).to.be.eq(reviwer);
@@ -114,7 +114,7 @@ describe('PaymentsHelper', async () => {
     it('should not return referral payable if it = 0', async () => {
       const app2 = await AppFactory.Create({ name: 'app1', indexCommission: 1, campaignCommission: 0.5 });
       const { payables } = await distributeReward({
-        reviwer, reward: 10, server_acc: app2.name, referral_acc: 'app', commission: 0.05,
+        reviwer, reward: 10, server_acc: app2.host, referral_acc: 'app', commission: 0.05,
       });
       const referralPayment = _.find(payables, (payable) => payable.account === 'app');
       expect(referralPayment).to.be.undefined;
@@ -123,7 +123,7 @@ describe('PaymentsHelper', async () => {
     it('should return eq index and campaign commission', async () => {
       const app2 = await AppFactory.Create({ indexCommission: 1, campaignCommission: 0.5 });
       const { payables } = await distributeReward({
-        reviwer, reward: 10, server_acc: app2.name, referral_acc: 'app', commission: 0.05,
+        reviwer, reward: 10, server_acc: app2.host, referral_acc: 'app', commission: 0.05,
       });
       const indexPayment = _.find(payables,
         (payable) => payable.account === app.app_commissions.index_commission_acc);
@@ -135,7 +135,7 @@ describe('PaymentsHelper', async () => {
     it('return with maximum referral server fee', async () => {
       const app1 = await AppFactory.Create({ indexCommission: 0, campaignCommission: 0 });
       const { payables } = await distributeReward({
-        reviwer, reward: 10, server_acc: app1.name, commission: 0.05,
+        reviwer, reward: 10, server_acc: app1.host, commission: 0.05,
       });
       const referralPayment = _.find(payables,
         (payable) => payable.account === app1.app_commissions.referral_commission_acc);
@@ -145,7 +145,7 @@ describe('PaymentsHelper', async () => {
     it('return with maximum campaign server fee', async () => {
       const app1 = await AppFactory.Create({ indexCommission: 1, campaignCommission: 1 });
       const { payables } = await distributeReward({
-        reviwer, reward: 10, server_acc: app1.name, commission: 0.05,
+        reviwer, reward: 10, server_acc: app1.host, commission: 0.05,
       });
       const campaignPayment = _.find(payables,
         (payable) => payable.account === app1.app_commissions.campaigns_server_acc);
@@ -154,7 +154,7 @@ describe('PaymentsHelper', async () => {
     it('should not create index fee if campaign fee eq 1', async () => {
       const app1 = await AppFactory.Create({ indexCommission: 1, campaignCommission: 1 });
       const { payables } = await distributeReward({
-        reviwer, reward: 10, server_acc: app1.name, commission: 0.05,
+        reviwer, reward: 10, server_acc: app1.host, commission: 0.05,
       });
       const indexPayment = _.find(payables,
         (payable) => payable.account === app1.app_commissions.index_commission_acc);
@@ -164,7 +164,7 @@ describe('PaymentsHelper', async () => {
       const { payables } = await distributeReward({
         reviwer,
         reward: 10,
-        server_acc: app.name,
+        server_acc: app.host,
         beneficiaries,
         commission: 0.05,
       });
@@ -179,7 +179,7 @@ describe('PaymentsHelper', async () => {
       const { payables } = await distributeReward({
         reviwer,
         reward: 10,
-        server_acc: app.name,
+        server_acc: app.host,
         beneficiaries,
         commission: 0.05,
       });
@@ -217,7 +217,7 @@ describe('PaymentsHelper', async () => {
         },
       });
       const { payables } = await distributeReward({
-        reviwer, reward: 10, server_acc: app1.name, referral_acc: 'app', commission: 1,
+        reviwer, reward: 10, server_acc: app1.host, referral_acc: 'app', commission: 1,
       });
       expect(payables.length).to.be.eq(4);
       expect(payables[0].account).to.be.eq(reviwer);

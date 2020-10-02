@@ -178,10 +178,10 @@ const processWobjects = async ({
   await Promise.all(wobjects.map(async (obj) => {
     /** Get app admins, wobj administrators, which was approved by app owner(creator) */
     const ownership = _.intersection(
-      _.get(obj, 'authority.ownership', []), _.get(app, 'authority.ownership', []),
+      _.get(obj, 'authority.ownership', []), _.get(app, 'authority', []),
     );
     const administrative = _.intersection(
-      _.get(obj, 'authority.administrative', []), _.get(app, 'authority.administrative', []),
+      _.get(obj, 'authority.administrative', []), _.get(app, 'authority', []),
     );
 
     obj.fields = addDataToFields(obj.fields, fields, admins, ownership, administrative);

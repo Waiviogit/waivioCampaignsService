@@ -16,8 +16,7 @@ describe('On wobjectHelper', async () => {
     ownership = faker.name.firstName();
     app = await AppFactory.Create({
       admins: [admin, admin2],
-      ownership: [ownership],
-      administrative: [administrative],
+      authority: [ownership, administrative],
     });
   });
   describe('getUpdates without adminVotes and filters', async () => {

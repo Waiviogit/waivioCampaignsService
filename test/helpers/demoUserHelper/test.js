@@ -26,21 +26,21 @@ describe('demoUserHelper', async () => {
     it('should be return success', async () => {
       sinon.stub(steemHelper, 'getAccountInfo').returns(Promise.resolve(userInfoStub));
       sinon.stub(steemHelper, 'transfer').returns(Promise.resolve({ result: true }));
-      const { result } = await demoUsersHelper.transfer({ demoUser, to, amount });
+      const { result } = await demoUsersHelper.transfer({ demoUser, data: { to, amount } });
       expect(result).to.be.true;
     });
     it('should be return success with amount eq dept', async () => {
       amount = 10.45;
       sinon.stub(steemHelper, 'getAccountInfo').returns(Promise.resolve(userInfoStub));
       sinon.stub(steemHelper, 'transfer').returns(Promise.resolve({ result: true }));
-      const { result } = await demoUsersHelper.transfer({ demoUser, to, amount });
+      const { result } = await demoUsersHelper.transfer({ demoUser, data: { to, amount } });
       expect(result).to.be.true;
     });
     it('should be return error if amount more than real dept', async () => {
       amount = 10.5;
       sinon.stub(steemHelper, 'getAccountInfo').returns(Promise.resolve(userInfoStub));
       sinon.stub(steemHelper, 'transfer').returns(Promise.resolve({ result: true }));
-      const { error } = await demoUsersHelper.transfer({ demoUser, to, amount });
+      const { error } = await demoUsersHelper.transfer({ demoUser, data: { to, amount } });
       expect(error).to.be.exist;
     });
     it('should be return error if amount more than bot balance', async () => {
@@ -50,19 +50,19 @@ describe('demoUserHelper', async () => {
       amount = 11.5;
       sinon.stub(steemHelper, 'getAccountInfo').returns(Promise.resolve(userInfoStub));
       sinon.stub(steemHelper, 'transfer').returns(Promise.resolve({ result: true }));
-      const { error } = await demoUsersHelper.transfer({ demoUser, to, amount });
+      const { error } = await demoUsersHelper.transfer({ demoUser, data: { to, amount } });
       expect(error).to.be.exist;
     });
     it('should be return error with transfer error', async () => {
       sinon.stub(steemHelper, 'getAccountInfo').returns(Promise.resolve(userInfoStub));
       sinon.stub(steemHelper, 'transfer').returns(Promise.resolve({ error: { message: 'some_error' } }));
-      const { error } = await demoUsersHelper.transfer({ demoUser, to, amount });
+      const { error } = await demoUsersHelper.transfer({ demoUser, data: { to, amount } });
       expect(error).to.be.eql({ message: 'some_error' });
     });
     it('should be return error with without dept records', async () => {
       sinon.stub(steemHelper, 'getAccountInfo').returns(Promise.resolve(userInfoStub));
       sinon.stub(steemHelper, 'transfer').returns(Promise.resolve({ result: true }));
-      const { error } = await demoUsersHelper.transfer({ demoUser: 'eugenezh', to: 'qwertyuiop[45678', amount });
+      const { error } = await demoUsersHelper.transfer({ demoUser: 'eugenezh', data: { to: 'qwertyuiop[45678', amount } });
       expect(error).to.be.exist;
     });
   });
