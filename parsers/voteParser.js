@@ -16,7 +16,7 @@ exports.parse = async (votes) => {
       const { result } = await campaignModel.findOne({
         payments: { $elemMatch: { postPermlink: vote.permlink, rootAuthor: vote.author } },
       });
-      const { result: existedTTL } = await redisGetter.getTTLData(`${DOWNVOTE_ON_REVIEW}|${vote.author}|${vote.permlink}`);
+      const { result: existedTTL } = await redisGetter.getTTLData(`expire:${DOWNVOTE_ON_REVIEW}|${vote.author}|${vote.permlink}`);
       if (!result || _.isString(existedTTL)) return;
 
       const post = await steemHelper.getPostInfo({ author: vote.author, permlink: vote.permlink });
