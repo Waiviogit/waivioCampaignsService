@@ -2477,4 +2477,139 @@ describe('route /campaigns-api/rewards/:userName', async () => {
     const { body: { campaigns: [returnedCampaign] } } = await chai.request(app).get(`/campaigns-api/rewards/${user.name}`);
     expect(returnedCampaign).to.be.undefined;
   });
+
+  describe('on route /campaign/review-check/:campaignId', async () => {
+    let campaign, users, primaryObject, secondaryObject, userName, sponsor, alias, payments, postPermlink;
+    describe('when send userName without postPermlink', async () => {
+      beforeEach(async () => {
+        await dropDatabase();
+        alias = faker.name.firstName();
+        userName = faker.name.firstName();
+        primaryObject = await WobjectFactory.Create();
+        secondaryObject = await WobjectFactory.Create();
+        sponsor = await UserFactory.Create({ alias });
+        users = [{
+          name: userName,
+          status: 'assigned',
+          object_permlink: secondaryObject.author_permlink,
+          hiveCurrency: 1,
+          rewardRaisedBy: 0,
+          permlink: faker.random.string(),
+          _id: new ObjectID(),
+        }];
+        campaign = await CampaignFactory.Create({
+          requiredObject: primaryObject.author_permlink,
+          users,
+          guideName: sponsor.name,
+          app: faker.random.string(),
+          objects: [secondaryObject.author_permlink],
+        });
+      });
+      it('should return status code 200', async () => {
+        const res = await chai.request(app).get(`/campaigns-api/campaign/review-check/${campaign._id}`)
+          .query({ userName });
+        expect(res).to.have.status(200);
+      });
+      it('should return status code 422', async () => {
+        const res = await chai.request(app).get(`/campaigns-api/campaign/review-check/${campaign._id}`);
+        expect(res).to.have.status(422);
+      });
+      it('should return status code 404', async () => {
+        const res = await chai.request(app).get(`/campaigns-api/campaign/review-check/${faker.random.string()}`)
+          .query({ userName });
+        expect(res).to.have.status(404);
+      });
+      it('alias should be same', async () => {
+        ({ body: { campaign } } = await chai.request(app).get(`/campaigns-api/campaign/review-check/${campaign._id}`)
+          .query({ userName }));
+        expect(campaign.alias).to.be.eq(alias);
+      });
+      it('response should have requiredObject', async () => {
+        const wobjFields = {
+          author_permlink: primaryObject.author_permlink,
+          name: primaryObject.default_name,
+          object_type: primaryObject.object_type,
+        };
+        ({ body: { campaign } } = await chai.request(app).get(`/campaigns-api/campaign/review-check/${campaign._id}`)
+          .query({ userName }));
+        expect(campaign.requiredObject).to.be.deep.eq(wobjFields);
+      });
+      it('response should have secondaryObject', async () => {
+        const wobjFields = {
+          author_permlink: secondaryObject.author_permlink,
+          name: secondaryObject.default_name,
+          object_type: secondaryObject.object_type,
+        };
+        ({ body: { campaign } } = await chai.request(app).get(`/campaigns-api/campaign/review-check/${campaign._id}`)
+          .query({ userName }));
+        expect(campaign.secondaryObject).to.be.deep.eq(wobjFields);
+      });
+    });
+    describe('when send userName and postPermlink', async () => {
+      beforeEach(async () => {
+        await dropDatabase();
+        alias = faker.name.firstName();
+        userName = faker.name.firstName();
+        postPermlink = faker.random.string();
+        primaryObject = await WobjectFactory.Create();
+        secondaryObject = await WobjectFactory.Create();
+        sponsor = await UserFactory.Create({ alias });
+        payments = [{
+          objectPermlink: secondaryObject.author_permlink,
+          reservationId: new ObjectID(),
+          userName,
+          rootAuthor: userName,
+          postTitle: faker.random.string(),
+          postPermlink,
+        }];
+        campaign = await CampaignFactory.Create({
+          requiredObject: primaryObject.author_permlink,
+          payments,
+          guideName: sponsor.name,
+          app: faker.random.string(),
+          objects: [secondaryObject.author_permlink],
+        });
+      });
+      it('should return status code 200', async () => {
+        const res = await chai.request(app).get(`/campaigns-api/campaign/review-check/${campaign._id}`)
+          .query({ userName, postPermlink });
+        expect(res).to.have.status(200);
+      });
+      it('should return status code 422', async () => {
+        const res = await chai.request(app).get(`/campaigns-api/campaign/review-check/${campaign._id}`)
+          .query({ postPermlink });
+        expect(res).to.have.status(422);
+      });
+      it('should return status code 404', async () => {
+        const res = await chai.request(app).get(`/campaigns-api/campaign/review-check/${faker.random.string()}`)
+          .query({ userName, postPermlink });
+        expect(res).to.have.status(404);
+      });
+      it('alias should be same', async () => {
+        ({ body: { campaign } } = await chai.request(app).get(`/campaigns-api/campaign/review-check/${campaign._id}`)
+          .query({ userName, postPermlink }));
+        expect(campaign.alias).to.be.eq(alias);
+      });
+      it('response should have requiredObject', async () => {
+        const wobjFields = {
+          author_permlink: primaryObject.author_permlink,
+          name: primaryObject.default_name,
+          object_type: primaryObject.object_type,
+        };
+        ({ body: { campaign } } = await chai.request(app).get(`/campaigns-api/campaign/review-check/${campaign._id}`)
+          .query({ userName, postPermlink }));
+        expect(campaign.requiredObject).to.be.deep.eq(wobjFields);
+      });
+      it('response should have secondaryObject', async () => {
+        const wobjFields = {
+          author_permlink: secondaryObject.author_permlink,
+          name: secondaryObject.default_name,
+          object_type: secondaryObject.object_type,
+        };
+        ({ body: { campaign } } = await chai.request(app).get(`/campaigns-api/campaign/review-check/${campaign._id}`)
+          .query({ userName, postPermlink }));
+        expect(campaign.secondaryObject).to.be.deep.eq(wobjFields);
+      });
+    });
+  });
 });

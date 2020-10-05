@@ -158,3 +158,10 @@ exports.validateUserRewardsSchema = Joi.object().keys({
   skip: Joi.number().default(0),
   limit: Joi.number().default(10),
 }).options(options);
+
+exports.validateCheckReviewSchema = Joi.object().keys({
+  _id: Joi.string().required(),
+  userName: Joi.string().required(),
+  postPermlink: Joi.string(),
+  locale: Joi.string(),
+}).options(options);

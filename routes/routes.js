@@ -32,6 +32,7 @@ campaignsRoutes.route('/statistics').get(campaignsController.getCampaignsStatist
 campaignsRoutes.route('/statistics').post(campaignsController.getCampaignsStatistic);
 campaignsRoutes.route('/campaigns/all').post(campaignsController.allCampaigns);
 campaignsRoutes.route('/campaign/:campaign_id').get(campaignsController.show);
+campaignsRoutes.route('/campaign/review-check/:campaignId').get(campaignsController.checkReview);
 campaignsRoutes.route('/campaigns/history').post(campaignsController.history);
 campaignsRoutes.route('/create_campaign').post(campaignsController.create);
 campaignsRoutes.route('/rewards/:userName').get(campaignsController.userRewards);

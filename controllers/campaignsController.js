@@ -5,10 +5,11 @@ const {
   renderSuccess,
   renderError,
   renderNotFound,
+  renderCustomError,
 } = require('concerns/renderConcern');
 const {
   campaigns: {
-    getDashboard, getCampaign, createCampaign, getDataForFirstLoad,
+    getDashboard, getCampaign, createCampaign, getDataForFirstLoad, checkingReview,
     getReservedCampaigns, getAllCampaigns, getEligibleCampaigns, getHistory, getUserRewards,
   },
 } = require('utilities/operations');
@@ -238,6 +239,19 @@ const userRewards = async (req, res) => {
   });
 };
 
+const checkReview = async (req, res) => {
+  const { params, validationError } = validators
+    .validate({
+      ...req.query,
+      _id: req.params.campaignId,
+      locale: req.headers.locale,
+    }, validators.campaigns.validateCheckReviewSchema);
+  if (validationError) return renderError(res, validationError);
+  const { campaign, error } = await checkingReview(params);
+  if (error)renderCustomError(res, error);
+  renderSuccess(res, { campaign });
+};
+
 module.exports = {
   validateRejectAssignCampaign,
   validateActivationCampaign,
@@ -248,6 +262,7 @@ module.exports = {
   eligibleCampaigns,
   reservedCampaigns,
   allCampaigns,
+  checkReview,
   userRewards,
   destroy,
   history,
