@@ -50,11 +50,12 @@ const fillObjects = ({ wobjects, primaryPermlink, secondaryPermlink }) => {
 const getGuideAlias = async (name) => {
   const { user } = await userModel.findOne(name);
   if (!user) return '';
+  if (user.alias) return user.alias;
   try {
     const metadata = user.posting_json_metadata
       ? JSON.parse(user.posting_json_metadata)
       : JSON.parse(user.json_metadata);
-    return user.alias || _.get(metadata, 'profile.name', '');
+    return _.get(metadata, 'profile.name', '');
   } catch (e) {
     return '';
   }
