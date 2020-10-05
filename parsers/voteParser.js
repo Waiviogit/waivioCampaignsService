@@ -22,13 +22,13 @@ exports.parse = async (votes) => {
       const post = await steemHelper.getPostInfo({ author: vote.author, permlink: vote.permlink });
       if (!post.author || moment.utc(post.created) < moment.utc().subtract(7, 'days')) return;
 
-      const expirationTime = moment.utc(post.created).add(165, 'hours').valueOf();
+      const expirationTime = moment.utc(post.created).add(167, 'hours').valueOf();
       const ttlTime = Math.round((expirationTime - moment.utc().valueOf()) / 1000);
       if (ttlTime < 0) return;
-      await redisSetter.setSimpleTtl(`${DOWNVOTE_ON_REVIEW}|${vote.author}|${vote.permlink}`, ttlTime);
+      await redisSetter.setSimpleTtl(`expire:${DOWNVOTE_ON_REVIEW}|${vote.author}|${vote.permlink}`, ttlTime);
       /** If voter match-bot - parse manual votes */
     } else if (campaign) {
-      await redisSetter.setSimpleTtl(`${MATCH_BOT_VOTE}|${vote.author}|${vote.permlink}|${vote.voter}`, 20);
+      await redisSetter.setSimpleTtl(`expire:${MATCH_BOT_VOTE}|${vote.author}|${vote.permlink}|${vote.voter}`, 20);
     }
   }));
 };
