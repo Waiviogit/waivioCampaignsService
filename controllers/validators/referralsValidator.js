@@ -12,5 +12,4 @@ exports.statusSchema = Joi.object().keys({
 
 exports.blackListSchema = Joi.object().keys({
   userName: Joi.string().required(),
-  host: Joi.string().required(),
 }).required().options(options);
