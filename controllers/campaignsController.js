@@ -5,6 +5,7 @@ const {
   renderSuccess,
   renderError,
   renderNotFound,
+  renderCustomError,
 } = require('concerns/renderConcern');
 const {
   campaigns: {
@@ -243,10 +244,11 @@ const checkReview = async (req, res) => {
     .validate({
       ...req.query,
       _id: req.params.campaignId,
+      locale: req.headers.locale,
     }, validators.campaigns.validateCheckReviewSchema);
   if (validationError) return renderError(res, validationError);
   const { campaign, error } = await checkingReview(params);
-  if (error)renderNotFound(res, error);
+  if (error)renderCustomError(res, error);
   renderSuccess(res, { campaign });
 };
 

@@ -459,6 +459,11 @@
             "type": "string",
             "required": true
           },{
+            "name": "locale",
+            "in": "header",
+            "type": "string",
+            "required": true
+          },{
             "in": "query",
             "name": "userName",
             "description": "authorised user name",

@@ -163,4 +163,5 @@ exports.validateCheckReviewSchema = Joi.object().keys({
   _id: Joi.string().required(),
   userName: Joi.string().required(),
   postPermlink: Joi.string(),
+  locale: Joi.string(),
 }).options(options);

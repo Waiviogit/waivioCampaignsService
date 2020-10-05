@@ -2,12 +2,16 @@ const _ = require('lodash');
 const { campaignModel, userModel } = require('models');
 const { getWobjects } = require('utilities/helpers/wobjectHelper');
 
-module.exports = async ({ _id, postPermlink, userName }) => {
+module.exports = async ({
+  _id, postPermlink, userName, locale,
+}) => {
   const { result: campaign } = await campaignModel.findOne({ _id });
-  if (!campaign) return { error: { success: false, message: 'Campaign not found' } };
+  if (!campaign) return { error: { success: false, message: 'Campaign not found', status: 404 } };
   const secondaryPermlink = getSecondaryPermlink({ campaign, postPermlink, userName });
-  const { wobjects } = await getWobjects({ campaigns: [campaign] });
-  const alias = await getGuideAlias(campaign.guideName);
+  const { wobjects } = await getWobjects({ campaigns: [campaign], locale });
+  const { user, error } = await userModel.findOne(campaign.guideName);
+  if (!user || error) return { error: { success: false, message: `guideName ${campaign.guideName} not found`, status: 500 } };
+  const alias = _.get(user, 'alias', '');
   const { requiredObject, secondaryObject } = fillObjects({
     wobjects, primaryPermlink: campaign.requiredObject, secondaryPermlink,
   });
@@ -45,18 +49,4 @@ const fillObjects = ({ wobjects, primaryPermlink, secondaryPermlink }) => {
   const requiredObject = _.find(wobjects, (w) => w.author_permlink === primaryPermlink);
   const secondaryObject = _.find(wobjects, (w) => w.author_permlink === secondaryPermlink);
   return { requiredObject, secondaryObject };
-};
-
-const getGuideAlias = async (name) => {
-  const { user } = await userModel.findOne(name);
-  if (!user) return '';
-  if (user.alias) return user.alias;
-  try {
-    const metadata = user.posting_json_metadata
-      ? JSON.parse(user.posting_json_metadata)
-      : JSON.parse(user.json_metadata);
-    return _.get(metadata, 'profile.name', '');
-  } catch (e) {
-    return '';
-  }
 };
