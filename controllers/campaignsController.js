@@ -232,7 +232,7 @@ const userRewards = async (req, res) => {
     // eslint-disable-next-line camelcase
     campaigns, campaigns_types, hasMore, sponsors, radius, error,
   } = await getUserRewards(params);
-  if (error)renderNotFound(res, error);
+  if (error) return renderNotFound(res, error);
 
   renderSuccess(res, {
     campaigns, campaigns_types, hasMore, sponsors, radius,
@@ -248,7 +248,7 @@ const checkReview = async (req, res) => {
     }, validators.campaigns.validateCheckReviewSchema);
   if (validationError) return renderError(res, validationError);
   const { campaign, error } = await checkingReview(params);
-  if (error)renderCustomError(res, error);
+  if (error) return renderCustomError(res, error);
   renderSuccess(res, { campaign });
 };
 
