@@ -13,6 +13,7 @@ const moment = require('moment');
 const redis = require('utilities/redis/redis');
 const redisSetter = require('utilities/redis/redisSetter');
 const redisGetter = require('utilities/redis/redisGetter');
+const render = require('concerns/renderConcern');
 const { Constants } = require('../constants');
 
 const dropDatabase = async () => {
@@ -52,4 +53,5 @@ module.exports = {
   Constants,
   ...models,
   Mongoose,
+  render,
 };

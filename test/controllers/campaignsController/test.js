@@ -1,12 +1,13 @@
 const moment = require('moment');
 const {
-  chai, chaiHttp, app, faker, ObjectID, dropDatabase, steemHelper, sinon, User, _,
+  chai, chaiHttp, app, faker, ObjectID, dropDatabase, steemHelper, sinon, User, _, render
 } = require('test/testHelper');
 const {
   BlacklistFactory, CampaignFactory, PaymentFactory, SubscriptionFactory,
   UserFactory, WobjectFactory, PostFactory, PaymentHistoryFactory, AppendObjectFactory, WobjectSubscriptionFactory,
 } = require('test/factories');
 const Campaign = require('models/campaignModel');
+
 
 chai.use(chaiHttp);
 chai.should();
@@ -2479,7 +2480,7 @@ describe('route /campaigns-api/rewards/:userName', async () => {
   });
 
   describe('on route /campaign/review-check/:campaignId', async () => {
-    let campaign, users, primaryObject, secondaryObject, userName, sponsor, alias, payments, postPermlink;
+    let campaign, users, primaryObject, secondaryObject, userName, sponsor, alias, payments, postPermlink, spy;
     describe('when send userName without postPermlink', async () => {
       beforeEach(async () => {
         await dropDatabase();
@@ -2554,6 +2555,8 @@ describe('route /campaigns-api/rewards/:userName', async () => {
         primaryObject = await WobjectFactory.Create();
         secondaryObject = await WobjectFactory.Create();
         sponsor = await UserFactory.Create({ alias });
+        sinon.spy(render, 'renderSuccess');
+
         payments = [{
           objectPermlink: secondaryObject.author_permlink,
           reservationId: new ObjectID(),
@@ -2569,6 +2572,9 @@ describe('route /campaigns-api/rewards/:userName', async () => {
           app: faker.random.string(),
           objects: [secondaryObject.author_permlink],
         });
+      });
+      afterEach(() => {
+        sinon.restore();
       });
       it('should return status code 200', async () => {
         const res = await chai.request(app).get(`/campaigns-api/campaign/review-check/${campaign._id}`)
@@ -2609,6 +2615,10 @@ describe('route /campaigns-api/rewards/:userName', async () => {
         ({ body: { campaign } } = await chai.request(app).get(`/campaigns-api/campaign/review-check/${campaign._id}`)
           .query({ userName, postPermlink }));
         expect(campaign.secondaryObject).to.be.deep.eq(wobjFields);
+      });
+      it('should not call renderSuccess on code 404', async () => {
+        await chai.request(app).get(`/campaigns-api/campaign/review-check/${faker.random.string()}`);
+        expect(render.renderSuccess.notCalled).to.be.true;
       });
     });
   });
