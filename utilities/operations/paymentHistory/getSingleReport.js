@@ -44,7 +44,7 @@ const prepareReportData = async ({
     createCampaignDate: campaign.createdAt,
     reservationDate: reservation.createdAt,
     reviewDate: rewardRecord.createdAt,
-    title: paymentData.postTitle,
+    title: _.get(paymentData, 'postTitle', ''),
     activationPermlink: campaign.activation_permlink,
     primaryObject: _.find(wobjects,
       (wobject) => wobject.author_permlink === campaign.requiredObject),
