@@ -52,6 +52,7 @@ const parseCampaignsTransfer = async ({
               memoJson, to, from, amount,
             });
             break;
+          case 'waivio_guest_transfer':
           case 'demo_user_transfer':
             if (_.get(memoJson, 'message.id') === 'overpayment_refund') {
               await transferHelper.overpaymentRefund({
@@ -61,7 +62,7 @@ const parseCampaignsTransfer = async ({
             }
             await paymentHistoryModel.addPaymentHistory({
               userName: memoJson.from,
-              type: memoJson.id,
+              type: 'demo_user_transfer',
               payable: amount.match(/.\d*.\d*/)[0],
               sponsor: from,
               memo: `Transfer to ${to}, memo: ${memoJson.message.toString()}`,
