@@ -1,9 +1,9 @@
 const _ = require('lodash');
 const axios = require('axios');
-const config = require('config');
+const { getNamespace } = require('cls-hooked');
 const moment = require('moment');
 const exifParser = require('exif-parser');
-const { wobjectModel } = require('models');
+const { wobjectModel, appModel } = require('models');
 const { FIELDS_NAMES } = require('constants/wobjectsData');
 const { processWobjects } = require('utilities/helpers/wobjectHelper');
 
@@ -11,8 +11,12 @@ const getMap = async (permlink = '') => {
   let map = {};
   const { result } = await wobjectModel.findOne(permlink);
   if (!result) return { map };
+
+  const session = getNamespace('request-session');
+  const host = session.get('host');
+  const { result: app } = await appModel.findOne(host);
   const fields = await processWobjects({
-    wobjects: [result], fields: [FIELDS_NAMES.MAP], app: config.waivio_app_name, returnArray: false,
+    wobjects: [result], fields: [FIELDS_NAMES.MAP], app, returnArray: false,
   });
   if (_.get(fields, FIELDS_NAMES.MAP)) map = JSON.parse(fields.map);
   return { map };

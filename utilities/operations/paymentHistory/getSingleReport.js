@@ -1,6 +1,7 @@
 const _ = require('lodash');
 const config = require('config');
-const { wobjectModel } = require('models');
+const { wobjectModel, appModel } = require('models');
+const { getNamespace } = require('cls-hooked');
 const { FIELDS_NAMES } = require('constants/wobjectsData');
 const { processWobjects } = require('utilities/helpers/wobjectHelper');
 const paymentHistoriesHelper = require('utilities/helpers/paymentHistoriesHelper');
@@ -61,8 +62,12 @@ const prepareReportData = async ({
 const getObjectsData = async (permlinks) => {
   const { result: wobjects } = await wobjectModel.find({ author_permlink: { $in: permlinks } });
 
+  const session = getNamespace('request-session');
+  const host = session.get('host');
+  const { result: app } = await appModel.findOne(host);
+
   const filteredObjects = await processWobjects(
-    { wobjects, fields: FIELDS_NAMES.NAME, app: config.waivio_app_name },
+    { wobjects, fields: FIELDS_NAMES.NAME, app },
   );
 
   return {
