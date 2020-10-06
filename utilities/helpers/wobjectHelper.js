@@ -219,7 +219,7 @@ const getWobjects = async ({
 
   const session = getNamespace('request-session');
   const host = session.get('host');
-  const { app } = await appModel.findOne(host);
+  const { result: app } = await appModel.findOne(host);
 
   let { result: wobjects } = await wobjectModel.find(
     { author_permlink: { $in: _.uniq(objects) } },
