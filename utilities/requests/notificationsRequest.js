@@ -1,13 +1,10 @@
 const _ = require('lodash');
 const axios = require('axios');
-const config = require('config');
-const { getNamespace } = require('cls-hooked');
-const { FIELDS_NAMES } = require('constants/wobjectsData');
 const { NOTIFICATIONS_ID } = require('constants/constants');
-const { processWobjects } = require('utilities/helpers/wobjectHelper');
+const { getWobjectName } = require('utilities/helpers/wobjectHelper');
 const { HOST, BASE_URL, SET_NOTIFICATION } = require('constants/appData').notificationsApi;
 const {
-  campaignModel, userModel, wobjectModel, Subscriptions, wobjectSubscriptions, appModel,
+  campaignModel, userModel, Subscriptions, wobjectSubscriptions,
 } = require('models');
 
 const URL = HOST + BASE_URL + SET_NOTIFICATION;
@@ -92,23 +89,6 @@ const sendBellNotification = async ({ objects, primaryObject, guideName }) => {
     };
     await sendNotification(operation);
   }
-};
-
-const getWobjectName = async (permlink) => {
-  const { result: wobject, error } = await wobjectModel.findOne(permlink);
-  if (error || !wobject) return { error: 'Something wrong' };
-
-  const session = getNamespace('request-session');
-  const host = session.get('host');
-  const { result: app } = await appModel.findOne(host);
-
-  const processedWobj = await processWobjects({
-    wobjects: [wobject],
-    fields: [FIELDS_NAMES.NAME],
-    app,
-    returnArray: false,
-  });
-  return { objectName: processedWobj.name || wobject.default_name };
 };
 
 module.exports = { custom, activateCampaign };

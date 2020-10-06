@@ -2,7 +2,7 @@ const _ = require('lodash');
 const { getNamespace } = require('cls-hooked');
 const { wobjectModel, appModel } = require('models');
 const {
-  REQUIREDFIELDS_PARENT, MIN_PERCENT_TO_SHOW_UPGATE,
+  REQUIREDFIELDS_PARENT, MIN_PERCENT_TO_SHOW_UPGATE, FIELDS_NAMES,
   ADMIN_ROLES, categorySwitcher, CAMPAIGN_FIELDS, VOTE_STATUSES,
 } = require('constants/wobjectsData');
 
@@ -242,6 +242,22 @@ const getWobjects = async ({
   return { wobjects };
 };
 
+const getWobjectName = async (permlink) => {
+  const { result: wobject } = await wobjectModel.findOne(permlink);
+
+  const session = getNamespace('request-session');
+  const host = session.get('host');
+  const { result: app } = await appModel.findOne(host);
+
+  const processedWobj = await processWobjects({
+    wobjects: [wobject],
+    fields: [FIELDS_NAMES.NAME],
+    app,
+    returnArray: false,
+  });
+  return { objectName: processedWobj.name || wobject.default_name };
+};
+
 module.exports = {
-  processWobjects, getWobjects,
+  processWobjects, getWobjects, getWobjectName,
 };

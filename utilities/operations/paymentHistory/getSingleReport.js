@@ -1,9 +1,5 @@
 const _ = require('lodash');
-const config = require('config');
-const { wobjectModel, appModel } = require('models');
-const { getNamespace } = require('cls-hooked');
-const { FIELDS_NAMES } = require('constants/wobjectsData');
-const { processWobjects } = require('utilities/helpers/wobjectHelper');
+const { getWobjectName } = require('utilities/helpers/wobjectHelper');
 const paymentHistoriesHelper = require('utilities/helpers/paymentHistoriesHelper');
 
 module.exports = async (data) => {
@@ -60,20 +56,14 @@ const prepareReportData = async ({
 };
 
 const getObjectsData = async (permlinks) => {
-  const { result: wobjects } = await wobjectModel.find({ author_permlink: { $in: permlinks } });
+  const wobjects = [];
+  for (const permlink of permlinks) {
+    const { objectName } = await getWobjectName(permlink);
+    wobjects.push({
+      author_permlink: permlink,
+      object_name: objectName,
+    });
+  }
 
-  const session = getNamespace('request-session');
-  const host = session.get('host');
-  const { result: app } = await appModel.findOne(host);
-
-  const filteredObjects = await processWobjects(
-    { wobjects, fields: FIELDS_NAMES.NAME, app },
-  );
-
-  return {
-    wobjects: _.map(filteredObjects, (obj) => ({
-      author_permlink: obj.author_permlink,
-      object_name: obj.name,
-    })),
-  };
+  return { wobjects };
 };
