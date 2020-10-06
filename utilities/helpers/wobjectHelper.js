@@ -31,18 +31,24 @@ const getFieldVoteRole = (vote) => {
   let role = ADMIN_ROLES.ADMIN;
   vote.ownership ? role = ADMIN_ROLES.OWNERSHIP : null;
   vote.administrative ? role = ADMIN_ROLES.ADMINISTRATIVE : null;
+  vote.owner ? role = ADMIN_ROLES.OWNER : null;
   return role;
 };
 
-const addDataToFields = (fields, filter, admins, ownership, administrative) => {
+const addDataToFields = ({
+  fields, filter, admins, ownership, administrative, owner,
+}) => {
   /** Filter, if we need not all fields */
   if (filter) fields = _.filter(fields, (field) => _.includes(filter, field.name));
 
   for (const field of fields) {
-    let adminVote, administrativeVote, ownershipVote;
+    let adminVote, administrativeVote, ownershipVote, ownerVote;
     _.map(field.active_votes, (vote) => {
       vote.timestamp = vote._id.getTimestamp().valueOf();
-      if (_.includes(admins, vote.voter)) {
+      if (vote.voter === owner) {
+        vote.owner = true;
+        ownerVote = vote;
+      } else if (_.includes(admins, vote.voter)) {
         vote.admin = true;
         vote.timestamp > _.get(adminVote, 'timestamp', 0) ? adminVote = vote : null;
       } else if (_.includes(administrative, vote.voter)) {
@@ -55,8 +61,8 @@ const addDataToFields = (fields, filter, admins, ownership, administrative) => {
     });
     field.createdAt = field._id.getTimestamp().valueOf();
     /** If field includes admin votes fill in it */
-    if (adminVote || administrativeVote || ownershipVote) {
-      const mainVote = adminVote || ownershipVote || administrativeVote;
+    if (ownerVote || adminVote || administrativeVote || ownershipVote) {
+      const mainVote = ownerVote || adminVote || ownershipVote || administrativeVote;
       field.adminVote = {
         role: getFieldVoteRole(mainVote),
         status: mainVote.percent > 0 ? 'approved' : 'rejected',
@@ -124,7 +130,7 @@ const filterFieldValidation = (filter, field, locale, ownership) => {
   if (filter) result = result && _.includes(filter, field.name);
   if (ownership) {
     result = result && _.includes(
-      [ADMIN_ROLES.OWNERSHIP, ADMIN_ROLES.ADMIN], _.get(field, 'adminVote.role'),
+      [ADMIN_ROLES.OWNERSHIP, ADMIN_ROLES.ADMIN, ADMIN_ROLES.OWNER], _.get(field, 'adminVote.role'),
     );
   }
   return result;
@@ -152,9 +158,12 @@ const getFieldsToDisplay = (fields, locale, filter, permlink, ownership) => {
     }
 
     if (approvedFields.length) {
+      const ownerVotes = _.filter(approvedFields,
+        (field) => field.adminVote.role === ADMIN_ROLES.OWNER);
       const adminVotes = _.filter(approvedFields,
         (field) => field.adminVote.role === ADMIN_ROLES.ADMIN);
-      if (adminVotes.length) winningFields[id] = _.maxBy(adminVotes, 'adminVote.timestamp').body;
+      if (ownerVotes.length) winningFields[id] = _.maxBy(ownerVotes, 'adminVote.timestamp').body;
+      else if (adminVotes.length) winningFields[id] = _.maxBy(adminVotes, 'adminVote.timestamp').body;
       else winningFields[id] = _.maxBy(approvedFields, 'adminVote.timestamp').body;
       continue;
     }
@@ -184,7 +193,9 @@ const processWobjects = async ({
       _.get(obj, 'authority.administrative', []), _.get(app, 'authority', []),
     );
 
-    obj.fields = addDataToFields(obj.fields, fields, admins, ownership, administrative);
+    obj.fields = addDataToFields({
+      fields: obj.fields, filter: fields, admins, ownership, administrative, owner: _.get(app, 'owner'),
+    });
     /** Omit map, because wobject has field map, temp solution? maybe field map in wobj not need */
     obj = _.omit(obj, ['map']);
     Object.assign(obj,

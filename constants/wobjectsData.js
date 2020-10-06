@@ -34,6 +34,7 @@ exports.ADMIN_ROLES = {
   ADMINISTRATIVE: 'administrative',
   OWNERSHIP: 'ownership',
   ADMIN: 'admin',
+  OWNER: 'owner',
 };
 
 exports.AUTHORITY_FIELD_ENUM = {
