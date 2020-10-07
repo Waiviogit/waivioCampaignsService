@@ -69,7 +69,7 @@ const Configuration = new Schema({
 }, { _id: false });
 
 const AppSchema = new Schema({
-  name: { type: String, index: true, unique: true },
+  name: { type: String, index: true },
   owner: { type: String, required: true },
   googleAnalyticsTag: { type: String, default: null },
   beneficiary: {
@@ -78,7 +78,9 @@ const AppSchema = new Schema({
   },
   mainPage: { type: String },
   configuration: { type: Configuration, default: () => ({}) },
-  host: { type: String, required: true },
+  host: {
+    type: String, required: true, unique: true, index: true,
+  },
   admins: { type: [String], default: [] },
   authority: { type: [String], default: [] },
   moderators: { type: [String], default: [] },
