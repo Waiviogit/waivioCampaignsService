@@ -19,8 +19,14 @@ exports.expirePendingTransfer = async (id) => {
 exports.expireDemoPost = async ({ author, permlink }) => {
   const post = await steemHelper.getPostInfo({ author, permlink });
   const metadata = JSON.parse(post.json_metadata);
+  const payoutPercent = _.get(post, 'percent_steem_dollars', post.percent_hive_dollars);
+  const authorPayout = parseFloat(post.total_payout_value);
+  const curatorPayout = parseFloat(post.curator_payout_value);
+  const totalPayout = payoutPercent
+    ? curatorPayout + (authorPayout / (payoutPercent / 10000))
+    : curatorPayout * 2;
   const steemAmount = await steemHelper.getPostAuthorReward(
-    { reward_price: parseFloat(post.total_payout_value) + parseFloat(post.curator_payout_value) },
+    { reward_price: totalPayout },
   );
 
   if (steemAmount > 0 && _.find(post.beneficiaries, { account: process.env.POWER_ACC_NAME })) {

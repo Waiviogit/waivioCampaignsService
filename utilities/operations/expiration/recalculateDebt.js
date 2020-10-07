@@ -4,7 +4,7 @@ const mathBotHelper = require('utilities/helpers/matchBotHelper');
 const steemHelper = require('utilities/helpers/steemHelper');
 const { CAMPAIGN_STATUSES, PAYMENT_HISTORIES_TYPES, TRANSFER_TYPES } = require('constants/constants');
 
-module.exports = async (author, permlink) => {
+exports.bla = async (author, permlink) => {
   const post = await steemHelper.getPostInfo({ author, permlink });
   if (!post.author) return;
   author = mathBotHelper.checkForGuest(author, post.json_metadata);
@@ -14,11 +14,18 @@ module.exports = async (author, permlink) => {
     },
   });
   if (!campaign) return;
+  /** If post reward paid in HP, we need to specially calculate
+   * the full value of the remuneration */
+  const payoutPercent = _.get(post, 'percent_steem_dollars', post.percent_hive_dollars);
+  const authorPayout = parseFloat(post.total_payout_value);
+  const curatorPayout = parseFloat(post.curator_payout_value);
+  const totalPayout = payoutPercent
+    ? curatorPayout + (authorPayout / (payoutPercent / 10000))
+    : curatorPayout * 2;
 
-  if (parseFloat(post.total_payout_value) + parseFloat(post.curator_payout_value) === 0) {
+  if (totalPayout === 0) {
     return removeVoteDebt(author, permlink, campaign);
   }
-
   let botUpvotes = 0, elseUpvotes = 0, downvotes = 0;
   for (const vote of post.active_votes) {
     if (+vote.rshares < 0) {
@@ -33,14 +40,17 @@ module.exports = async (author, permlink) => {
   if (downvotes >= (botUpvotes + elseUpvotes)) return removeVoteDebt(author, permlink, campaign);
   if (downvotes && botUpvotes < (botUpvotes + elseUpvotes) - downvotes) {
     const { currentPrice } = await steemHelper.getCurrentPriceInfo();
-    const payout = _.round(((parseFloat(post.total_payout_value)
-      + parseFloat(post.curator_payout_value)) / 2) / currentPrice, 3);
+    const payout = _.round((totalPayout / 2) / currentPrice, 3);
 
     await recountVoteDebt({
       payout, author, permlink, campaign,
     });
   }
 };
+
+(async () => {
+  await this.bla('waivio.guest03', '4dchkq-review-hive-5-my-favorite-coffee-mug');
+})();
 
 const recountVoteDebt = async ({
   payout, author, permlink, campaign,
