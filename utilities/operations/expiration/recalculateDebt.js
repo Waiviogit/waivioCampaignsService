@@ -4,7 +4,7 @@ const mathBotHelper = require('utilities/helpers/matchBotHelper');
 const steemHelper = require('utilities/helpers/steemHelper');
 const { CAMPAIGN_STATUSES, PAYMENT_HISTORIES_TYPES, TRANSFER_TYPES } = require('constants/constants');
 
-exports.bla = async (author, permlink) => {
+module.exports = async (author, permlink) => {
   const post = await steemHelper.getPostInfo({ author, permlink });
   if (!post.author) return;
   author = mathBotHelper.checkForGuest(author, post.json_metadata);
@@ -47,10 +47,6 @@ exports.bla = async (author, permlink) => {
     });
   }
 };
-
-(async () => {
-  await this.bla('waivio.guest03', '4dchkq-review-hive-5-my-favorite-coffee-mug');
-})();
 
 const recountVoteDebt = async ({
   payout, author, permlink, campaign,

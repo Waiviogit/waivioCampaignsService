@@ -169,6 +169,7 @@ describe('On recalculateDebt', async () => {
         json_metadata: '',
         total_payout_value: '0.330 HBD',
         curator_payout_value: '0.370 HBD',
+        percent_steem_dollars: 10000,
         active_votes: [{ rshares: 1000, voter: bot }, { rshares: -500, voter: faker.random.string() }],
       }));
       sinon.stub(steemHelper, 'getCurrentPriceInfo').returns(Promise.resolve({ currentPrice: 1 }));
