@@ -2,7 +2,7 @@ const _ = require('lodash');
 const {
   paymentHistoryModel, userModel, wobjectModel, campaignModel,
 } = require('models');
-const steemHelper = require('./steemHelper');
+const { getWobjectName } = require('utilities/helpers/wobjectHelper');
 
 const withoutWrapPipeline = (data) => {
   const pipeline = [
@@ -134,6 +134,10 @@ const fillPayments = async (histories, currency) => {
     },
   ]);
   if (wobjError) return { error: wobjError };
+  for (const wobj of wobjects) {
+    const { objectName } = await getWobjectName(wobj.author_permlink);
+    wobj.name = objectName;
+  }
   const { result: payments, error } = await paymentHistoryModel.find({ type: 'review', 'details.reservation_permlink': { $in: reviewPermlinks } });
   if (error) return { error };
 
