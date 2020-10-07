@@ -2,6 +2,7 @@ const mongoose = require('mongoose');
 const db = require('database/db_Connection');
 const _ = require('lodash');
 const { REFERRAL_TYPES } = require('constants/constants');
+const { STATUSES, SUPPORTED_COLORS } = require('constants/sitesConstants');
 
 const { Schema } = mongoose;
 
@@ -46,14 +47,14 @@ const MapPoints = new Schema({
 }, { _id: false });
 
 const Colors = new Schema({
-  background: { type: String },
-  font: { type: String },
-  hover: { type: String },
-  header: { type: String },
-  button: { type: String },
-  border: { type: String },
-  focus: { type: String },
-  links: { type: String },
+  [SUPPORTED_COLORS.BACKGROUND]: { type: String },
+  [SUPPORTED_COLORS.FONT]: { type: String, default: '' },
+  [SUPPORTED_COLORS.HOVER]: { type: String, default: '' },
+  [SUPPORTED_COLORS.HEADER]: { type: String, default: '' },
+  [SUPPORTED_COLORS.BUTTON]: { type: String, default: '' },
+  [SUPPORTED_COLORS.BORDER]: { type: String, default: '' },
+  [SUPPORTED_COLORS.FOCUS]: { type: String, default: '' },
+  [SUPPORTED_COLORS.LINKS]: { type: String, default: '' },
 }, { _id: false });
 
 const Configuration = new Schema({
@@ -63,7 +64,7 @@ const Configuration = new Schema({
   aboutObject: { type: String },
   desktopMap: { type: MapPoints },
   mobileMap: { type: MapPoints },
-  colors: { type: Colors },
+  colors: { type: Colors, default: () => ({}) },
 
 }, { _id: false });
 
@@ -75,7 +76,7 @@ const AppSchema = new Schema({
     account: { type: String, default: 'waivio' },
     percent: { type: Number, default: 300 },
   },
-  configuration: { type: Configuration },
+  configuration: { type: Configuration, default: () => ({}) },
   host: { type: String, required: true },
   admins: { type: [String], default: [] },
   authority: { type: [String], default: [] },
@@ -86,6 +87,9 @@ const AppSchema = new Schema({
   supported_hashtags: { type: [String], default: [] },
   canBeExtended: { type: Boolean, default: false },
   inherited: { type: Boolean, default: true },
+  status: { type: String, default: STATUSES.PENDING, enum: Object.values(STATUSES) },
+  activatedAt: { type: Date, default: null },
+  deactivatedAt: { type: Date, default: null },
   supported_objects: { type: [String], index: true, default: [] },
   top_users: { type: [topUsersSchema] },
   daily_chosen_post: {
@@ -110,7 +114,7 @@ AppSchema.pre('save', async function (doc) {
     if (!parent) return;
     doc.supported_object_types = parent.supported_object_types;
     doc.object_filters = parent.object_filters;
-    if (!doc.configuration) doc.configuration = {};
+    if (!doc._.doc.configuration) doc.configuration = {};
     doc.configuration.configurationFields = _.get(parent, 'configuration.configurationFields', []);
   }
 });

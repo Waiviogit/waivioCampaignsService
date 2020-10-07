@@ -7,3 +7,11 @@ exports.findOne = async (host) => {
     return { error };
   }
 };
+
+exports.findByCondition = async (condition) => {
+  try {
+    return { result: await App.findOne(condition).lean() };
+  } catch (error) {
+    return { error };
+  }
+};
