@@ -3,7 +3,7 @@ const { getNamespace } = require('cls-hooked');
 const { wobjectModel, appModel } = require('models');
 const {
   REQUIREDFIELDS_PARENT, MIN_PERCENT_TO_SHOW_UPGATE, FIELDS_NAMES,
-  ADMIN_ROLES, categorySwitcher, CAMPAIGN_FIELDS, VOTE_STATUSES,
+  ADMIN_ROLES, categorySwitcher, CAMPAIGN_FIELDS, VOTE_STATUSES, OBJECT_TYPES
 } = require('constants/wobjectsData');
 
 const calculateApprovePercent = (field) => {
@@ -176,6 +176,40 @@ const getFieldsToDisplay = (fields, locale, filter, permlink, ownership) => {
   return winningFields;
 };
 
+const getLinkToPageLoad = (obj) => {
+  const listItem = _.get(obj, 'listItem', []);
+  if (!_.get(obj, 'sortCustom', []).length) {
+    switch (obj.object_type) {
+      case OBJECT_TYPES.PAGE:
+        return `/object/${obj.author_permlink}/page`;
+      case OBJECT_TYPES.LIST:
+        return `/object/${obj.author_permlink}/list`;
+      case OBJECT_TYPES.BUSINESS:
+      case OBJECT_TYPES.PRODUCT:
+      case OBJECT_TYPES.SERVICE:
+      case OBJECT_TYPES.COMPANY:
+      case OBJECT_TYPES.PERSON:
+      case OBJECT_TYPES.PLACE:
+      case OBJECT_TYPES.HOTEL:
+      case OBJECT_TYPES.RESTAURANT:
+        if (listItem.length) {
+          const item = _
+            .chain(listItem)
+            .orderBy([(list) => _.get(list, 'adminVote.timestamp', 0), 'weight'], ['desc', 'desc'])
+            .first()
+            .value();
+          return `/object/${obj.author_permlink}/${item.type === 'menuPage' ? 'page' : 'menu'}#${item.body}`;
+        }
+        return `/object/${obj.author_permlink}`;
+      default:
+        return `/object/${obj.author_permlink}`;
+    }
+  }
+  const field = _.find(listItem, { body: obj.sortCustom[0] });
+  if (!field) return `/object/${obj.author_permlink}`;
+  return `/object/${obj.author_permlink}/menu#${field.body}`;
+};
+
 /** Parse wobjects to get its winning */
 const processWobjects = async ({
   wobjects, fields, locale = 'en-US',
@@ -201,6 +235,7 @@ const processWobjects = async ({
     Object.assign(obj,
       getFieldsToDisplay(obj.fields, locale, fields, obj.author_permlink, !!ownership.length));
     obj = _.omit(obj, ['fields', 'latest_posts', 'last_posts_counts_by_hours', 'tagCategories']);
+    obj.defaultShowLink = getLinkToPageLoad(obj);
     filteredWobj.push(obj);
   }));
   if (!returnArray) return filteredWobj[0];
