@@ -76,6 +76,7 @@ const AppSchema = new Schema({
     account: { type: String, default: 'waivio' },
     percent: { type: Number, default: 300 },
   },
+  mainPage: { type: String },
   configuration: { type: Configuration, default: () => ({}) },
   host: { type: String, required: true },
   admins: { type: [String], default: [] },
@@ -114,6 +115,7 @@ AppSchema.pre('save', async function (doc) {
     if (!parent) return;
     doc.supported_object_types = parent.supported_object_types;
     doc.object_filters = parent.object_filters;
+    this._doc.mainPage = parent.mainPage;
     if (!doc._.doc.configuration) doc.configuration = {};
     doc.configuration.configurationFields = _.get(parent, 'configuration.configurationFields', []);
   }
