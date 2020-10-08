@@ -17,13 +17,13 @@ module.exports = async ({
 }) => {
   /** In this case we dont filter by date adn type because we have not indexes */
   const { users, error } = await userModel.find(
-    { referral: { $elemMatch: { agent: userName, type: REFERRAL_TYPES.REVIEWS } } },
+    { referral: { $elemMatch: { agent: userName, type: REFERRAL_TYPES.REWARDS } } },
   );
   if (error) return { error };
   if (!users.length) return { users: [], hasMore: false };
 
   let activeUsers = _.map(users, (user) => {
-    const referralData = _.find(user.referral, { agent: userName, type: REFERRAL_TYPES.REVIEWS });
+    const referralData = _.find(user.referral, { agent: userName, type: REFERRAL_TYPES.REWARDS });
     if (referralData.endedAt > new Date()) {
       return {
         name: user.name,

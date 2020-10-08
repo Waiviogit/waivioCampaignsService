@@ -108,7 +108,7 @@ const GUEST_WALLET_OPERATIONS = [
 ];
 
 const REFERRAL_TYPES = {
-  REVIEWS: 'reviews',
+  REWARDS: 'rewards',
 };
 
 const REFERRAL_STATUSES = {
