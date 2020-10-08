@@ -1,7 +1,7 @@
 const _ = require('lodash');
 const moment = require('moment');
 const { wobjectModel } = require('models');
-const { campaignHelper, steemHelper } = require('utilities/helpers');
+const { campaignHelper, steemHelper, wobjectHelper } = require('utilities/helpers');
 const { currencyRequest } = require('utilities/requests');
 const paymentHistory = require('../paymentHistory');
 
@@ -124,6 +124,10 @@ const addObjectsToCampaigns = async (campaigns) => {
     (campaign) => objects = _.uniq(_.concat(objects, campaign.objects, campaign.requiredObject, campaign.agreementObjects)));
   const { result: wobjects, error } = await wobjectModel.aggregate(objectsPipeline(objects));
   if (error) return { error };
+  for (const wobject of wobjects) {
+    const { objectName } = await wobjectHelper.getWobjectName(wobject.author_permlink);
+    wobject.name = objectName;
+  }
   campaigns = _.map(campaigns, (campaign) => {
     campaign.agreementObjects = _.filter(wobjects,
       (wobject) => _.includes(campaign.agreementObjects, wobject.author_permlink));
