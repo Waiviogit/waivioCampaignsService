@@ -26,6 +26,7 @@ module.exports = async ({
     const referralData = _.find(user.referral, { agent: userName, type: REFERRAL_TYPES.REWARDS });
     if (referralData.endedAt > new Date()) {
       return {
+        alias: user.alias,
         name: user.name,
         started: referralData.startedAt,
         ended: referralData.endedAt,
