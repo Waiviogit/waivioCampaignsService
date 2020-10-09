@@ -1,3 +1,4 @@
+const _ = require('lodash');
 const { campaignHelper } = require('utilities/helpers');
 
 module.exports = async ({
@@ -13,6 +14,7 @@ module.exports = async ({
       campaigns: [], campaigns_types: [], hasMore: false, sponsors: [],
     };
   }
+  campaigns = filterAssignOnSameObject(campaigns, userName);
   campaigns = campaignHelper.eligibleCampaignsFilter(campaigns, userName);
   if (!requiredObject) {
     return getPrimaryCampaigns({
@@ -77,4 +79,15 @@ const getPrimaryCampaigns = async ({
     locale,
     appName,
   });
+};
+
+const filterAssignOnSameObject = (campaigns, userName) => {
+  let campaignsCopy = [...campaigns];
+  for (const campaign of campaigns) {
+    const assignedUser = _.find(campaign.users, (user) => user.name === userName && user.status === 'assigned');
+    if (assignedUser) {
+      campaignsCopy = _.filter(campaignsCopy, (c) => c.requiredObject !== campaign.requiredObject);
+    }
+  }
+  return campaignsCopy;
 };

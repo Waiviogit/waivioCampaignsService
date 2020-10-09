@@ -107,7 +107,7 @@ const fillObjects = (
       (user) => user.status === 'assigned' && user.object_permlink === obj).length;
   }
   if (area && !firstMapLoad) {
-    const coordinates = object.map ? parseCoordinates(object.map) : null;
+    const coordinates = _.get(object, 'map') ? parseCoordinates(object.map) : null;
     distance = coordinates ? getDistance(area, coordinates) : null;
     if (radius && (radius < distance || !_.isNumber(distance))) return;
   }
@@ -319,16 +319,12 @@ exports.getCompletedUsersInSameCampaigns = async (guideName, requiredObject, use
       },
       assignedUser: { $filter: { input: '$users', as: 'user', cond: { $and: [{ $eq: ['$$user.name', userName] }, { $eq: ['$$user.status', 'assigned'] }] } } },
     },
-  }, { $group: { _id: null, lastCompleted: { $max: '$completedUser.updatedAt' }, assignedUser: { $last: '$assignedUser.name' } } }, {
-    $project: {
-      _id: 0,
-      lastCompleted: { $arrayElemAt: ['$lastCompleted', 0] },
-      assignedUser: { $arrayElemAt: ['$assignedUser', 0] },
-    },
   },
+  { $project: { _id: null, completedUser: 1, assignedUser: 1 } },
   ];
   const { result } = await campaignModel.aggregate(pipeline);
-  return { lastCompleted: _.get(result, '[0].lastCompleted', null), assignedUser: !!_.get(result, '[0].assignedUser') };
+  if (_.isEmpty(result)) return { lastCompleted: false, assignedUser: false };
+  return { lastCompleted: _.max(_.map(result[0].completedUser, 'updatedAt')), assignedUser: !!_.last(_.get(result, '[0].assignedUser')) };
 };
 
 exports.campaignsAggregation = async ({
