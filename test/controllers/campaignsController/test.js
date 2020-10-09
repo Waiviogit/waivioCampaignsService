@@ -1,13 +1,12 @@
 const moment = require('moment');
 const {
-  chai, chaiHttp, app, faker, ObjectID, dropDatabase, steemHelper, sinon, User, _, render
+  chai, chaiHttp, app, faker, ObjectID, dropDatabase, steemHelper, sinon, User, _, render, Campaign: Campaigndb,
 } = require('test/testHelper');
 const {
-  BlacklistFactory, CampaignFactory, PaymentFactory, SubscriptionFactory,
+  BlacklistFactory, CampaignFactory, PaymentFactory, SubscriptionFactory, AppFactory,
   UserFactory, WobjectFactory, PostFactory, PaymentHistoryFactory, AppendObjectFactory, WobjectSubscriptionFactory,
 } = require('test/factories');
 const Campaign = require('models/campaignModel');
-
 
 chai.use(chaiHttp);
 chai.should();
@@ -2434,6 +2433,79 @@ describe('blackList', async () => {
       .post('/campaigns-api/campaigns/eligible')
       .send({ userName: user2.name });
     expect(result.body.campaigns).to.have.length(0);
+  });
+});
+describe('eligible: if have received a reward from campaign in the last frequency_assign days', async () => {
+  let user, wobject;
+  beforeEach(async () => {
+    await dropDatabase();
+
+    const frequency = _.random(1, 30);
+    user = await UserFactory.Create({ followers_count: 10, count_posts: 10 });
+    wobject = await WobjectFactory.Create();
+    const users = [];
+    for (let i = 0; i < _.random(2, 5); i++) {
+      let time = moment().subtract(frequency * (i + 1), 'days').toISOString();
+      if (!i) time = moment().subtract((frequency - 1) * (i + 1), 'days').toISOString();
+      users.push({
+        name: user.name,
+        object_permlink: faker.random.string(),
+        permlink: faker.random.string(),
+        hiveCurrency: 1,
+        status: 'completed',
+        updatedAt: time,
+        createdAt: time,
+      });
+    }
+
+    await CampaignFactory.Create({
+      status: 'active',
+      frequency_assign: frequency,
+      requiredObject: wobject.author_permlink,
+      users,
+    });
+  });
+  it('expect campaigns length to be 0', async () => {
+    const { body: { campaigns } } = await chai.request(app)
+      .post('/campaigns-api/campaigns/eligible')
+      .send({ userName: user.name, requiredObject: wobject.author_permlink });
+    expect(campaigns).to.have.length(0);
+  });
+});
+describe('eligible: if have not received a reward from campaign in the last frequency_assign days', async () => {
+  let user, wobject;
+  beforeEach(async () => {
+    await dropDatabase();
+
+    const frequency = _.random(1, 30);
+    user = await UserFactory.Create({ followers_count: 10, count_posts: 10 });
+    wobject = await WobjectFactory.Create();
+    const users = [];
+    for (let i = 0; i < _.random(2, 5); i++) {
+      const time = moment().subtract(frequency * (i + 1), 'days').toISOString();
+      users.push({
+        name: user.name,
+        object_permlink: faker.random.string(),
+        permlink: faker.random.string(),
+        hiveCurrency: 1,
+        status: 'completed',
+        updatedAt: time,
+        createdAt: time,
+      });
+    }
+
+    await CampaignFactory.Create({
+      status: 'active',
+      frequency_assign: frequency,
+      requiredObject: wobject.author_permlink,
+      users,
+    });
+  });
+  it('expect campaigns length to be 1', async () => {
+    const { body: { campaigns } } = await chai.request(app)
+      .post('/campaigns-api/campaigns/eligible')
+      .send({ userName: user.name, requiredObject: wobject.author_permlink });
+    expect(campaigns).to.have.length(1);
   });
 });
 describe('route /campaigns-api/rewards/:userName', async () => {

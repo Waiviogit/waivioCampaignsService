@@ -56,7 +56,7 @@ const Create = async (data = {}) => {
   if (!data.hasOwnProperty('coordinates')) {
     campaign.map = undefined;
   }
-  await campaign.save();
+  await campaign.save({ timestamps: false });
 
   // Please, dont ask....
   if (data.noObject) {
