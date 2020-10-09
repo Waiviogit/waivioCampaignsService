@@ -1,10 +1,10 @@
 const moment = require('moment');
 const {
-  chai, chaiHttp, app, faker, ObjectID, dropDatabase, steemHelper, sinon, User, _, render, Campaign: Campaigndb,
+  chai, chaiHttp, app, faker, ObjectID, dropDatabase, steemHelper, sinon, User, _, render,
 } = require('test/testHelper');
 const {
-  BlacklistFactory, CampaignFactory, PaymentFactory, SubscriptionFactory, AppFactory,
-  UserFactory, WobjectFactory, PostFactory, PaymentHistoryFactory, AppendObjectFactory, WobjectSubscriptionFactory,
+  BlacklistFactory, CampaignFactory, PaymentFactory, SubscriptionFactory, UserFactory,
+  WobjectFactory, PostFactory, PaymentHistoryFactory, AppendObjectFactory, WobjectSubscriptionFactory,
 } = require('test/factories');
 const Campaign = require('models/campaignModel');
 
@@ -2463,6 +2463,7 @@ describe('eligible: if have received a reward from campaign in the last frequenc
       frequency_assign: frequency,
       requiredObject: wobject.author_permlink,
       users,
+      customTimestamps : true,
     });
   });
   it('expect campaigns length to be 0', async () => {
@@ -2499,6 +2500,7 @@ describe('eligible: if have not received a reward from campaign in the last freq
       frequency_assign: frequency,
       requiredObject: wobject.author_permlink,
       users,
+      customTimestamps : true,
     });
   });
   it('expect campaigns length to be 1', async () => {
