@@ -76,7 +76,7 @@ exports.recountDebtAfterTransfer = async ({
       ? debtHistories[id].details.remaining
       : debtHistories[id].amount;
 
-    if (_.round(amount, 4) < _.round(remaining, 3) && +id === 0) {
+    if (_.round(amount, 4) - _.round(remaining, 3) < -0.001 && +id === 0) {
       return { remaining: amount, payed: false };
     }
 
@@ -88,11 +88,11 @@ exports.recountDebtAfterTransfer = async ({
       const nextRemaining = debtHistories[+id + 1].type === 'overpayment_refund'
         ? debtHistories[+id + 1].details.remaining
         : debtHistories[+id + 1].amount;
-      if ((_.round(amount, 3) - _.round(nextRemaining, 3)) < 0) break;
+      if ((_.round(amount, 4) - _.round(nextRemaining, 3)) < -0.001) break;
     }
   }
   if (suspended) await checkForUnblockCampaign(guideName);
-  return { remaining: amount, payed: amount === 0 };
+  return { remaining: _.round(amount, 3) < 0 ? 0 : _.round(amount, 3), payed: amount <= 0 && amount > -0.001 };
 };
 
 exports.overpaymentRefund = async ({

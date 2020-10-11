@@ -1914,7 +1914,7 @@ describe('Restore reservation', async () => {
     });
     it('should create index, campaign, referral debt', async () => {
       await commentParser.parse(mock);
-      const amount = _.round((campaign.reward / campaign.users[0].hiveCurrency) * 0.05, 3);
+      const amount = _.floor((campaign.reward / campaign.users[0].hiveCurrency) * 0.05, 3);
       const result = await PaymentHistory.find({
         type: {
           $in: [PAYMENT_HISTORIES_TYPES.REFERRAL_SERVER_FEE, PAYMENT_HISTORIES_TYPES.CAMPAIGNS_SERVER_FEE, PAYMENT_HISTORIES_TYPES.INDEX_FEE],

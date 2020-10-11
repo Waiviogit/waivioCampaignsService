@@ -92,8 +92,8 @@ const withoutWrapperPayables = async ({
   }
   return {
     histories: limit === 0 ? histories : histories.slice(skip, limit + skip),
-    payable: _.round(payable, 3),
-    amount: _.round(amount, 3),
+    payable: _.ceil(payable, 3),
+    amount: _.ceil(amount, 3),
     is_demo: user && !!user.auth,
     hasMore: histories.slice(skip, limit + skip).length < histories.length,
   };

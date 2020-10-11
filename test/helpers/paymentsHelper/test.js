@@ -704,11 +704,11 @@ describe('PaymentsHelper', async () => {
             const histories = await PaymentHistory.find({ type: { $in: ['campaign_server_fee', 'referral_server_fee'] } }).lean();
 
             expect(histories.length).to.be.eq(4);
-            expect(histories[0].amount).to.be.eq(0.1575);
+            expect(histories[0].amount).to.be.eq(0.158);
             expect(histories[0].userName).to.be.eq('waivio.campaigns');
             expect(histories[1].amount).to.be.eq(0.294);
             expect(histories[1].userName).to.be.eq('waivio.referrals');
-            expect(histories[2].amount).to.be.eq(0.1575);
+            expect(histories[2].amount).to.be.eq(0.158);
             expect(histories[2].userName).to.be.eq('waivio.campaigns');
             expect(histories[3].amount).to.be.eq(0.294);
             expect(histories[3].userName).to.be.eq('waivio.referrals');
@@ -774,9 +774,9 @@ describe('PaymentsHelper', async () => {
           expect(histories[0].userName).to.be.eq('user1');
           expect(histories[0].amount).to.be.eq(10.5);
           expect(histories[1].userName).to.be.eq('waivio.campaigns');
-          expect(histories[1].amount).to.be.eq(0.1575);
+          expect(histories[1].amount).to.be.eq(0.158);
           expect(histories[2].userName).to.be.eq('waivio.index');
-          expect(histories[2].amount).to.be.eq(0.0735);
+          expect(histories[2].amount).to.be.eq(0.073);
           expect(histories[3].userName).to.be.eq('waivio.referrals');
           expect(histories[3].amount).to.be.eq(0.294);
           expect(histories[4].userName).to.be.eq('user1');
@@ -795,9 +795,9 @@ describe('PaymentsHelper', async () => {
           });
           const histories = await PaymentHistory.find({ type: 'index_fee' });
           expect(histories.length).to.be.eq(2);
-          expect(histories[0].amount).to.be.eq(0.0735);
+          expect(histories[0].amount).to.be.eq(0.073);
           expect(histories[0].userName).to.be.eq(waivio);
-          expect(histories[1].amount).to.be.eq(0.0735);
+          expect(histories[1].amount).to.be.eq(0.073);
           expect(histories[1].userName).to.be.eq(waivio);
         });
         it('check beneficiaries fee payment histories with beneficiaries', async () => {
