@@ -1,4 +1,3 @@
-const _ = require('lodash');
 const { campaignHelper } = require('utilities/helpers');
 
 module.exports = async ({
