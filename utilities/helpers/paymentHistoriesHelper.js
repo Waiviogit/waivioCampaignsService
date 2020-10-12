@@ -92,8 +92,8 @@ const withoutWrapperPayables = async ({
   }
   return {
     histories: limit === 0 ? histories : histories.slice(skip, limit + skip),
-    payable: _.round(payable, 3),
-    amount: _.round(amount, 3),
+    payable: _.ceil(payable, 3),
+    amount: _.ceil(amount, 3),
     is_demo: user && !!user.auth,
     hasMore: histories.slice(skip, limit + skip).length < histories.length,
   };
@@ -208,10 +208,10 @@ const withWrapperPayables = async ({
     },
   ]);
   if (error) return { error };
-  const payable = _.round(_.sumBy(histories, 'payable'), 3);
+  const payable = _.ceil(_.sumBy(histories, 'payable'), 3);
 
   histories = _.forEach(histories.slice(skip, limit + skip), (history) => {
-    history.payable = _.round(history.payable, 3);
+    history.payable = _.ceil(history.payable, 3);
   });
   return { histories, payable, is_demo_user: user && !!user.auth };
 };

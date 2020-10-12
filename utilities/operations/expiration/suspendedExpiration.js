@@ -59,18 +59,15 @@ const getPaymentsAmounts = async (sponsor, userName, createdAt) => {
         PAYMENT_HISTORIES_TYPES.CAMPAIGNS_SERVER_FEE,
         PAYMENT_HISTORIES_TYPES.REFERRAL_SERVER_FEE,
         PAYMENT_HISTORIES_TYPES.BENEFICIARY_FEE,
-        PAYMENT_HISTORIES_TYPES.INDEX_FEE,
-        PAYMENT_HISTORIES_TYPES.DEMO_DEBT], pmnt.type,
+        PAYMENT_HISTORIES_TYPES.INDEX_FEE, PAYMENT_HISTORIES_TYPES.COMPENSATION_FEE,
+      ], pmnt.type,
     )) {
       return pmnt.amount;
     }
   }) || 0;
-  const paymentsAmount = _.sumBy(allPayments, (pmnt) => {
-    if (_.includes(
-      [PAYMENT_HISTORIES_TYPES.TRANSFER], pmnt.type,
-    )) {
-      return _.get(pmnt, 'details.remaining', 0);
-    }
-  }) || 0;
+  const transfers = await PaymentHistory.find({
+    sponsor, userName, payed: false, type: { $in: [PAYMENT_HISTORIES_TYPES.TRANSFER, PAYMENT_HISTORIES_TYPES.DEMO_DEBT] },
+  });
+  const paymentsAmount = _.sumBy(transfers, (pmnt) => _.get(pmnt, 'details.remaining', 0)) || 0;
   return { debtsAmount, paymentsAmount };
 };

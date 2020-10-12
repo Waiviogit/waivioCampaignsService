@@ -69,10 +69,12 @@ const orderIds = {
 };
 
 const MIN_DEBT_TO_SUSPENDED = 2;
+const MIN_TO_PAYED_VALUE = 0.001;
 
 module.exports = {
   telegramApi,
   MIN_DEBT_TO_SUSPENDED,
+  MIN_TO_PAYED_VALUE,
   nodeUrls,
   notificationsApi: notificationsApi[process.env.NODE_ENV || 'development'],
   mailerApi: mailerApi[process.env.NODE_ENV || 'development'],

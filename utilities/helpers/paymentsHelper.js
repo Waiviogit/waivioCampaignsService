@@ -62,7 +62,7 @@ const createReview = async ({
       const { result: transfer } = await PaymentHistory.findOne({
         sponsor: campaign.guideName, userName: payable.account, type: 'transfer', payed: false,
       });
-      if (transfer && transfer.details.remaining && transfer.details.remaining >= payable.amount) {
+      if (transfer && transfer.details.remaining && transfer.details.remaining - payable.amount >= -0.001) {
         await PaymentHistory.updateOne({ _id: transfer._id }, {
           'details.remaining': 0,
           payed: true,
@@ -77,9 +77,9 @@ const createReview = async ({
         userName: payable.account,
         sponsor: campaign.guideName,
         type: payable.type,
-        payed: !(payable.amount - debt > 0),
+        payed: !(payable.amount - debt > 0.001),
         commission: payable.commission || null,
-        payable: payable.amount,
+        payable: _.round(payable.amount, 3),
         review_permlink: permlink,
         beneficiaries: updBeneficiaries,
         object_permlink: objectPermlink,
@@ -288,7 +288,7 @@ const commissionRecords = async (reward, commission, server_acc, referralAgent) 
 
   const { commissions } = await getCommissions(server_acc);
 
-  const campaignCommission = _.round(((reward * commission) * commissions.campaignsCommission), 4);
+  const campaignCommission = _.round(((reward * commission) * commissions.campaignsCommission), 3);
   if (campaignCommission > 0) {
     payables.push({
       account: commissions.campaignsAccount,
@@ -299,7 +299,7 @@ const commissionRecords = async (reward, commission, server_acc, referralAgent) 
   }
 
   // eslint-disable-next-line max-len
-  const indexCommission = _.round(((reward * commission) - campaignCommission) * commissions.indexCommission, 4);
+  const indexCommission = _.round(((reward * commission) - campaignCommission) * commissions.indexCommission, 3);
   if (indexCommission > 0) {
     payables.push({
       account: commissions.indexAccount,
@@ -312,7 +312,7 @@ const commissionRecords = async (reward, commission, server_acc, referralAgent) 
   if ((campaignCommission + indexCommission) === (reward * commission)) return payables;
 
   // eslint-disable-next-line max-len
-  const referralCommission = _.round(((reward * commission) - campaignCommission - indexCommission), 4);
+  const referralCommission = _.round(((reward * commission) - campaignCommission - indexCommission), 3);
   // eslint-disable-next-line camelcase
   payables.push({
     account: referralAgent || commissions.referralAccount,
