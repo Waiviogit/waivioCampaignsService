@@ -1,6 +1,5 @@
 const { faker, ObjectID, Campaign } = require('test/testHelper');
 
-
 const Create = async (data = {}) => {
   const campaignData = {
     id: data.id || undefined,
@@ -56,7 +55,12 @@ const Create = async (data = {}) => {
   if (!data.hasOwnProperty('coordinates')) {
     campaign.map = undefined;
   }
-  await campaign.save();
+  if (data.hasOwnProperty('customTimestamps')) {
+    // allows to save timestamps that we need
+    await campaign.save({ timestamps: false });
+  } else {
+    await campaign.save();
+  }
 
   // Please, dont ask....
   if (data.noObject) {
