@@ -2510,38 +2510,6 @@ describe('eligible: if have not received a reward from campaign in the last freq
     expect(campaigns).to.have.length(1);
   });
 });
-describe('eligible: if there are 2 campaigns on same object and user assigned on one', async () => {
-  let user, wobject;
-  beforeEach(async () => {
-    await dropDatabase();
-
-    user = await UserFactory.Create({ followers_count: 10, count_posts: 10 });
-    wobject = await WobjectFactory.Create();
-
-    await CampaignFactory.Create({
-      status: 'active',
-      requiredObject: wobject.author_permlink,
-      users: [{
-        name: user.name,
-        object_permlink: faker.random.string(),
-        permlink: faker.random.string(),
-        hiveCurrency: 1,
-        status: 'assigned',
-      }],
-    });
-
-    await CampaignFactory.Create({
-      status: 'active',
-      requiredObject: wobject.author_permlink,
-    });
-  });
-  it('expect campaigns length to be 0', async () => {
-    const { body: { campaigns } } = await chai.request(app)
-      .post('/campaigns-api/campaigns/eligible')
-      .send({ userName: user.name, requiredObject: wobject.author_permlink });
-    expect(campaigns).to.have.length(0);
-  });
-});
 describe('route /campaigns-api/rewards/:userName', async () => {
   let user, campaign, wobject;
   beforeEach(async () => {
