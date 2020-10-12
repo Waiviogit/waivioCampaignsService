@@ -274,7 +274,7 @@ describe('Payables', async () => {
           .send({ sponsor: 'sponsor2' });
         res.should.have.status(200);
         res.body.histories.length.should.to.be.eq(3);
-        res.body.payable.should.to.be.eq(20.2);
+        res.body.payable.should.to.be.eq(20.201);
         _.round(res.body.histories[0].payable, 2).should.to.be.eq(20);
         _.round(res.body.histories[1].payable, 2).should.to.be.eq(0.1);
         _.round(res.body.histories[2].payable, 2).should.to.be.eq(0.1);
@@ -392,7 +392,7 @@ describe('Payables', async () => {
           .send({ sponsor: 'sponsor2' });
         res.should.have.status(200);
         res.body.histories.length.should.to.be.eq(4);
-        res.body.payable.should.to.be.eq(20.2);
+        res.body.payable.should.to.be.eq(20.201);
         _.round(res.body.histories[0].payable, 2).should.to.be.eq(18);
         _.round(res.body.histories[1].payable, 2).should.to.be.eq(2);
         _.round(res.body.histories[2].payable, 2).should.to.be.eq(0.1);

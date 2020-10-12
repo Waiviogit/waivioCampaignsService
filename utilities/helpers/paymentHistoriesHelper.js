@@ -208,10 +208,10 @@ const withWrapperPayables = async ({
     },
   ]);
   if (error) return { error };
-  const payable = _.round(_.sumBy(histories, 'payable'), 3);
+  const payable = _.ceil(_.sumBy(histories, 'payable'), 3);
 
   histories = _.forEach(histories.slice(skip, limit + skip), (history) => {
-    history.payable = _.round(history.payable, 3);
+    history.payable = _.ceil(history.payable, 3);
   });
   return { histories, payable, is_demo_user: user && !!user.auth };
 };
