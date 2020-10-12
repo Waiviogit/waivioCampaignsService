@@ -59,8 +59,8 @@ const getPaymentsAmounts = async (sponsor, userName, createdAt) => {
         PAYMENT_HISTORIES_TYPES.CAMPAIGNS_SERVER_FEE,
         PAYMENT_HISTORIES_TYPES.REFERRAL_SERVER_FEE,
         PAYMENT_HISTORIES_TYPES.BENEFICIARY_FEE,
-        PAYMENT_HISTORIES_TYPES.INDEX_FEE,
-        PAYMENT_HISTORIES_TYPES.DEMO_DEBT], pmnt.type,
+        PAYMENT_HISTORIES_TYPES.INDEX_FEE, PAYMENT_HISTORIES_TYPES.COMPENSATION_FEE,
+      ], pmnt.type,
     )) {
       return pmnt.amount;
     }
