@@ -1,11 +1,10 @@
 const _ = require('lodash');
-const { getNamespace } = require('cls-hooked');
 const { PAYMENT_HISTORIES_TYPES } = require('constants/constants');
 const { FIELDS_NAMES } = require('constants/wobjectsData');
 const {
-  paymentHistoryModel, userModel, wobjectModel, campaignModel, appModel,
+  paymentHistoryModel, userModel, wobjectModel, campaignModel,
 } = require('models');
-const { processWobjects } = require('utilities/helpers/wobjectHelper');
+const { processWobjects, getSessionApp } = require('utilities/helpers/wobjectHelper');
 
 const withoutWrapPipeline = (data) => {
   const pipeline = [
@@ -139,9 +138,7 @@ const fillPayments = async (histories, currency) => {
   ]);
   if (wobjError) return { error: wobjError };
 
-  const session = getNamespace('request-session');
-  const host = session.get('host');
-  const { result: app } = await appModel.findOne(host);
+  const app = await getSessionApp();
   wobjects = await processWobjects({
     fields: [FIELDS_NAMES.NAME],
     wobjects,
