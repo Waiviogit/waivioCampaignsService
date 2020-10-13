@@ -66,7 +66,7 @@ describe('PaymentsHelper', async () => {
         count_posts: 10,
         name: reviwer,
         referral: {
-          type: REFERRAL_TYPES.REVIEWS,
+          type: REFERRAL_TYPES.REWARDS,
           endedAt: moment.utc().add(10, 'days').toDate(),
           agent: referral,
         },
@@ -90,7 +90,7 @@ describe('PaymentsHelper', async () => {
         count_posts: 10,
         name: reviwer,
         referral: {
-          type: REFERRAL_TYPES.REVIEWS,
+          type: REFERRAL_TYPES.REWARDS,
           endedAt: moment.utc().add(10, 'days').toDate(),
           agent: 'app2',
         },
@@ -211,7 +211,7 @@ describe('PaymentsHelper', async () => {
         count_posts: 10,
         name: reviwer,
         referral: {
-          type: REFERRAL_TYPES.REVIEWS,
+          type: REFERRAL_TYPES.REWARDS,
           endedAt: moment.utc().add(10, 'days').toDate(),
           agent: 'app',
         },

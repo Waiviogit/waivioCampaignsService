@@ -835,7 +835,7 @@ describe('comment Parser', async () => {
           count_posts: 10,
           name: 'user1',
           referral: {
-            type: REFERRAL_TYPES.REVIEWS,
+            type: REFERRAL_TYPES.REWARDS,
             endedAt: moment.utc().add(10, 'days').toDate(),
             agent,
           },
