@@ -323,8 +323,8 @@ exports.getCompletedUsersInSameCampaigns = async (guideName, requiredObject, use
   { $project: { _id: null, completedUser: 1, assignedUser: 1 } },
   ];
   const { result } = await campaignModel.aggregate(pipeline);
-  if (_.isEmpty(result)) return { lastCompleted: false, assignedUser: false };
-  return { lastCompleted: _.max(_.map(result[0].completedUser, 'updatedAt')), assignedUser: !!_.last(_.get(result, '[0].assignedUser')) };
+  if (_.isEmpty(result)) return { lastCompleted: null, assignedUser: false };
+  return { lastCompleted: _.max(_.map(result[0].completedUser, 'updatedAt')) || null, assignedUser: !!_.last(_.get(result, '[0].assignedUser')) };
 };
 
 exports.campaignsAggregation = async ({
