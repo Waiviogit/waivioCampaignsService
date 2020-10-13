@@ -22,6 +22,7 @@ exports.payablesSchema = Joi.object().keys({
   objects: Joi.array().items(Joi.string()).default([]),
   globalReport: Joi.boolean().default(false),
   processingFees: Joi.boolean().default(false),
+  referral: Joi.string(),
 }).options(options);
 
 exports.demoDeptSchema = Joi.object().keys({

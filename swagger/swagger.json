@@ -1296,6 +1296,10 @@
                   "description": "User name",
                   "type": "string"
                 },
+                "referral": {
+                  "description": "name of referral agent",
+                  "type": "string"
+                },
                 "type": {
                   "description": "Type of payable for filter by this type and userName",
                   "type": "string",

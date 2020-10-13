@@ -1,4 +1,5 @@
 const _ = require('lodash');
+const { PAYMENT_HISTORIES_TYPES } = require('constants/constants');
 const {
   paymentHistoryModel, userModel, wobjectModel, campaignModel,
 } = require('models');
@@ -11,6 +12,7 @@ const withoutWrapPipeline = (data) => {
     { $addFields: { 'details.payableInDollars': { $multiply: ['$amount', '$details.hiveCurrency'] } } },
   ];
   data.type ? pipeline[0].$match.type = data.type : pipeline[0].$match.sponsor = data.sponsor;
+  if (data.ids) pipeline[0].$match = { 'details.reservation_permlink': { $in: data.ids }, type: PAYMENT_HISTORIES_TYPES.REFERRAL_SERVER_FEE };
   return pipeline;
 };
 
@@ -244,8 +246,20 @@ const getSingleReport = async ({ guideName, userName, reservationPermlink }) => 
   return { histories, users, campaign };
 };
 
+const getReferralPermlinks = async (userName, agent) => {
+  const { result: referrals } = await paymentHistoryModel.find({ userName: agent, type: PAYMENT_HISTORIES_TYPES.REFERRAL_SERVER_FEE });
+
+  const { result: reviews } = await paymentHistoryModel.find({
+    'details.reservation_permlink': { $in: _.map(referrals, 'details.reservation_permlink') },
+    userName,
+    type: PAYMENT_HISTORIES_TYPES.REVIEW,
+  });
+  return _.map(reviews, 'details.reservation_permlink');
+};
+
 module.exports = {
   withoutWrapperPayables,
+  getReferralPermlinks,
   withoutWrapPipeline,
   createReportPipeline,
   withWrapperPayables,

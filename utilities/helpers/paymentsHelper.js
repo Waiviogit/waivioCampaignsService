@@ -234,7 +234,7 @@ const distributeReward = async ({
   payables.push({ account: reviwer, amount: reviewReward, type: 'review' });
 
   const referralAcc = _.find(_.get(user, 'referral'),
-    (referral) => referral.type === REFERRAL_TYPES.REVIEWS);
+    (referral) => referral.type === REFERRAL_TYPES.REWARDS);
   const referralAgent = referralAcc && referralAcc.endedAt > new Date() ? referralAcc.agent : null;
 
   const commissionPayments = await commissionRecords(reward, commission, server_acc, referralAgent);

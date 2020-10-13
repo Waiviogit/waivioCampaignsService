@@ -2,7 +2,7 @@ const moment = require('moment');
 const paymentHistoriesHelper = require('utilities/helpers/paymentHistoriesHelper');
 
 module.exports = async ({
-  skip, limit, days, payable, sponsor, userName, sort, type,
+  skip, limit, days, payable, sponsor, userName, sort, type, referral,
   globalReport, objects, endDate, startDate, currency, processingFees,
 }) => {
   if (!sponsor && !userName) return { error: { status: 422, message: 'One of userName or sponsor is required!' } };
@@ -21,6 +21,17 @@ module.exports = async ({
       processingFees,
       filterPayable,
       pipeline: paymentHistoriesHelper.createReportPipeline,
+    });
+  }
+  if (userName && type) {
+    const ids = await paymentHistoriesHelper.getReferralPermlinks(userName, referral);
+    return paymentHistoriesHelper.withoutWrapperPayables({
+      matchData: {
+        sponsor, userName, type, ids,
+      },
+      skip,
+      limit,
+      pipeline: paymentHistoriesHelper.withoutWrapPipeline,
     });
   }
   if ((sponsor && userName) || (userName && type)) {
