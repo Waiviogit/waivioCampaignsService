@@ -3,8 +3,15 @@ const { getNamespace } = require('cls-hooked');
 const { wobjectModel, appModel } = require('models');
 const {
   REQUIREDFIELDS_PARENT, MIN_PERCENT_TO_SHOW_UPGATE, FIELDS_NAMES,
-  ADMIN_ROLES, categorySwitcher, CAMPAIGN_FIELDS, VOTE_STATUSES, OBJECT_TYPES
+  ADMIN_ROLES, categorySwitcher, CAMPAIGN_FIELDS, VOTE_STATUSES, OBJECT_TYPES,
 } = require('constants/wobjectsData');
+
+const getSessionApp = async () => {
+  const session = getNamespace('request-session');
+  const host = session.get('host');
+  const { result } = await appModel.findOne(host);
+  return result;
+};
 
 const calculateApprovePercent = (field) => {
   if (_.isEmpty(field.active_votes)) return 100;
@@ -279,11 +286,7 @@ const getWobjects = async ({
 
 const getWobjectName = async (permlink) => {
   const { result: wobject } = await wobjectModel.findOne(permlink);
-
-  const session = getNamespace('request-session');
-  const host = session.get('host');
-  const { result: app } = await appModel.findOne(host);
-
+  const app = await getSessionApp();
   const processedWobj = await processWobjects({
     wobjects: [wobject],
     fields: [FIELDS_NAMES.NAME],
@@ -294,5 +297,5 @@ const getWobjectName = async (permlink) => {
 };
 
 module.exports = {
-  processWobjects, getWobjects, getWobjectName,
+  processWobjects, getWobjects, getWobjectName, getSessionApp,
 };

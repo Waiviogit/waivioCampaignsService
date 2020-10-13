@@ -1,9 +1,10 @@
 const _ = require('lodash');
 const { PAYMENT_HISTORIES_TYPES } = require('constants/constants');
+const { FIELDS_NAMES } = require('constants/wobjectsData');
 const {
   paymentHistoryModel, userModel, wobjectModel, campaignModel,
 } = require('models');
-const { getWobjectName } = require('utilities/helpers/wobjectHelper');
+const { processWobjects, getSessionApp } = require('utilities/helpers/wobjectHelper');
 
 const withoutWrapPipeline = (data) => {
   const pipeline = [
@@ -126,20 +127,24 @@ const fillPayments = async (histories, currency) => {
   const reviewPermlinks = _.chain(histories).map('details.reservation_permlink').uniq().compact()
     .value();
 
-  const { result: wobjects, error: wobjError } = await wobjectModel.aggregate([
+  let { result: wobjects, error: wobjError } = await wobjectModel.aggregate([
     { $match: { author_permlink: { $in: _.uniq(_.compact(permlinks)) } } },
     { $addFields: { fields: { $filter: { input: '$fields', as: 'field', cond: { $eq: ['$$field.name', 'name'] } } } } },
     {
       $project: {
-        _id: 0, author_permlink: 1, fields: 1, object_type: 1,
+        _id: 0, author_permlink: 1, fields: 1, object_type: 1, default_name: 1,
       },
     },
   ]);
   if (wobjError) return { error: wobjError };
-  for (const wobj of wobjects) {
-    const { objectName } = await getWobjectName(wobj.author_permlink);
-    wobj.name = objectName;
-  }
+
+  const app = await getSessionApp();
+  wobjects = await processWobjects({
+    fields: [FIELDS_NAMES.NAME],
+    wobjects,
+    app,
+  });
+
   const { result: payments, error } = await paymentHistoryModel.find({ type: 'review', 'details.reservation_permlink': { $in: reviewPermlinks } });
   if (error) return { error };
 
