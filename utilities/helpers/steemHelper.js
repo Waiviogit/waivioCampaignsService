@@ -3,7 +3,11 @@ const dhive = require('@hiveio/dhive');
 const { specialTransferBeneficiaries } = require('constants/constants');
 
 const { Asset } = dhive;
-const steemClient = new dhive.Client('https://anyx.io');
+const steemClient = new dhive.Client('https://anyx.io', {
+  timeout: 8 * 1000,
+  failoverThreshold: 4,
+  rebrandedApi: true,
+});
 
 const likePost = async ({
   key, voter, author, permlink, weight,
@@ -207,8 +211,8 @@ const claimRewards = async (account) => {
     'claim_reward_balance',
     {
       account: account.name,
-      reward_sbd: accountInfo.reward_hbd_balance,
-      reward_steem: accountInfo.reward_hive_balance,
+      reward_hbd: accountInfo.reward_hbd_balance,
+      reward_hive: accountInfo.reward_hive_balance,
       reward_vests: `${accountInfo.reward_vesting_balance.split(' ')[0]} VESTS`,
     },
   ];
