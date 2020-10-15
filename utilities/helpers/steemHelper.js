@@ -1,9 +1,13 @@
 const _ = require('lodash');
-const dsteem = require('@hivechain/dsteem');
+const dhive = require('@hiveio/dhive');
 const { specialTransferBeneficiaries } = require('constants/constants');
 
-const { Asset } = dsteem;
-const steemClient = new dsteem.Client('https://anyx.io');
+const { Asset } = dhive;
+const steemClient = new dhive.Client('https://anyx.io', {
+  timeout: 8 * 1000,
+  failoverThreshold: 4,
+  rebrandedApi: true,
+});
 
 const likePost = async ({
   key, voter, author, permlink, weight,
@@ -12,7 +16,7 @@ const likePost = async ({
     const result = await steemClient.broadcast.vote({
       voter, author, permlink, weight,
     },
-    dsteem.PrivateKey.fromString(key));
+    dhive.PrivateKey.fromString(key));
     console.log(`Successfully liked. Included in block: ${result.block_num}`);
     return { result: true };
   } catch (error) {
@@ -33,7 +37,7 @@ const likePost = async ({
 const transfer = async ({
   from, to, amount, memo = '', activeKey,
 }) => {
-  const key = await dsteem.PrivateKey.fromString(activeKey);
+  const key = await dhive.PrivateKey.fromString(activeKey);
 
   return steemClient.broadcast.transfer({
     from, to, amount: new Asset(amount, 'HIVE'), memo,
@@ -68,7 +72,15 @@ const getAccountInfo = async (name) => {
  * @param permlink {string}
  * @returns {Promise<any>}
  */
-const getPostInfo = async ({ author, permlink }) => steemClient.database.call('get_content', [author, permlink]);
+const getPostInfo = async ({ author, permlink }) => {
+  try {
+    const result = await steemClient.database.call('get_content', [author, permlink]);
+    return result;
+  } catch (error) {
+    console.error(error.message);
+    return { author: '', permlink: '' };
+  }
+};
 
 /**
  *
@@ -183,7 +195,7 @@ const sendOperations = async (operations, key) => {
   try {
     return {
       result: await steemClient.broadcast.sendOperations(
-        [operations], dsteem.PrivateKey.fromString(key),
+        [operations], dhive.PrivateKey.fromString(key),
       ),
     };
   } catch (error) {
@@ -199,8 +211,8 @@ const claimRewards = async (account) => {
     'claim_reward_balance',
     {
       account: account.name,
-      reward_sbd: accountInfo.reward_sbd_balance,
-      reward_steem: accountInfo.reward_steem_balance,
+      reward_hbd: accountInfo.reward_hbd_balance,
+      reward_hive: accountInfo.reward_hive_balance,
       reward_vests: `${accountInfo.reward_vesting_balance.split(' ')[0]} VESTS`,
     },
   ];

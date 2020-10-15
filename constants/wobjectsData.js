@@ -5,6 +5,7 @@ exports.FIELDS_NAMES = {
   GALLERY_ITEM: 'galleryItem',
   PAGE_CONTENT: 'pageContent',
   DESCRIPTION: 'description',
+  SORT_CUSTOM: 'sortCustom',
   NEWS_FILTER: 'newsFilter',
   BACKGROUND: 'background',
   AUTHORITY: 'authority',
@@ -110,6 +111,8 @@ exports.CAMPAIGN_FIELDS = [
   this.FIELDS_NAMES.ADDRESS,
   this.FIELDS_NAMES.TITLE,
   this.FIELDS_NAMES.DESCRIPTION,
+  this.FIELDS_NAMES.SORT_CUSTOM,
+  this.FIELDS_NAMES.LIST_ITEM,
 ];
 
 exports.REQUIREDFIELDS_CHILD = [this.FIELDS_NAMES.NAME, this.FIELDS_NAMES.AVATAR];
