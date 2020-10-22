@@ -30,7 +30,7 @@ module.exports = async ({
         name: user.name,
         started: referralData.startedAt,
         ended: referralData.endedAt,
-        daysLeft: moment.utc(referralData.endedAt).get('dayOfYear') - moment.utc().get('dayOfYear'),
+        daysLeft: Math.trunc(((((moment.utc(referralData.endedAt).valueOf() - moment.utc().valueOf()) / 1000) / 60) / 60) / 24),
       };
     }
   });
