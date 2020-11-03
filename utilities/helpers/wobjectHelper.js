@@ -313,5 +313,5 @@ const getWobjectName = async (permlink) => {
 };
 
 module.exports = {
-  processWobjects, getWobjects, getWobjectName, getSessionApp,
+  processWobjects, getWobjects, getWobjectName, getSessionApp, getTopTags,
 };

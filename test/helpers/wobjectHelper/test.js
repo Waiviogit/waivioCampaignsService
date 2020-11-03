@@ -630,4 +630,45 @@ describe('On wobjectHelper', async () => {
       expect(result[FIELDS_NAMES.NAME]).to.be.undefined;
     });
   });
+
+  describe('on getTopTags', async () => {
+    let object, result, topTags, tag1, tag2;
+    beforeEach(async () => {
+      const tagCategory = FIELDS_NAMES.TAG_CATEGORY;
+      const categoryItem = FIELDS_NAMES.CATEGORY_ITEM;
+      const id = faker.random.number();
+      tag1 = faker.random.string();
+      tag2 = faker.random.string();
+      ({ wobject: object } = await AppendObjectFactory.Create({
+        name: tagCategory, id, weight: 100,
+      }));
+      await AppendObjectFactory.Create({
+        weight: _.random(100, 200),
+        rootWobj: object.author_permlink,
+        name: categoryItem,
+        body: tag1,
+        id,
+      });
+      ({ wobject: object } = await AppendObjectFactory.Create({
+        weight: _.random(1, 99),
+        rootWobj: object.author_permlink,
+        name: categoryItem,
+        body: tag2,
+        id,
+      }));
+      result = await wobjectHelper.processWobjects({
+        fields: [FIELDS_NAMES.TAG_CATEGORY, FIELDS_NAMES.CATEGORY_ITEM],
+        wobjects: [_.cloneDeep(object)],
+        returnArray: false,
+        app,
+      });
+      topTags = wobjectHelper.getTopTags(result);
+    });
+    it('should return tag with more weight on 0 element of array', async () => {
+      expect(topTags[0]).to.be.eq(tag1);
+    });
+    it('should return tag with less weight on 1 element of array', async () => {
+      expect(topTags[1]).to.be.eq(tag2);
+    });
+  });
 });
