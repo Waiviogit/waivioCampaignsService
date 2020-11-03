@@ -217,6 +217,21 @@ const getLinkToPageLoad = (obj) => {
   return `/object/${obj.author_permlink}/menu#${field.body}`;
 };
 
+const getTopTags = (obj) => {
+  const tagCategories = _.get(obj, 'tagCategory', []);
+  if (_.isEmpty(tagCategories)) return [];
+  let tags = [];
+  for (const tagCategory of tagCategories) {
+    tags = _.concat(tags, tagCategory.items);
+  }
+  return _
+    .chain(tags)
+    .orderBy('weight', 'desc')
+    .slice(0, 2)
+    .map('body')
+    .value();
+};
+
 /** Parse wobjects to get its winning */
 const processWobjects = async ({
   wobjects, fields, locale = 'en-US',
@@ -243,6 +258,7 @@ const processWobjects = async ({
       getFieldsToDisplay(obj.fields, locale, fields, obj.author_permlink, !!ownership.length));
     obj = _.omit(obj, ['fields', 'latest_posts', 'last_posts_counts_by_hours', 'tagCategories']);
     obj.defaultShowLink = getLinkToPageLoad(obj);
+    if (_.has(obj, FIELDS_NAMES.TAG_CATEGORY)) obj.topTags = getTopTags(obj);
     filteredWobj.push(obj);
   }));
   if (!returnArray) return filteredWobj[0];
@@ -297,5 +313,5 @@ const getWobjectName = async (permlink) => {
 };
 
 module.exports = {
-  processWobjects, getWobjects, getWobjectName, getSessionApp,
+  processWobjects, getWobjects, getWobjectName, getSessionApp, getTopTags,
 };
