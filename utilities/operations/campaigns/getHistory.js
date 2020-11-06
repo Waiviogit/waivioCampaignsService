@@ -174,7 +174,9 @@ const getHistory = async ({
     : filteredCampaigns.slice(0, limit);
   return {
     campaigns: result,
-    hasMore: result.length < filteredCampaigns.length,
+    hasMore: onlyWithMessages
+      ? result.length < filteredCampaigns.length - skip
+      : result.length < filteredCampaigns.length,
     sponsors: _.uniq(_.map(campaigns, 'guideName')),
     campaigns_types: _.uniq(_.map(campaigns, 'type')),
     campaigns_names: _.uniq(_.map(campaigns, 'name')),
