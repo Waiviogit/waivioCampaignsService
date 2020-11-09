@@ -1317,12 +1317,7 @@ describe('Campaign', async () => {
           name: `name${i}`, object_permlink: 'obj1', permlink: 'permlink1', status: 'completed', completedAt: new Date(), hiveCurrency: 1,
         });
       }
-      users.push({
-        name: 'name99', object_permlink: 'obj1', permlink: 'permlink1', status: 'completed', completedAt: new Date('1999-02-02'), hiveCurrency: 1,
-      });
-      users.push({
-        name: 'name99', object_permlink: 'obj1', permlink: 'permlink1', status: 'assigned', createdAt: new Date('1999-02-02'), hiveCurrency: 1,
-      });
+
       for (let i = 0; i < 15; i++) {
         const campaign = await CampaignFactory.Create({
           users,
