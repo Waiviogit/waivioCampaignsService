@@ -1,17 +1,20 @@
 const _ = require('lodash');
+const moment = require('moment');
 const { wobjectModel } = require('models');
 const { campaignHelper, steemHelper, wobjectHelper } = require('utilities/helpers');
 const { currencyRequest } = require('utilities/requests');
 const paymentHistory = require('../paymentHistory');
 
 module.exports = async (data) => {
+  const limitDate = moment.utc().startOf('month').toDate();
   const { campaigns: dashboard, error } = await campaignHelper.getCampaigns({
     matchData: [
       { $match: { guideName: data.guideName } },
       {
         $addFields: {
-          completed: { $size: { $filter: { input: '$users', as: 'user', cond: { $eq: ['$$user.status', 'completed'] } } } },
-          reserved: { $size: { $filter: { input: '$users', as: 'user', cond: { $eq: ['$$user.status', 'assigned'] } } } },
+          completed: { $size: { $filter: { input: '$users', as: 'user', cond: { $and: [{ $eq: ['$$user.status', 'completed'] }, { $gt: ['$$user.completedAt', limitDate] }] } } } },
+          reserved: { $size: { $filter: { input: '$users', as: 'user', cond: { $and: [{ $eq: ['$$user.status', 'assigned'] }, { $gt: ['$$user.createdAt', limitDate] }] } } } },
+          completedTotal: { $size: { $filter: { input: '$users', as: 'user', cond: { $eq: ['$$user.status', 'completed'] } } } },
         },
       },
       ...guideLookup(),
@@ -28,6 +31,7 @@ module.exports = async (data) => {
           reward: 1,
           reserved: 1,
           completed: 1,
+          completedTotal: 1,
           match_bots: 1,
           agreementObjects: 1,
           usersLegalNotice: 1,
