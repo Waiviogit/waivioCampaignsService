@@ -9,12 +9,13 @@ const config = require('config');
 
 const getMatchData = ({
   onlyWithMessages, fraudSuspicion, guideNames, guideName, userName,
-  rewards, status, limit, skip, sort, reservationPermlink,
+  rewards, status, limit, skip, sort, reservationPermlink, campaignNames,
 }) => {
   const pipeline = [
     { $unwind: '$users' },
     { $match: { status: { $in: status }, 'users.status': { $in: rewards } } },
   ];
+  if (campaignNames) pipeline[1].$match.name = { $in: campaignNames };
   if (reservationPermlink) pipeline[1].$match['users.permlink'] = reservationPermlink;
   if (fraudSuspicion) pipeline[1].$match['users.fraudSuspicion'] = true;
   if (guideName) pipeline[1].$match.guideName = guideName;
@@ -135,8 +136,8 @@ const fillCampaign = async (campaign, conversations) => {
 };
 
 const getHistory = async ({
-  skip, limit, sort, caseStatus, campaigns, guideNames,
-  onlyWithMessages, locale, appName, campaignNames,
+  skip, limit, sort, caseStatus, campaigns,
+  onlyWithMessages, locale, appName,
 }) => {
   /** get conversations by all campaigns from hive */
   const { conversations } = await getConversationsFromHive(campaigns);
@@ -157,26 +158,14 @@ const getHistory = async ({
   });
   campaigns = sortCampaignsHistory(campaigns, sort, caseStatus);
 
-  let filteredCampaigns = _.cloneDeep(campaigns);
-  /** Filter by guide names stage */
-  if (guideNames && guideNames.length) {
-    filteredCampaigns = _.filter(filteredCampaigns,
-      (campaign) => _.includes(guideNames, campaign.guideName));
-  }
-  /** Filter by campaigns names stage */
-  if (campaignNames && campaignNames.length) {
-    filteredCampaigns = _.filter(filteredCampaigns,
-      (campaign) => _.includes(campaignNames, campaign.name));
-  }
-
   const result = onlyWithMessages
-    ? filteredCampaigns.slice(skip, skip + limit)
-    : filteredCampaigns.slice(0, limit);
+    ? campaigns.slice(skip, skip + limit)
+    : campaigns.slice(0, limit);
   return {
     campaigns: result,
     hasMore: onlyWithMessages
-      ? result.length < filteredCampaigns.length - skip
-      : result.length < filteredCampaigns.length,
+      ? result.length < campaigns.length - skip
+      : result.length < campaigns.length,
     sponsors: _.uniq(_.map(campaigns, 'guideName')),
     campaigns_types: _.uniq(_.map(campaigns, 'type')),
     campaigns_names: _.uniq(_.map(campaigns, 'name')),
@@ -193,6 +182,7 @@ module.exports = async ({
       limit: limit + 1,
       onlyWithMessages,
       fraudSuspicion,
+      campaignNames,
       guideNames,
       guideName,
       userName,
@@ -209,9 +199,7 @@ module.exports = async ({
   }
   return getHistory({
     onlyWithMessages,
-    campaignNames,
     caseStatus,
-    guideNames,
     campaigns,
     appName,
     locale,
