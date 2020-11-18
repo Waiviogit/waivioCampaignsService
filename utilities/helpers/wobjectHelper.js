@@ -184,7 +184,7 @@ const getFieldsToDisplay = (fields, locale, filter, permlink, ownership) => {
 };
 
 const getLinkToPageLoad = (obj) => {
-  const listItem = _.get(obj, 'listItem', []);
+  let listItem = _.get(obj, 'listItem', []);
   if (!_.get(obj, 'sortCustom', []).length) {
     switch (obj.object_type) {
       case OBJECT_TYPES.PAGE:
@@ -200,6 +200,9 @@ const getLinkToPageLoad = (obj) => {
       case OBJECT_TYPES.HOTEL:
       case OBJECT_TYPES.RESTAURANT:
         if (listItem.length) {
+          _.find(listItem, (list) => list.type === 'menuList')
+            ? listItem = _.filter(listItem, (list) => list.type === 'menuList')
+            : null;
           const item = _
             .chain(listItem)
             .orderBy([(list) => _.get(list, 'adminVote.timestamp', 0), 'weight'], ['desc', 'desc'])
@@ -214,7 +217,7 @@ const getLinkToPageLoad = (obj) => {
   }
   const field = _.find(listItem, { body: obj.sortCustom[0] });
   if (!field) return `/object/${obj.author_permlink}`;
-  return `/object/${obj.author_permlink}/menu#${field.body}`;
+  return `/object/${obj.author_permlink}/${field.type === 'menuPage' ? 'page' : 'menu'}#${field.body}`;
 };
 
 const getTopTags = (obj) => {
@@ -313,5 +316,5 @@ const getWobjectName = async (permlink) => {
 };
 
 module.exports = {
-  processWobjects, getWobjects, getWobjectName, getSessionApp, getTopTags,
+  processWobjects, getWobjects, getWobjectName, getSessionApp, getTopTags, getLinkToPageLoad,
 };
