@@ -260,6 +260,7 @@ const processWobjects = async ({
     Object.assign(obj,
       getFieldsToDisplay(obj.fields, locale, fields, obj.author_permlink, !!ownership.length));
     obj = _.omit(obj, ['fields', 'latest_posts', 'last_posts_counts_by_hours', 'tagCategories']);
+    if (obj.sortCustom && typeof obj.sortCustom === 'string') obj.sortCustom = JSON.parse(obj.sortCustom);
     obj.defaultShowLink = getLinkToPageLoad(obj);
     if (_.has(obj, FIELDS_NAMES.TAG_CATEGORY)) obj.topTags = getTopTags(obj);
     filteredWobj.push(obj);
