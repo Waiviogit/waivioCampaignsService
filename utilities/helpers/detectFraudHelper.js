@@ -45,19 +45,29 @@ const handleImages = async (images) => {
 
 exports.detectFraudInReview = async (images = [], campaign) => {
   if (!images.length) return false;
+  const codesArr = [];
   const deadline = Math.round(moment(campaign.reservedAt).subtract(14, 'days').valueOf() / 1000);
   const { map } = await getMap(campaign.requiredObject);
   const { tagsArr } = await handleImages(images);
 
   const checkModels = _.uniqBy(tagsArr, 'model');
-  if (checkModels.length > 1) return true;
+  if (checkModels.length > 1) {
+    codesArr.push(`06${_.random(10, 99)}`);
+    return true;
+  }
 
   for (const item of tagsArr) {
-    if (item.date && item.date < deadline) return true;
+    if (item.date && item.date < deadline) {
+      codesArr.push(`07${_.random(10, 99)}`);
+      return true;
+    }
     if (item.latitude && item.longitude && !_.isEmpty(map)) {
       const lat = +map.latitude + 0.01 > item.latitude && item.latitude > +map.latitude - 0.01;
       const long = +map.longitude + 0.01 > item.longitude && item.longitude > +map.longitude - 0.01;
-      if (!lat || !long) return true;
+      if (!lat || !long) {
+        codesArr.push(`08${_.random(10, 99)}`);
+        return true;
+      }
     }
   }
   return false;
