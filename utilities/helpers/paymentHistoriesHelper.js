@@ -1,4 +1,5 @@
 const _ = require('lodash');
+const moment = require('moment');
 const { PAYMENT_HISTORIES_TYPES } = require('constants/constants');
 const { FIELDS_NAMES } = require('constants/wobjectsData');
 const {
@@ -168,9 +169,12 @@ const withWrapperPayables = async ({
 }) => {
   const userKeyName = paymentType === 'payables' ? 'userName' : 'guideName';
   const typeFilter = { $nin: ['demo_post', 'demo_user_transfer', 'user_to_guest_transfer'] };
-
   const { user, error: userError } = await userModel.findOne(userName);
   if (userError) return { error: userError };
+
+  const project = {
+    _id: 0, [userKeyName]: '$_id', payable: 1, alias: 1, lastCreatedAt: 1, payed: 1,
+  };
   // eslint-disable-next-line prefer-const
   let { error, result: histories } = await paymentHistoryModel.aggregate([
     { $match: paymentType === 'payables' ? { sponsor, type: typeFilter } : { userName, type: typeFilter } },
@@ -199,7 +203,12 @@ const withWrapperPayables = async ({
         },
       },
     },
-    { $addFields: { payable: { $subtract: [{ $sum: '$reviews.amount' }, { $sum: '$transfers.amount' }] } } },
+    {
+      $addFields: {
+        payable: { $subtract: [{ $sum: '$reviews.amount' }, { $sum: '$transfers.amount' }] },
+        lastTransfer: { $max: '$transfers.createdAt' },
+      },
+    },
     filterPipe(filterPayable, filterDate),
     { $sort: payablesSort(sort) },
     {
@@ -209,9 +218,17 @@ const withWrapperPayables = async ({
     },
     { $addFields: { alias: { $arrayElemAt: ['$user.alias', 0] } } },
     {
-      $project: {
-        _id: 0, [userKeyName]: '$_id', payable: 1, alias: 1, lastCreatedAt: 1, payed: 1,
-      },
+      $project: paymentType !== 'payables'
+        ? project
+        : Object.assign(project, {
+          notPayedPeriod: {
+            $cond: {
+              if: '$lastTransfer',
+              then: { $arrayElemAt: [{ $filter: { input: '$reviews', as: 'review', cond: { $gte: ['$$review.createdAt', '$lastTransfer'] } } }, 0] },
+              else: { $min: '$reviews.createdAt' },
+            },
+          },
+        }),
     },
   ]);
   if (error) return { error };
@@ -219,6 +236,11 @@ const withWrapperPayables = async ({
 
   histories = _.forEach(histories.slice(skip, limit + skip), (history) => {
     history.payable = _.ceil(history.payable, 3);
+    if (_.get(history, 'notPayedPeriod')) {
+      history.notPayedPeriod = _.get(history, 'notPayedPeriod.createdAt')
+        ? moment.utc().diff(moment.utc(history.notPayedPeriod.createdAt), 'days')
+        : moment.utc().diff(moment.utc(history.notPayedPeriod), 'days');
+    }
   });
   return { histories, payable, is_demo_user: user && !!user.auth };
 };
