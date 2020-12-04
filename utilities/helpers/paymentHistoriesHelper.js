@@ -234,7 +234,7 @@ const withWrapperPayables = async ({
   if (error) return { error };
   const payable = _.ceil(_.sumBy(histories, 'payable'), 3);
 
-  histories = _.forEach(histories.slice(skip, limit + skip), (history) => {
+  const result = _.forEach(histories.slice(skip, limit + skip), (history) => {
     history.payable = _.ceil(history.payable, 3);
     if (_.get(history, 'notPayedPeriod')) {
       history.notPayedPeriod = _.get(history, 'notPayedPeriod.createdAt')
@@ -242,7 +242,12 @@ const withWrapperPayables = async ({
         : moment.utc().diff(moment.utc(history.notPayedPeriod), 'days');
     }
   });
-  return { histories, payable, is_demo_user: user && !!user.auth };
+  return {
+    payable,
+    histories: result,
+    is_demo_user: user && !!user.auth,
+    hasMore: histories.length > skip + limit,
+  };
 };
 
 const filterPipe = (payable, date) => {
