@@ -479,12 +479,10 @@ describe('get payables history', async () => {
     });
     describe('check notPayedPeriod counter', async () => {
       let histories;
-      const notPayedPeriod = _.random(1, 4);
+      const notPayedPeriod = _.random(1, 8);
       beforeEach(async () => {
+        await paymentHistoryModel.updateOne({ sponsor: 'sponsor1', userName: 'user2' }, { payed: true });
         const object = await WobjectFactory.Create();
-        await PaymentHistoryFactory.Create({
-          userName: 'user2', sponsor: 'sponsor1', type: 'transfer', amount: 4, createdAt: moment().subtract(_.random(5, 8), 'days'),
-        });
         await PaymentHistoryFactory.Create({
           main_object: object.author_permlink, review_object: object.author_permlink, userName: 'user2', sponsor: 'sponsor1', type: 'review', amount: 4, createdAt: moment().subtract(notPayedPeriod, 'days'),
         });
