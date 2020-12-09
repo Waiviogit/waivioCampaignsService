@@ -206,7 +206,7 @@ const withWrapperPayables = async ({
     {
       $addFields: {
         payable: { $subtract: [{ $sum: '$reviews.amount' }, { $sum: '$transfers.amount' }] },
-        notPayedPeriod: { $arrayElemAt: [{ $filter: { input: '$reviews', as: 'review', cond: { $eq: ['$$review.payed', false] } } }, 0] },
+        lastNotPayedReview: { $arrayElemAt: [{ $filter: { input: '$reviews', as: 'review', cond: { $eq: ['$$review.payed', false] } } }, 0] },
       },
     },
     filterPipe(filterPayable, filterDate),
@@ -220,7 +220,7 @@ const withWrapperPayables = async ({
     {
       $project: paymentType !== 'payables'
         ? project
-        : Object.assign(project, { notPayedPeriod: 1 }),
+        : Object.assign(project, { lastNotPayedReview: 1 }),
     },
   ]);
   if (error) return { error };
@@ -229,7 +229,8 @@ const withWrapperPayables = async ({
   const result = _.forEach(histories.slice(skip, limit + skip), (history) => {
     history.payable = _.ceil(history.payable, 3);
     if (paymentType === 'payables') {
-      history.notPayedPeriod = moment.utc().diff(moment.utc(_.get(history, 'notPayedPeriod.createdAt', {})), 'days');
+      history.notPayedPeriod = moment.utc().diff(moment.utc(_.get(history, 'lastNotPayedReview.createdAt', {})), 'days');
+      delete history.lastNotPayedReview;
     }
   });
   return {
