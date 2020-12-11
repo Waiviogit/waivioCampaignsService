@@ -142,7 +142,7 @@ describe('get payables history', async () => {
       });
 
       expect(histories.length).to.be.eq(1);
-      expect(_.omit(histories[0], ['lastCreatedAt', 'payed'])).to.be.eql({ payable: 160, guideName: 'sponsor1' });
+      expect(_.omit(histories[0], ['lastCreatedAt', 'payed', 'notPayedPeriod'])).to.be.eql({ payable: 160, guideName: 'sponsor1' });
       expect(payable).to.be.eq(160);
     });
 
@@ -163,7 +163,6 @@ describe('get payables history', async () => {
       expect(payable).to.be.eq(4);
     });
 
-
     it('check filter by date', async () => {
       const { histories, payable } = await getPayableHistory({
         userName: 'user2', days: 8, skip: 0, limit: 30, payable: 0,
@@ -172,7 +171,6 @@ describe('get payables history', async () => {
       expect(histories.length).to.be.eq(1);
       expect(payable).to.be.eq(4);
     });
-
 
     it('check filter by date and payable', async () => {
       const { histories, payable } = await getPayableHistory({
@@ -332,10 +330,10 @@ describe('get payables history', async () => {
       });
 
       expect(histories.length).to.be.eq(4);
-      expect(_.omit(histories[0], ['lastCreatedAt', 'payed'])).to.be.eql({ payable: 160, userName: 'user3' });
-      expect(_.omit(histories[1], ['lastCreatedAt', 'payed'])).to.be.eql({ payable: 4, userName: 'user2' });
-      expect(_.omit(histories[2], ['lastCreatedAt', 'payed'])).to.be.eql({ payable: 2, userName: 'user1' });
-      expect(_.omit(histories[3], ['lastCreatedAt', 'payed'])).to.be.eql({ payable: -31.2, userName: 'user4' });
+      expect(_.omit(histories[0], ['lastCreatedAt', 'payed', 'notPayedPeriod'])).to.be.eql({ payable: 160, userName: 'user3' });
+      expect(_.omit(histories[1], ['lastCreatedAt', 'payed', 'notPayedPeriod'])).to.be.eql({ payable: 4, userName: 'user2' });
+      expect(_.omit(histories[2], ['lastCreatedAt', 'payed', 'notPayedPeriod'])).to.be.eql({ payable: 2, userName: 'user1' });
+      expect(_.omit(histories[3], ['lastCreatedAt', 'payed', 'notPayedPeriod'])).to.be.eql({ payable: -31.2, userName: 'user4' });
       expect(payable).to.be.eq(134.8);
     });
 
@@ -345,10 +343,10 @@ describe('get payables history', async () => {
       });
 
       expect(histories.length).to.be.eq(4);
-      expect(_.omit(histories[2], ['lastCreatedAt', 'payed'])).to.be.eql({ payable: 2, userName: 'user1' });
-      expect(_.omit(histories[3], ['lastCreatedAt', 'payed'])).to.be.eql({ payable: 4, userName: 'user2' });
-      expect(_.omit(histories[1], ['lastCreatedAt', 'payed'])).to.be.eql({ payable: 160, userName: 'user3' });
-      expect(_.omit(histories[0], ['lastCreatedAt', 'payed'])).to.be.eql({ payable: -31.2, userName: 'user4' });
+      expect(_.omit(histories[2], ['lastCreatedAt', 'payed', 'notPayedPeriod'])).to.be.eql({ payable: 2, userName: 'user1' });
+      expect(_.omit(histories[3], ['lastCreatedAt', 'payed', 'notPayedPeriod'])).to.be.eql({ payable: 4, userName: 'user2' });
+      expect(_.omit(histories[1], ['lastCreatedAt', 'payed', 'notPayedPeriod'])).to.be.eql({ payable: 160, userName: 'user3' });
+      expect(_.omit(histories[0], ['lastCreatedAt', 'payed', 'notPayedPeriod'])).to.be.eql({ payable: -31.2, userName: 'user4' });
       expect(payable).to.be.eq(134.8);
     });
 
@@ -358,10 +356,10 @@ describe('get payables history', async () => {
       });
 
       expect(histories.length).to.be.eq(4);
-      expect(_.omit(histories[0], ['lastCreatedAt', 'payed'])).to.be.eql({ payable: 160, userName: 'user3' });
-      expect(_.omit(histories[1], ['lastCreatedAt', 'payed'])).to.be.eql({ payable: 4, userName: 'user2' });
-      expect(_.omit(histories[2], ['lastCreatedAt', 'payed'])).to.be.eql({ payable: 2, userName: 'user1' });
-      expect(_.omit(histories[3], ['lastCreatedAt', 'payed'])).to.be.eql({ payable: -31.2, userName: 'user4' });
+      expect(_.omit(histories[0], ['lastCreatedAt', 'payed', 'notPayedPeriod'])).to.be.eql({ payable: 160, userName: 'user3' });
+      expect(_.omit(histories[1], ['lastCreatedAt', 'payed', 'notPayedPeriod'])).to.be.eql({ payable: 4, userName: 'user2' });
+      expect(_.omit(histories[2], ['lastCreatedAt', 'payed', 'notPayedPeriod'])).to.be.eql({ payable: 2, userName: 'user1' });
+      expect(_.omit(histories[3], ['lastCreatedAt', 'payed', 'notPayedPeriod'])).to.be.eql({ payable: -31.2, userName: 'user4' });
       expect(payable).to.be.eq(134.8);
     });
 
@@ -408,7 +406,7 @@ describe('get payables history', async () => {
       });
 
       expect(histories.length).to.be.eq(1);
-      expect(_.omit(histories[0], ['lastCreatedAt', 'payed'])).to.be.eql({ payable: 4, userName: 'user2' });
+      expect(_.omit(histories[0], ['lastCreatedAt', 'payed', 'notPayedPeriod'])).to.be.eql({ payable: 4, userName: 'user2' });
       expect(payable).to.be.eq(4);
     });
 
@@ -477,6 +475,24 @@ describe('get payables history', async () => {
 
         expect(histories.length).to.be.eq(0);
         expect(payable).to.be.eq(134.8);
+      });
+    });
+    describe('check notPayedPeriod counter', async () => {
+      let histories;
+      const notPayedPeriod = _.random(1, 8);
+      beforeEach(async () => {
+        await paymentHistoryModel.updateOne({ sponsor: 'sponsor1', userName: 'user2' }, { payed: true });
+        const object = await WobjectFactory.Create();
+        await PaymentHistoryFactory.Create({
+          main_object: object.author_permlink, review_object: object.author_permlink, userName: 'user2', sponsor: 'sponsor1', type: 'review', amount: 4, createdAt: moment().subtract(notPayedPeriod, 'days'),
+        });
+        ({ histories } = await getPayableHistory({
+          sponsor: 'sponsor1', skip: 0, limit: 30, days: 0, payable: 0,
+        }));
+      });
+      it('should be eq notPayedPeriod', async () => {
+        const user = _.find(histories, (el) => el.userName === 'user2');
+        expect(user.notPayedPeriod).to.be.eq(notPayedPeriod);
       });
     });
   });
