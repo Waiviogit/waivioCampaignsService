@@ -32,7 +32,9 @@ module.exports = async ({
 
 const getSecondaryPermlink = ({ campaign, postPermlink, userName }) => {
   if (postPermlink) {
-    const payment = _.find(campaign.payments, (el) => el.postPermlink === postPermlink);
+    const payment = _.find(
+      campaign.payments, (el) => el.postPermlink === postPermlink && el.userName === userName,
+    );
     return _.get(payment, 'objectPermlink');
   }
   const user = _.find(campaign.users,
