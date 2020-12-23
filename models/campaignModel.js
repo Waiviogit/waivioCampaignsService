@@ -22,10 +22,17 @@ exports.canCreateMoreCampaigns = async (userName) => maxCampaignsAssign >= await
 
 exports.updateUserStatus = async ({
   // eslint-disable-next-line camelcase
-  campaign_id, user_id, status, fraud = false,
+  campaign_id, user_id, status, fraud = false, fraudCodes,
 }) => {
   await Campaign.updateOne({ _id: campaign_id, users: { $elemMatch: { _id: user_id } } },
-    { $set: { 'users.$.status': status, 'users.$.completedAt': moment.utc().format(), 'users.$.fraudSuspicion': fraud } });
+    {
+      $set: {
+        'users.$.status': status,
+        'users.$.completedAt': moment.utc().format(),
+        'users.$.fraudSuspicion': fraud,
+        'users.$.fraudCodes': fraudCodes,
+      },
+    });
 };
 
 exports.aggregate = async (pipeline) => {

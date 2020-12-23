@@ -90,37 +90,37 @@ const checkResolution = (values) => {
 };
 
 exports.detectFraudInReview = async (images = [], campaign) => {
-  let fraudSuspicion = false;
-  if (!images.length) return fraudSuspicion;
+  let fraud = false;
+  const fraudCodes = [];
+  if (!images.length) return { fraud, fraudCodes };
 
-  const codesArr = [];
   const deadline = Math.round(moment(campaign.reservedAt).subtract(14, 'days').valueOf() / 1000);
   const { map } = await getMap(campaign.requiredObject);
   const {
     exifCounter, photoWidth, photoDates, models, latitudeArr, longitudeArr,
   } = await handleImages(images);
 
-  if (checkResolution(photoWidth)) codesArr.push(`${process.env.FR_RESOLUTION}${_.random(10, 99)}`);
-  if (!exifCounter) codesArr.push(`${process.env.FR_META_ALL}${_.random(10, 99)}`);
-  if (exifCounter === images.length - 1) codesArr.push(`${process.env.FR_META_ONE}${_.random(10, 99)}`);
-  if (checkValues(photoDates, SECONDS_IN_DAY)) codesArr.push(`${process.env.FR_DATE}${_.random(10, 99)}`);
+  if (checkResolution(photoWidth)) fraudCodes.push(`${process.env.FR_RESOLUTION}${_.random(10, 99)}`);
+  if (!exifCounter) fraudCodes.push(`${process.env.FR_META_ALL}${_.random(10, 99)}`);
+  if (exifCounter === images.length - 1) fraudCodes.push(`${process.env.FR_META_ONE}${_.random(10, 99)}`);
+  if (checkValues(photoDates, SECONDS_IN_DAY)) fraudCodes.push(`${process.env.FR_DATE}${_.random(10, 99)}`);
   if (checkValues(latitudeArr, GPS_DIFF) || checkValues(longitudeArr, GPS_DIFF)) {
-    codesArr.push(`${process.env.FR_GPS_DIFF}${_.random(10, 99)}`);
+    fraudCodes.push(`${process.env.FR_GPS_DIFF}${_.random(10, 99)}`);
   }
   if (checkValues([...latitudeArr, map.latitude], GPS_DIFF)
     || checkValues([...longitudeArr, map.longitude], GPS_DIFF)) {
-    codesArr.push(`${process.env.FR_GPS_1}${_.random(10, 99)}`);
-    fraudSuspicion = true;
+    fraudCodes.push(`${process.env.FR_GPS_1}${_.random(10, 99)}`);
+    fraud = true;
   }
   if (_.uniq(models).length > 1) {
-    codesArr.push(`${process.env.FR_ID_DIFF}${_.random(10, 99)}`);
-    fraudSuspicion = true;
+    fraudCodes.push(`${process.env.FR_ID_DIFF}${_.random(10, 99)}`);
+    fraud = true;
   }
   if (!_.isEmpty(photoDates)) {
     if (!_.isEmpty(_.filter(photoDates, (el) => el < deadline))) {
-      codesArr.push(`${process.env.FR_DATE_RW}${_.random(10, 99)}`);
-      fraudSuspicion = true;
+      fraudCodes.push(`${process.env.FR_DATE_RW}${_.random(10, 99)}`);
+      fraud = true;
     }
   }
-  return { fraudSuspicion, codesArr };
+  return { fraud, fraudCodes };
 };
