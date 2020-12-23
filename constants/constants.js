@@ -126,6 +126,9 @@ const NOTIFICATIONS_ID = {
   BELL_WOBJ_REWARDS: 'bellWobjectRewards',
 };
 
+const SECONDS_IN_DAY = 24 * 3600;
+const GPS_DIFF = 0.01;
+
 module.exports = {
   SORT_TYPES,
   REFERRAL_TYPES,
@@ -151,4 +154,6 @@ module.exports = {
   GUEST_WALLET_OPERATIONS,
   CAMPAIGN_STATUSES_FOR_ON_HOLD,
   NOTIFICATIONS_ID,
+  SECONDS_IN_DAY,
+  GPS_DIFF,
 };
