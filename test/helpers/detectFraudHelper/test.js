@@ -5,8 +5,8 @@ const { handleImagesData } = require('./mocks');
 
 describe('On detectFraudHelper', async () => {
   let fraud, fraudCodes, handleImages;
-  beforeEach(async () => {
-    await dropDatabase();
+  afterEach(() => {
+    sinon.restore();
   });
   it('should fraud false and empty codes on empty params', async () => {
     ({ fraud, fraudCodes } = await detectFraudHelper.detectFraudInReview());
@@ -18,9 +18,6 @@ describe('On detectFraudHelper', async () => {
       await sinon.stub(detectFraudHelper, 'handleImages').returns(Promise.resolve(handleImages));
       ({ fraud, fraudCodes } = await detectFraudHelper
         .detectFraudInReview([faker.random.string()], { reservedAt: new Date() }));
-    });
-    afterEach(() => {
-      sinon.restore();
     });
     it('should fraud be false', async () => {
       expect(fraud).to.be.false;
@@ -42,9 +39,6 @@ describe('On detectFraudHelper', async () => {
       ({ fraud, fraudCodes } = await detectFraudHelper
         .detectFraudInReview(images, { reservedAt: new Date() }));
     });
-    afterEach(() => {
-      sinon.restore();
-    });
     it('should fraud be false', async () => {
       expect(fraud).to.be.false;
     });
@@ -56,9 +50,6 @@ describe('On detectFraudHelper', async () => {
   describe('On resolution fraud', async () => {
     beforeEach(async () => {
       handleImages = handleImagesData({ photoWidth: [1920, 1000], exifCounter: 1 });
-    });
-    afterEach(() => {
-      sinon.restore();
     });
     it('should fraud be false', async () => {
       await sinon.stub(detectFraudHelper, 'handleImages').returns(Promise.resolve(handleImages));
@@ -92,9 +83,6 @@ describe('On detectFraudHelper', async () => {
         exifCounter: 1,
       });
     });
-    afterEach(() => {
-      sinon.restore();
-    });
     it('should fraud be false', async () => {
       await sinon.stub(detectFraudHelper, 'handleImages').returns(Promise.resolve(handleImages));
       ({ fraud, fraudCodes } = await detectFraudHelper
@@ -114,6 +102,70 @@ describe('On detectFraudHelper', async () => {
           Math.round(moment().valueOf() / 1000),
           Math.round(moment().valueOf() / 1000),
         ],
+        exifCounter: 1,
+      });
+      await sinon.stub(detectFraudHelper, 'handleImages').returns(Promise.resolve(handleImages));
+      ({ fraud, fraudCodes } = await detectFraudHelper
+        .detectFraudInReview([faker.random.string()], { reservedAt: new Date() }));
+
+      expect(fraudCodes).to.be.an('array').that.is.empty;
+    });
+  });
+  describe('On different date with reservation date', async () => {
+    beforeEach(async () => {
+      handleImages = handleImagesData({
+        photoDates: [Math.round(moment().subtract(_.random(15, 20), 'days').valueOf() / 1000)],
+        exifCounter: 1,
+      });
+    });
+    it('should fraud be true', async () => {
+      await sinon.stub(detectFraudHelper, 'handleImages').returns(Promise.resolve(handleImages));
+      ({ fraud, fraudCodes } = await detectFraudHelper
+        .detectFraudInReview([faker.random.string()], { reservedAt: new Date() }));
+      expect(fraud).to.be.true;
+    });
+    it('should fraudArray begin with proper number', async () => {
+      await sinon.stub(detectFraudHelper, 'handleImages').returns(Promise.resolve(handleImages));
+      ({ fraud, fraudCodes } = await detectFraudHelper
+        .detectFraudInReview([faker.random.string()], { reservedAt: new Date() }));
+      const [code] = fraudCodes;
+      expect(code.slice(0, 2)).to.be.eq(process.env.FR_DATE_RW);
+    });
+    it('should fraudArray to be empty on valid date', async () => {
+      handleImages = handleImagesData({
+        photoDates: [Math.round(moment().valueOf() / 1000)],
+        exifCounter: 1,
+      });
+      await sinon.stub(detectFraudHelper, 'handleImages').returns(Promise.resolve(handleImages));
+      ({ fraud, fraudCodes } = await detectFraudHelper
+        .detectFraudInReview([faker.random.string()], { reservedAt: new Date() }));
+
+      expect(fraudCodes).to.be.an('array').that.is.empty;
+    });
+  });
+  describe('On different models', async () => {
+    beforeEach(async () => {
+      handleImages = handleImagesData({
+        models: [faker.random.string(), faker.random.string()],
+        exifCounter: 1,
+      });
+    });
+    it('should fraud be true', async () => {
+      await sinon.stub(detectFraudHelper, 'handleImages').returns(Promise.resolve(handleImages));
+      ({ fraud, fraudCodes } = await detectFraudHelper
+        .detectFraudInReview([faker.random.string()], { reservedAt: new Date() }));
+      expect(fraud).to.be.true;
+    });
+    it('should fraudArray begin with proper number', async () => {
+      await sinon.stub(detectFraudHelper, 'handleImages').returns(Promise.resolve(handleImages));
+      ({ fraud, fraudCodes } = await detectFraudHelper
+        .detectFraudInReview([faker.random.string()], { reservedAt: new Date() }));
+      const [code] = fraudCodes;
+      expect(code.slice(0, 2)).to.be.eq(process.env.FR_ID_DIFF);
+    });
+    it('should fraudArray to be empty on valid date', async () => {
+      handleImages = handleImagesData({
+        models: [faker.random.string()],
         exifCounter: 1,
       });
       await sinon.stub(detectFraudHelper, 'handleImages').returns(Promise.resolve(handleImages));
