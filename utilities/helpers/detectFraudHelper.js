@@ -23,7 +23,7 @@ const getMap = async (permlink = '') => {
   return { map };
 };
 
-const handleImages = async (images) => {
+exports.handleImages = async (images) => {
   let exifCounter = 0;
   const photoWidth = [];
   const photoDates = [];
@@ -34,6 +34,7 @@ const handleImages = async (images) => {
     try {
       const { data } = await axios.get(image, { responseType: 'arraybuffer' });
       const parsedFile = exifParser.create(data).parse();
+
       const model = _.get(parsedFile, 'tags.Model');
       const ifNotHaveModel = _.has(parsedFile, 'tags.Orientation') ? 'iPhone' : 'unknown';
       const date = _.get(parsedFile, 'tags.DateTimeOriginal');
@@ -92,17 +93,17 @@ const checkResolution = (values) => {
 exports.detectFraudInReview = async (images = [], campaign) => {
   let fraud = false;
   const fraudCodes = [];
-  if (!images.length) return { fraud, fraudCodes };
+  if (!images.length || _.isEmpty(campaign)) return { fraud, fraudCodes };
 
   const deadline = Math.round(moment(campaign.reservedAt).subtract(14, 'days').valueOf() / 1000);
   const { map } = await getMap(campaign.requiredObject);
   const {
     exifCounter, photoWidth, photoDates, models, latitudeArr, longitudeArr,
-  } = await handleImages(images);
+  } = await this.handleImages(images);
 
   if (checkResolution(photoWidth)) fraudCodes.push(`${process.env.FR_RESOLUTION}${_.random(10, 99)}`);
   if (!exifCounter) fraudCodes.push(`${process.env.FR_META_ALL}${_.random(10, 99)}`);
-  if (exifCounter === images.length - 1) fraudCodes.push(`${process.env.FR_META_ONE}${_.random(10, 99)}`);
+  if (exifCounter !== 0 && exifCounter === images.length - 1) fraudCodes.push(`${process.env.FR_META_ONE}${_.random(10, 99)}`);
   if (checkValues(photoDates, SECONDS_IN_DAY)) fraudCodes.push(`${process.env.FR_DATE}${_.random(10, 99)}`);
   if (checkValues(latitudeArr, GPS_DIFF) || checkValues(longitudeArr, GPS_DIFF)) {
     fraudCodes.push(`${process.env.FR_GPS_DIFF}${_.random(10, 99)}`);
