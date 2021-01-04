@@ -1,10 +1,13 @@
 const {
-  detectFraudHelper, expect, sinon, dropDatabase, faker, _, moment,
+  detectFraudHelper, expect, sinon, faker, _, moment,
 } = require('test/testHelper');
+const { GPS_DIFF } = require('constants/constants');
 const { handleImagesData } = require('./mocks');
 
 describe('On detectFraudHelper', async () => {
   let fraud, fraudCodes, handleImages;
+  const latitude = faker.address.latitude();
+  const longitude = faker.address.longitude();
   afterEach(() => {
     sinon.restore();
   });
@@ -171,7 +174,79 @@ describe('On detectFraudHelper', async () => {
       await sinon.stub(detectFraudHelper, 'handleImages').returns(Promise.resolve(handleImages));
       ({ fraud, fraudCodes } = await detectFraudHelper
         .detectFraudInReview([faker.random.string()], { reservedAt: new Date() }));
-
+      expect(fraudCodes).to.be.an('array').that.is.empty;
+    });
+  });
+  describe('On different gps on photos', async () => {
+    beforeEach(async () => {
+      handleImages = handleImagesData({
+        latitudeArr: [+latitude, +latitude + _.random(0.02, 100)],
+        LongitudeArr: [+longitude, +longitude + _.random(0.02, 100)],
+        exifCounter: 1,
+      });
+    });
+    it('should fraud be true', async () => {
+      await sinon.stub(detectFraudHelper, 'handleImages').returns(Promise.resolve(handleImages));
+      ({ fraud, fraudCodes } = await detectFraudHelper
+        .detectFraudInReview([faker.random.string()], { reservedAt: new Date() }));
+      expect(fraud).to.be.true;
+    });
+    it('should fraudArray begin with proper number', async () => {
+      await sinon.stub(detectFraudHelper, 'handleImages').returns(Promise.resolve(handleImages));
+      ({ fraud, fraudCodes } = await detectFraudHelper
+        .detectFraudInReview([faker.random.string()], { reservedAt: new Date() }));
+      const [code, code2] = fraudCodes;
+      expect([code.slice(0, 2), code2.slice(0, 2)])
+        .to.be.deep.eq([process.env.FR_GPS_DIFF, process.env.FR_GPS_1]);
+    });
+    it('should fraudArray to be empty on valid date', async () => {
+      handleImages = handleImagesData({
+        latitudeArr: [+latitude, +latitude + _.random(0.001, GPS_DIFF)],
+        LongitudeArr: [+longitude, +longitude + _.random(0.001, GPS_DIFF)],
+        exifCounter: 1,
+      });
+      await sinon.stub(detectFraudHelper, 'handleImages').returns(Promise.resolve(handleImages));
+      ({ fraud, fraudCodes } = await detectFraudHelper
+        .detectFraudInReview([faker.random.string()], { reservedAt: new Date() }));
+      expect(fraudCodes).to.be.an('array').that.is.empty;
+    });
+  });
+  describe('On different gps on photos and object map', async () => {
+    let map = {
+      latitude: +latitude + _.random(0.02, 100),
+      longitude: +longitude + _.random(0.02, 100),
+    };
+    beforeEach(async () => {
+      handleImages = handleImagesData({
+        latitudeArr: [+latitude],
+        LongitudeArr: [+longitude],
+        exifCounter: 1,
+      });
+    });
+    it('should fraud be true', async () => {
+      await sinon.stub(detectFraudHelper, 'handleImages').returns(Promise.resolve(handleImages));
+      await sinon.stub(detectFraudHelper, 'getMap').returns(Promise.resolve({ map }));
+      ({ fraud, fraudCodes } = await detectFraudHelper
+        .detectFraudInReview([faker.random.string()], { reservedAt: new Date() }));
+      expect(fraud).to.be.true;
+    });
+    it('should fraudArray begin with proper number', async () => {
+      await sinon.stub(detectFraudHelper, 'handleImages').returns(Promise.resolve(handleImages));
+      await sinon.stub(detectFraudHelper, 'getMap').returns(Promise.resolve({ map }));
+      ({ fraud, fraudCodes } = await detectFraudHelper
+        .detectFraudInReview([faker.random.string()], { reservedAt: new Date() }));
+      const [code] = fraudCodes;
+      expect(code.slice(0, 2)).to.be.eq(process.env.FR_GPS_1);
+    });
+    it('should fraudArray to be empty on valid date', async () => {
+      map = {
+        latitude: +latitude + _.random(0.001, GPS_DIFF),
+        longitude: +longitude + _.random(0.001, GPS_DIFF),
+      };
+      await sinon.stub(detectFraudHelper, 'handleImages').returns(Promise.resolve(handleImages));
+      await sinon.stub(detectFraudHelper, 'getMap').returns(Promise.resolve({ map }));
+      ({ fraud, fraudCodes } = await detectFraudHelper
+        .detectFraudInReview([faker.random.string()], { reservedAt: new Date() }));
       expect(fraudCodes).to.be.an('array').that.is.empty;
     });
   });

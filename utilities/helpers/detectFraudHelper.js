@@ -8,7 +8,7 @@ const { FIELDS_NAMES } = require('constants/wobjectsData');
 const { SECONDS_IN_DAY, GPS_DIFF } = require('constants/constants');
 const { processWobjects } = require('utilities/helpers/wobjectHelper');
 
-const getMap = async (permlink = '') => {
+exports.getMap = async (permlink = '') => {
   let map = {};
   const { result } = await wobjectModel.findOne(permlink);
   if (!result) return { map };
@@ -60,6 +60,42 @@ exports.handleImages = async (images) => {
   };
 };
 
+exports.detectFraudInReview = async (images = [], campaign) => {
+  let fraud = false;
+  const fraudCodes = [];
+  if (!images.length || _.isEmpty(campaign)) return { fraud, fraudCodes };
+
+  const deadline = Math.round(moment(campaign.reservedAt).subtract(14, 'days').valueOf() / 1000);
+  const { map } = await this.getMap(campaign.requiredObject);
+  const {
+    exifCounter, photoWidth, photoDates, models, latitudeArr, longitudeArr,
+  } = await this.handleImages(images);
+
+  if (checkResolution(photoWidth)) fraudCodes.push(`${process.env.FR_RESOLUTION}${_.random(10, 99)}`);
+  if (!exifCounter) fraudCodes.push(`${process.env.FR_META_ALL}${_.random(10, 99)}`);
+  if (exifCounter !== 0 && exifCounter === images.length - 1) fraudCodes.push(`${process.env.FR_META_ONE}${_.random(10, 99)}`);
+  if (checkValues(photoDates, SECONDS_IN_DAY)) fraudCodes.push(`${process.env.FR_DATE}${_.random(10, 99)}`);
+  if (checkValues(latitudeArr, GPS_DIFF) || checkValues(longitudeArr, GPS_DIFF)) {
+    fraudCodes.push(`${process.env.FR_GPS_DIFF}${_.random(10, 99)}`);
+  }
+  if (checkValues([...latitudeArr, map.latitude], GPS_DIFF)
+    || checkValues([...longitudeArr, map.longitude], GPS_DIFF)) {
+    fraudCodes.push(`${process.env.FR_GPS_1}${_.random(10, 99)}`);
+    fraud = true;
+  }
+  if (_.uniq(models).length > 1) {
+    fraudCodes.push(`${process.env.FR_ID_DIFF}${_.random(10, 99)}`);
+    fraud = true;
+  }
+  if (!_.isEmpty(photoDates)) {
+    if (!_.isEmpty(_.filter(photoDates, (el) => el < deadline))) {
+      fraudCodes.push(`${process.env.FR_DATE_RW}${_.random(10, 99)}`);
+      fraud = true;
+    }
+  }
+  return { fraud, fraudCodes };
+};
+
 const checkValues = (values, controlValue) => {
   for (let i = 0; i < values.length; i++) {
     for (let j = 0; j < values.length; j++) {
@@ -88,40 +124,4 @@ const checkResolution = (values) => {
     }
   }
   return false;
-};
-
-exports.detectFraudInReview = async (images = [], campaign) => {
-  let fraud = false;
-  const fraudCodes = [];
-  if (!images.length || _.isEmpty(campaign)) return { fraud, fraudCodes };
-
-  const deadline = Math.round(moment(campaign.reservedAt).subtract(14, 'days').valueOf() / 1000);
-  const { map } = await getMap(campaign.requiredObject);
-  const {
-    exifCounter, photoWidth, photoDates, models, latitudeArr, longitudeArr,
-  } = await this.handleImages(images);
-
-  if (checkResolution(photoWidth)) fraudCodes.push(`${process.env.FR_RESOLUTION}${_.random(10, 99)}`);
-  if (!exifCounter) fraudCodes.push(`${process.env.FR_META_ALL}${_.random(10, 99)}`);
-  if (exifCounter !== 0 && exifCounter === images.length - 1) fraudCodes.push(`${process.env.FR_META_ONE}${_.random(10, 99)}`);
-  if (checkValues(photoDates, SECONDS_IN_DAY)) fraudCodes.push(`${process.env.FR_DATE}${_.random(10, 99)}`);
-  if (checkValues(latitudeArr, GPS_DIFF) || checkValues(longitudeArr, GPS_DIFF)) {
-    fraudCodes.push(`${process.env.FR_GPS_DIFF}${_.random(10, 99)}`);
-  }
-  if (checkValues([...latitudeArr, map.latitude], GPS_DIFF)
-    || checkValues([...longitudeArr, map.longitude], GPS_DIFF)) {
-    fraudCodes.push(`${process.env.FR_GPS_1}${_.random(10, 99)}`);
-    fraud = true;
-  }
-  if (_.uniq(models).length > 1) {
-    fraudCodes.push(`${process.env.FR_ID_DIFF}${_.random(10, 99)}`);
-    fraud = true;
-  }
-  if (!_.isEmpty(photoDates)) {
-    if (!_.isEmpty(_.filter(photoDates, (el) => el < deadline))) {
-      fraudCodes.push(`${process.env.FR_DATE_RW}${_.random(10, 99)}`);
-      fraud = true;
-    }
-  }
-  return { fraud, fraudCodes };
 };
