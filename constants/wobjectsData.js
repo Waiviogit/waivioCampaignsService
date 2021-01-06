@@ -26,6 +26,7 @@ exports.FIELDS_NAMES = {
   PRICE: 'price',
   BODY: 'body',
   NAME: 'name',
+  BLOG: 'blog',
   LINK: 'link',
   MAP: 'map',
   TAG: 'tag',
@@ -83,6 +84,7 @@ exports.REQUIREDFIELDS = [
   this.FIELDS_NAMES.NEWS_FILTER,
   this.FIELDS_NAMES.PAGE_CONTENT,
   this.FIELDS_NAMES.STATUS,
+  this.FIELDS_NAMES.BLOG,
 ];
 
 exports.REQUIREDFIELDS_PARENT = [

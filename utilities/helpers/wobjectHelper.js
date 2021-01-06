@@ -103,17 +103,18 @@ const arrayFieldFilter = ({
   for (const field of idFields) {
     if (_.get(field, 'adminVote.status') === 'rejected') continue;
     switch (id) {
-      case 'tagCategory':
-      case 'galleryAlbum':
+      case FIELDS_NAMES.TAG_CATEGORY:
+      case FIELDS_NAMES.GALLERY_ALBUM:
         validFields.push(specialFieldFilter(field, allFields, id));
         break;
-      case 'rating':
-      case 'phone':
-      case 'button':
-      case 'galleryItem':
-      case 'listItem':
-        if (_.includes(filter, 'galleryAlbum')) break;
-        if (_.get(field, 'adminVote.status') === 'approved') validFields.push(field);
+      case FIELDS_NAMES.RATING:
+      case FIELDS_NAMES.PHONE:
+      case FIELDS_NAMES.BUTTON:
+      case FIELDS_NAMES.BLOG:
+      case FIELDS_NAMES.GALLERY_ITEM:
+      case FIELDS_NAMES.LIST_ITEM:
+        if (_.includes(filter, FIELDS_NAMES.GALLERY_ALBUM)) break;
+        if (_.get(field, 'adminVote.status') === VOTE_STATUSES.APPROVED) validFields.push(field);
         else if (field.weight > 0 && field.approvePercent > MIN_PERCENT_TO_SHOW_UPGATE) {
           validFields.push(field);
         }
@@ -122,9 +123,9 @@ const arrayFieldFilter = ({
         break;
     }
   }
-  if (id === 'galleryAlbum') {
+  if (id === FIELDS_NAMES.GALLERY_ALBUM ) {
     const noAlbumItems = _.filter(allFields[categorySwitcher[id]],
-      (item) => item.id === permlink && _.get(item, 'adminVote.status') !== 'rejected');
+      (item) => item.id === permlink && _.get(item, 'adminVote.status') !== VOTE_STATUSES.REJECTED);
     if (noAlbumItems.length)validFields.push({ items: noAlbumItems, body: 'Photos' });
   }
   return _.compact(validFields);
