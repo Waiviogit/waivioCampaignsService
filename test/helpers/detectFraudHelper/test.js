@@ -22,8 +22,8 @@ describe('On detectFraudHelper', async () => {
       ({ fraud, fraudCodes } = await detectFraudHelper
         .detectFraudInReview([faker.random.string()], { reservedAt: new Date() }));
     });
-    it('should fraud be false', async () => {
-      expect(fraud).to.be.false;
+    it('should fraud be true', async () => {
+      expect(fraud).to.be.true;
     });
     it('should fraudArray begin with proper number', async () => {
       const [code] = fraudCodes;
@@ -43,7 +43,7 @@ describe('On detectFraudHelper', async () => {
         .detectFraudInReview(images, { reservedAt: new Date() }));
     });
     it('should fraud be false', async () => {
-      expect(fraud).to.be.false;
+      expect(fraud).to.be.true;
     });
     it('should fraudArray begin with proper number', async () => {
       const [code] = fraudCodes;
@@ -54,11 +54,11 @@ describe('On detectFraudHelper', async () => {
     beforeEach(async () => {
       handleImages = handleImagesData({ photoWidth: [1920, 1000], exifCounter: 1 });
     });
-    it('should fraud be false', async () => {
+    it('should fraud be true', async () => {
       await sinon.stub(detectFraudHelper, 'handleImages').returns(Promise.resolve(handleImages));
       ({ fraud, fraudCodes } = await detectFraudHelper
         .detectFraudInReview([faker.random.string()], { reservedAt: new Date() }));
-      expect(fraud).to.be.false;
+      expect(fraud).to.be.true;
     });
     it('should fraudArray begin with proper number', async () => {
       await sinon.stub(detectFraudHelper, 'handleImages').returns(Promise.resolve(handleImages));
@@ -86,11 +86,11 @@ describe('On detectFraudHelper', async () => {
         exifCounter: 1,
       });
     });
-    it('should fraud be false', async () => {
+    it('should fraud be true', async () => {
       await sinon.stub(detectFraudHelper, 'handleImages').returns(Promise.resolve(handleImages));
       ({ fraud, fraudCodes } = await detectFraudHelper
         .detectFraudInReview([faker.random.string()], { reservedAt: new Date() }));
-      expect(fraud).to.be.false;
+      expect(fraud).to.be.true;
     });
     it('should fraudArray begin with proper number', async () => {
       await sinon.stub(detectFraudHelper, 'handleImages').returns(Promise.resolve(handleImages));

@@ -71,12 +71,25 @@ exports.detectFraudInReview = async (images = [], campaign) => {
     exifCounter, photoWidth, photoDates, models, latitudeArr, longitudeArr,
   } = await this.handleImages(images);
 
-  if (checkResolution(photoWidth)) fraudCodes.push(`${process.env.FR_RESOLUTION}${_.random(10, 99)}`);
-  if (!exifCounter) fraudCodes.push(`${process.env.FR_META_ALL}${_.random(10, 99)}`);
-  if (exifCounter !== 0 && exifCounter === images.length - 1) fraudCodes.push(`${process.env.FR_META_ONE}${_.random(10, 99)}`);
-  if (checkValues(photoDates, SECONDS_IN_DAY)) fraudCodes.push(`${process.env.FR_DATE}${_.random(10, 99)}`);
+  if (checkResolution(photoWidth)) {
+    fraudCodes.push(`${process.env.FR_RESOLUTION}${_.random(10, 99)}`);
+    fraud = true;
+  }
+  if (!exifCounter) {
+    fraudCodes.push(`${process.env.FR_META_ALL}${_.random(10, 99)}`);
+    fraud = true;
+  }
+  if (exifCounter !== 0 && exifCounter === images.length - 1) {
+    fraudCodes.push(`${process.env.FR_META_ONE}${_.random(10, 99)}`);
+    fraud = true;
+  }
+  if (checkValues(photoDates, SECONDS_IN_DAY)) {
+    fraudCodes.push(`${process.env.FR_DATE}${_.random(10, 99)}`);
+    fraud = true;
+  }
   if (checkValues(latitudeArr, GPS_DIFF) || checkValues(longitudeArr, GPS_DIFF)) {
     fraudCodes.push(`${process.env.FR_GPS_DIFF}${_.random(10, 99)}`);
+    fraud = true;
   }
   if (checkValues([...latitudeArr, map.latitude], GPS_DIFF)
     || checkValues([...longitudeArr, map.longitude], GPS_DIFF)) {
