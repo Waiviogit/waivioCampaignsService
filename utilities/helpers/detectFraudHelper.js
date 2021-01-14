@@ -24,12 +24,8 @@ exports.getMap = async (permlink = '') => {
 };
 
 exports.handleImages = async (images) => {
+  const photoWidth = [], photoDates = [], latitudeArr = [], longitudeArr = [], models = [];
   let exifCounter = 0;
-  const photoWidth = [];
-  const photoDates = [];
-  const latitudeArr = [];
-  const longitudeArr = [];
-  const models = [];
   for (const image of images) {
     try {
       const { data } = await axios.get(image, { responseType: 'arraybuffer' });
