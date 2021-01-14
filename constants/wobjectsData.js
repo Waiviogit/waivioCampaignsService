@@ -24,8 +24,10 @@ exports.FIELDS_NAMES = {
   PHONE: 'phone',
   EMAIL: 'email',
   PRICE: 'price',
+  FORM: 'form',
   BODY: 'body',
   NAME: 'name',
+  BLOG: 'blog',
   LINK: 'link',
   MAP: 'map',
   TAG: 'tag',
@@ -83,6 +85,8 @@ exports.REQUIREDFIELDS = [
   this.FIELDS_NAMES.NEWS_FILTER,
   this.FIELDS_NAMES.PAGE_CONTENT,
   this.FIELDS_NAMES.STATUS,
+  this.FIELDS_NAMES.BLOG,
+  this.FIELDS_NAMES.FORM,
 ];
 
 exports.REQUIREDFIELDS_PARENT = [
