@@ -1,4 +1,5 @@
 const _ = require('lodash');
+const moment = require('moment');
 const paymentHistoryModel = require('models/paymentHistoryModel');
 const userModel = require('models/userModel');
 const { campaignHelper } = require('utilities/helpers');
@@ -17,7 +18,10 @@ const getMatchData = ({
   ];
   if (campaignNames) pipeline[1].$match.name = { $in: campaignNames };
   if (reservationPermlink) pipeline[1].$match['users.permlink'] = reservationPermlink;
-  if (fraudSuspicion) pipeline[1].$match['users.fraudSuspicion'] = true;
+  if (fraudSuspicion) {
+    pipeline[1].$match['users.fraudSuspicion'] = true;
+    pipeline[1].$match['users.completedAt'] = { $gte: moment().subtract(30, 'day').toDate() };
+  }
   if (guideName) pipeline[1].$match.guideName = guideName;
   if (userName) pipeline[1].$match['users.name'] = userName;
   if (guideNames) pipeline[1].$match.guideName = { $in: guideNames };

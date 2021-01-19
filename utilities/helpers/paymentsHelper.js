@@ -50,9 +50,9 @@ const createReview = async ({
       await addCampaignPayment({
         campaign, postTitle: title, objectPermlink, permlink, owner, reservationId: campaign.user_id,
       });
-      const fraud = await detectFraudInReview(images, campaign);
+      const { fraud, fraudCodes } = await detectFraudInReview(images, campaign);
       await CampaignModel.updateUserStatus({
-        campaign_id: campaign.campaignId, user_id: campaign.user_id, status: 'completed', fraud,
+        campaign_id: campaign.campaignId, user_id: campaign.user_id, status: 'completed', fraud, fraudCodes,
       });
       await updateCampaignStatus(campaign.campaignId);
       await checkOnHoldStatus(campaign.permlink);

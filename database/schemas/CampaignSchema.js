@@ -25,6 +25,7 @@ const userSchema = new Schema({
     type: String, enum: Object.values(RESERVATION_STATUSES), required: true, default: 'assigned', index: true,
   },
   fraudSuspicion: { type: Boolean },
+  fraudCodes: { type: [String] },
   completedAt: { type: Date },
 }, {
   timestamps: true,
