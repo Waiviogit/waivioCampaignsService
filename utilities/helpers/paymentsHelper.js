@@ -28,11 +28,11 @@ const { checkOnHoldStatus } = require('utilities/helpers/campaignsHelper');
  */
 const createReview = async ({
   campaigns, owner_account: owner, beneficiaries,
-  objects, permlink, title, app, images,
+  objects, permlink, title, app, images, host,
 }) => {
   for (const campaign of campaigns) {
     const { payables } = await distributeReward({
-      server_acc: campaign.campaign_server,
+      server_acc: host,
       beneficiaries,
       reward: _.round((campaign.reward / campaign.hiveCurrency) + campaign.rewardRaisedBy, 3),
       reviwer: campaign.userName,
@@ -331,7 +331,7 @@ const getCommissions = async (appHost) => {
     indexAccount: _.get(result, 'app_commissions.index_commission_acc', 'waivio.index'),
     campaignsCommission: _.get(result, 'app_commissions.campaigns_percent', 0.3),
     campaignsAccount: _.get(result, 'app_commissions.campaigns_server_acc', 'waivio.campaigns'),
-    referralAccount: _.get(result, 'app_commissions.referral_commission_acc', 'waivio.referrals'),
+    referralAccount: _.get(result, 'app_commissions.referral_commission_acc', _.get(result, 'owner', 'waivio.referrals')),
   };
   return { commissions };
 };
