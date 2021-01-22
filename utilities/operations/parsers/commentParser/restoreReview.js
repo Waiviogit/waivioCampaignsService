@@ -51,6 +51,7 @@ module.exports = async ({
       objects: [userData.object_permlink],
       beneficiaries: post.beneficiaries,
       permlink: post.permlink,
+      host: _.get(JSON.parse(_.get(post, 'json_metadata')), 'host', null),
     });
     /** Update debt record with new status, and remove rejection permlink */
     await campaignModel.updateOne({
