@@ -334,7 +334,10 @@ const getCommissions = async (appHost, referralHost) => {
     indexAccount: _.get(result, 'app_commissions.index_commission_acc', 'waivio.index'),
     campaignsCommission: _.get(result, 'app_commissions.campaigns_percent', 0.3),
     campaignsAccount: _.get(result, 'app_commissions.campaigns_server_acc', 'waivio.campaigns'),
-    referralAccount: _.get(refApp, 'app_commissions.referral_commission_acc', _.get(refApp, 'owner', 'waivio.referrals')),
+    referralAccount:
+      _.get(refApp, 'app_commissions.referral_commission_acc',
+        _.get(refApp, 'owner',
+          _.get(result, 'app_commissions.referral_commission_acc', 'waivio.referrals'))),
   };
   return { commissions };
 };
