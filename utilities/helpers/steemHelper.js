@@ -3,7 +3,7 @@ const dhive = require('@hiveio/dhive');
 const { specialTransferBeneficiaries } = require('constants/constants');
 
 const { Asset } = dhive;
-const steemClient = new dhive.Client('https://anyx.io', {
+const steemClient = new dhive.Client('https://rpc.esteem.app', {
   timeout: 8 * 1000,
   failoverThreshold: 4,
   rebrandedApi: true,
@@ -182,13 +182,15 @@ const calculateVotePower = async (name, voteWeight, author, permlink) => {
 const parseToFloat = (balance) => parseFloat(balance.match(/.\d*.\d*/)[0]);
 
 const getPostState = async ({ author, permlink, category }) => {
-  const result = await steemClient.database.call(
-    'get_state',
-    [`${category}/@${author}/${permlink}`],
-  );
-  if (!result || result.error) return { error: { message: _.get(result, 'error') } };
-
-  return { result };
+  try {
+    const result = await steemClient.database.call(
+      'get_state',
+      [`${category}/@${author}/${permlink}`],
+    );
+    return { result };
+  } catch (e) {
+    return { result: null };
+  }
 };
 
 const sendOperations = async (operations, key) => {
