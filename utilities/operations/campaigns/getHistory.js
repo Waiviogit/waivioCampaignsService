@@ -7,6 +7,7 @@ const steemHelper = require('utilities/helpers/steemHelper');
 const currenciesStatisticModel = require('models/currenciesStatisticModel');
 const appModel = require('models/appModel');
 const config = require('config');
+const { hiveClient, hiveOperations } = require('utilities/hiveApi');
 
 const getMatchData = ({
   onlyWithMessages, fraudSuspicion, guideNames, guideName, userName,
@@ -44,8 +45,12 @@ const getConversationsFromHive = async (campaigns) => {
     const { users } = campaign;
     if (users.children === 0) return;
 
-    const { result: comments } = await steemHelper.getPostState(
-      { author: users.rootName, permlink: users.permlink, category: 'waivio' },
+    // const { result: comments } = await steemHelper.getPostState(
+    //   { author: users.rootName, permlink: users.permlink, category: 'waivio' },
+    // );
+    const { result: comments } = await hiveClient.execute(
+      hiveOperations.getPostState,
+      { author: users.rootName || users.name, permlink: users.permlink, category: 'waivio' },
     );
     if (!_.get(comments, 'content')) return;
     let time = 0, replyTime = 0, firstAppealTime = Number.MAX_SAFE_INTEGER;
