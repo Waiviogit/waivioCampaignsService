@@ -25,13 +25,11 @@ exports.execute = async (method, params) => {
   for (let i = 0; i < hiveClients.length; i++) {
     const data = await method(hiveClient, params);
     if (!_.get(data, 'error')) return data;
-    console.log(i);
     if (i === hiveClients.length - 1) {
       return { error: data.error };
     }
     if (data.error) { // #TODO add specific code
       hiveClient = getHiveClient(hiveClient);
     }
-    // return { error: data.error };// #TODO sentury
   }
 };

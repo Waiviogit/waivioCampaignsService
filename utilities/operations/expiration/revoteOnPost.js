@@ -2,15 +2,18 @@ const _ = require('lodash');
 const moment = require('moment');
 const { botUpvoteModel, matchBotModel } = require('models');
 const matchBotHelper = require('utilities/helpers/matchBotHelper');
-const steemHelper = require('utilities/helpers/steemHelper');
 const { BOT_UPVOTE_STATUSES, MIN_TO_VOTE_VALUE } = require('constants/constants');
+const { hiveClient, hiveOperations } = require('utilities/hiveApi');
 
 module.exports = async ({ author, permlink }) => {
   const { result: upvotes } = await botUpvoteModel.find(
     { author, permlink, status: BOT_UPVOTE_STATUSES.UPVOTED },
   );
   if (!upvotes.length) return;
-  const post = await steemHelper.getPostInfo({ author, permlink });
+  const post = await hiveClient.execute(
+    hiveOperations.getPostInfo,
+    { author, permlink },
+  );
   if (!post.author || moment.utc(post.created).add(7, 'days').toDate() < moment.utc().toDate()) return;
   const botNames = _.map(upvotes, 'botName');
   /** Exit from method without downvotes on post */
@@ -28,7 +31,7 @@ module.exports = async ({ author, permlink }) => {
   });
   const oneHBDRshares = (upvoteWeight - downvoteWeight) / parseFloat(post.pending_payout_value);
   const toVoteValue = downvoteWeight / oneHBDRshares;
-  const { currentPrice } = await steemHelper.getCurrentPriceInfo();
+  const { currentPrice } = await hiveClient.execute(hiveOperations.getCurrentPriceInfo);
   await toVoteOnPost({
     author, permlink, toVoteValue: toVoteValue / currentPrice, upvotes, botNames,
   });
@@ -36,9 +39,16 @@ module.exports = async ({ author, permlink }) => {
 
 const unVoteOnPost = async ({ author, permlink, botNames }) => {
   for (const bot of botNames) {
-    await steemHelper.likePost({
-      key: process.env.UPVOTE_BOT_KEY, voter: bot, author, permlink, weight: 0,
-    });
+    await hiveClient.execute(
+      hiveOperations.likePost,
+      {
+        key: process.env.UPVOTE_BOT_KEY,
+        voter: bot,
+        author,
+        permlink,
+        weight: 0,
+      },
+    );
   }
 };
 
@@ -63,7 +73,15 @@ const toVoteOnPost = async ({
     const upvote = _.find(upvotes, { botName: bot.bot_name });
     if (upvote.votePercent === 10000) continue;
     /** In future we may need to check current currentVotePower with permissions */
-    const { currentVotePower, voteWeight } = await steemHelper.getVotingInfo(bot.bot_name, 100, author, permlink);
+    const { currentVotePower, voteWeight } = await hiveClient.execute(
+      hiveOperations.getVotingInfo,
+      {
+        accountName: bot.bot_name,
+        weight: 100,
+        postAuthor: author,
+        postPermlink: permlink,
+      },
+    );
     if (voteWeight > upvote.currentVote)maxToVoteValue += voteWeight - upvote.currentVote;
     else continue;
     upvote.voteWeight = voteWeight - upvote.currentVote;
@@ -78,22 +96,28 @@ const toVoteOnPost = async ({
     if (bot.voteWeight > toVoteValue) {
       bot.amountToVote = bot.currentVote + toVoteValue;
       const { votePower } = await matchBotHelper.getNeededVoteWeight(bot.voteWeight, bot);
-      await steemHelper.likePost({
+      await hiveClient.execute(
+        hiveOperations.likePost,
+        {
+          voter: bot.botName,
+          author,
+          permlink,
+          weight: votePower,
+          key: process.env.UPVOTE_BOT_KEY,
+        },
+      );
+      return;
+    }
+    await hiveClient.execute(
+      hiveOperations.likePost,
+      {
         voter: bot.botName,
         author,
         permlink,
-        weight: votePower,
+        weight: 10000,
         key: process.env.UPVOTE_BOT_KEY,
-      });
-      return;
-    }
-    await steemHelper.likePost({
-      voter: bot.botName,
-      author,
-      permlink,
-      weight: 10000,
-      key: process.env.UPVOTE_BOT_KEY,
-    });
+      },
+    );
     toVoteValue -= (bot.voteWeight - bot.currentVote);
   }
 };

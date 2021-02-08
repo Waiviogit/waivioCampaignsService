@@ -1,8 +1,9 @@
 const _ = require('lodash');
 const moment = require('moment');
 const { wobjectModel } = require('models');
-const { campaignHelper, steemHelper, wobjectHelper } = require('utilities/helpers');
+const { campaignHelper, wobjectHelper } = require('utilities/helpers');
 const { currencyRequest } = require('utilities/requests');
+const { hiveClient, hiveOperations } = require('utilities/hiveApi');
 const paymentHistory = require('../paymentHistory');
 
 module.exports = async (data) => {
@@ -57,7 +58,10 @@ module.exports = async (data) => {
   const { payable } = await paymentHistory.getPayableHistory(
     { skip: 0, limit: 1, sponsor: data.guideName },
   );
-  const user = await steemHelper.getAccountInfo(data.guideName);
+  const user = await hiveClient.execute(
+    hiveOperations.getAccountInfo,
+    data.guideName,
+  );
   const budgetTotal = {
     account_amount: parseFloat(_.get(user, 'balance', 0)),
     sum_payable: payable,

@@ -1,10 +1,11 @@
+/* eslint-disable camelcase */
 const _ = require('lodash');
 const moment = require('moment');
 const {
   botUpvoteModel, postModel, matchBotModel, paymentHistoryModel, campaignModel,
 } = require('models');
-const steemHelper = require('utilities/helpers/steemHelper');
 const { voteCoefficients } = require('constants/constants');
+const { hiveClient, hiveOperations } = require('utilities/hiveApi');
 
 /**
  * Find all expired match bot upvotes and recount sponsors debt to the contractors
@@ -14,7 +15,8 @@ const executeRecount = async () => {
   const upvotes = await botUpvoteModel.getExpiredUpvotes();
 
   for (const upvote of upvotes) {
-    const { active_votes: activeVotes } = await steemHelper.getPostInfo(
+    const { active_votes: activeVotes } = await hiveClient.execute(
+      hiveOperations.getPostInfo,
       { author: upvote.author, permlink: upvote.permlink },
     );
 
@@ -62,27 +64,33 @@ const executeUpvotes = async () => {
 
   for (const upvote of upvotes) {
     let weight = 1;
-    let { currentVotePower, voteWeight } = await steemHelper.getVotingInfo(upvote.bot_name, 100, upvote.author, upvote.permlink);
+    let { currentVotePower, voteWeight } = await hiveClient.execute(
+      hiveOperations.getVotingInfo,
+      {
+        accountName: upvote.bot_name,
+        weight: 100,
+        postAuthor: upvote.author,
+        postPermlink: upvote.permlink,
+      },
+    );
     const post = await postModel.getOne({ author: upvote.author, permlink: upvote.permlink });
 
     if (post && post.active_votes && _.map(post.active_votes, 'voter').includes(upvote.bot_name)) {
       return;
     } if (currentVotePower >= upvote.min_voting_power) {
-      try {
-        ({ votePower: weight, voteWeight } = await getNeededVoteWeight(voteWeight, upvote));
-
-        const { result: vote } = await steemHelper.likePost({
+      ({ votePower: weight, voteWeight } = await getNeededVoteWeight(voteWeight, upvote));
+      const { result: vote } = await hiveClient.execute(
+        hiveOperations.likePost,
+        {
           voter: upvote.bot_name,
           author: upvote.author,
           permlink: upvote.permlink,
           weight,
           key: process.env.UPVOTE_BOT_KEY,
-        });
-        if (vote) {
-          await updateDataAfterVote({ upvote, voteWeight, weight });
-        }
-      } catch (error) {
-        console.log(`Error with match bot upvote: ${error}`);
+        },
+      );
+      if (vote) {
+        await updateDataAfterVote({ upvote, voteWeight, weight });
       }
     }
   }
@@ -100,8 +108,14 @@ const getNeededVoteWeight = async (totalAmount, upvote) => {
     const realVote = totalAmount * idealCoef * realFault;
     if (!needVotePower)needVotePower = idealCoef + (((totalAmount * idealCoef) - realVote) / totalAmount);
     else needVotePower *= idealCoef > 1 ? idealCoef : (idealCoef * realFault);
-    ({ voteWeight: totalAmount } = await steemHelper.getVotingInfo(
-      upvote.bot_name, _.round(needVotePower, 3) * 100, upvote.author, upvote.permlink,
+    ({ voteWeight: totalAmount } = await hiveClient.execute(
+      hiveOperations.getVotingInfo,
+      {
+        accountName: upvote.bot_name,
+        weight: _.round(needVotePower, 3) * 100,
+        postAuthor: upvote.author,
+        postPermlink: upvote.permlink,
+      },
     ));
     iteration++;
   }
@@ -174,11 +188,13 @@ const updateDataAfterVote = async ({ upvote, voteWeight, weight }) => {
  * @returns {Promise<{result: boolean}>}
  */
 const setRule = async ({
-  // eslint-disable-next-line camelcase
+
   bot_name, sponsor, voting_percent, note, enabled, expiredAt,
 }) => {
-  // eslint-disable-next-line camelcase
-  const [botAcc, sponsorAcc] = await steemHelper.getAccountsInfo([bot_name, sponsor]);
+  const [botAcc, sponsorAcc] = await hiveClient.execute(
+    hiveOperations.getAccountInfo,
+    [bot_name, sponsor],
+  );
 
   if (!botAcc || !sponsorAcc) return { result: false };
 
@@ -204,9 +220,12 @@ const checkDisable = async ({ bot_name: botName, account_auths: accountAuths }) 
 const removeVote = async ({ botName, author, permlink }) => {
   const enabled = await checkForEnable(botName);
   if (!enabled) return true;
-  await steemHelper.likePost({
-    key: process.env.UPVOTE_BOT_KEY, weight: 0, permlink, author, voter: botName,
-  });
+  await hiveClient.execute(
+    hiveOperations.likePost,
+    {
+      key: process.env.UPVOTE_BOT_KEY, weight: 0, permlink, author, voter: botName,
+    },
+  );
   return true;
 };
 
@@ -234,7 +253,10 @@ const lookForDownVotes = async (post, bots, voteWeight) => {
 };
 
 const checkForEnable = async (botName) => {
-  const [botAcc] = await steemHelper.getAccountsInfo([botName]);
+  const [botAcc] = await hiveClient.execute(
+    hiveOperations.getAccountsInfo,
+    [botName],
+  );
   if (!botAcc) return false;
   return !!_.flattenDepth(botAcc.posting.account_auths).includes(process.env.UPVOTE_BOT_NAME);
 };
@@ -247,7 +269,8 @@ const removeVotes = async (user, reservationPermlink) => {
   if (!paymentHistories || !paymentHistories.length) return false;
 
   const upvotes = await botUpvoteModel.getExpiredUpvotes(user.postPermlink);
-  const post = await steemHelper.getPostInfo(
+  const post = await hiveClient.execute(
+    hiveOperations.getPostInfo,
     { author: user.userName, permlink: user.postPermlink },
   );
   const reviewHistories = _.filter(paymentHistories, (history) => _.includes(['review', 'beneficiary_fee'], history.type));
@@ -481,21 +504,30 @@ const recountMatchBotVotes = async ({ user, reward, amount }) => {
 
 const reVoteOnReview = async (upvote, newAmountToVote) => {
   let weight;
-  let { voteWeight } = await steemHelper.getVotingInfo(
-    upvote.bot_name, 100, upvote.author, upvote.permlink,
+  let { voteWeight } = await hiveClient.execute(
+    hiveOperations.getVotingInfo,
+    {
+      accountName: upvote.bot_name,
+      weight: 100,
+      postAuthor: upvote.author,
+      postPermlink: upvote.permlink,
+    },
   );
   upvote.bot_name = upvote.botName;
   upvote.amountToVote = newAmountToVote;
 
   ({ votePower: weight, voteWeight } = await getNeededVoteWeight(voteWeight, upvote));
   try {
-    const { result: vote } = await steemHelper.likePost({
-      voter: upvote.bot_name,
-      author: upvote.author,
-      permlink: upvote.permlink,
-      weight,
-      key: process.env.UPVOTE_BOT_KEY,
-    });
+    const { result: vote } = await hiveClient.execute(
+      hiveOperations.likePost,
+      {
+        voter: upvote.bot_name,
+        author: upvote.author,
+        permlink: upvote.permlink,
+        weight,
+        key: process.env.UPVOTE_BOT_KEY,
+      },
+    );
     if (vote) {
       await botUpvoteModel.update({ _id: upvote._id },
         { currentVote: voteWeight, votePercent: weight });

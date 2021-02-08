@@ -3,7 +3,6 @@ const moment = require('moment');
 const paymentHistoryModel = require('models/paymentHistoryModel');
 const userModel = require('models/userModel');
 const { campaignHelper } = require('utilities/helpers');
-const steemHelper = require('utilities/helpers/steemHelper');
 const currenciesStatisticModel = require('models/currenciesStatisticModel');
 const appModel = require('models/appModel');
 const config = require('config');
@@ -45,9 +44,6 @@ const getConversationsFromHive = async (campaigns) => {
     const { users } = campaign;
     if (users.children === 0) return;
 
-    // const { result: comments } = await steemHelper.getPostState(
-    //   { author: users.rootName, permlink: users.permlink, category: 'waivio' },
-    // );
     const { result: comments } = await hiveClient.execute(
       hiveOperations.getPostState,
       { author: users.rootName || users.name, permlink: users.permlink, category: 'waivio' },
