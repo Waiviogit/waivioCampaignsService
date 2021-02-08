@@ -1,6 +1,7 @@
 const _ = require('lodash');
 const { PrivateKey, Asset } = require('@hiveio/dhive');
 const { specialTransferBeneficiaries } = require('constants/constants');
+const { postModel } = require('models');
 
 exports.likePost = async (client, {
   key, voter, author, permlink, weight,
@@ -148,7 +149,13 @@ exports.getVoteValue = async (client, vote) => {
 
   const currentVote = _.find(post.active_votes,
     (hiveVote) => vote.voter === hiveVote.voter);
-  if (!currentVote || currentVote.percent === 0) return { weight: _.get(currentVote, 'percent', 0), voteValue: 0, metadata: post.json_metadata };
+  if (!currentVote || currentVote.percent === 0) {
+    return {
+      weight: _.get(currentVote, 'percent', 0),
+      voteValue: 0,
+      metadata: post.json_metadata,
+    };
+  }
   if (currentVote.percent < 0) {
     return { weight: currentVote.percent, voteValue: -1, metadata: post.json_metadata };
   }
@@ -184,9 +191,9 @@ exports.calculateVotePower = async (client, {
   const power = (((accountVotingPower / 100) * voteWeight)) / 50;
   const rShares = (vests * power * 100) - 50000000;
 
-  const post = await this.getPostInfo(client, { author, permlink });
+  const postVoteRhares = await getPostVoteRhares(client, { author, permlink });
 
-  const tRShares = parseFloat(post.vote_rshares) + rShares;
+  const tRShares = postVoteRhares + rShares;
 
   const s = parseFloat(rewardFund.content_constant);
   const tClaims = (tRShares * (tRShares + (2 * s))) / (tRShares + (4 * s));
@@ -244,3 +251,13 @@ exports.makeSpecialTransfers = async (client, account) => {
 };
 
 const parseToFloat = (balance) => parseFloat(balance.match(/.\d*.\d*/)[0]);
+
+const getPostVoteRhares = async (client, { author, permlink }) => {
+  let { post } = await postModel.getOne({ author, permlink });
+  if (!post) {
+    post = await this.getPostInfo(client, { author, permlink });
+  }
+  return _.get(post, 'vote_rshares')
+    ? parseFloat(post.vote_rshares)
+    : 0;
+};
