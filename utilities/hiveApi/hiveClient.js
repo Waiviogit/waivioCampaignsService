@@ -19,17 +19,17 @@ const getHiveClient = (hiveClient) => {
   return hiveClients[currentClientIndex === hiveClients.length - 1 ? 0 : currentClientIndex + 1];
 };
 
-let hiveClient = getHiveClient();
+exports.client = getHiveClient();
 
 exports.execute = async (method, params) => {
   for (let i = 0; i < hiveClients.length; i++) {
-    const data = await method(hiveClient, params);
+    const data = await method(this.client, params);
     if (!_.get(data, 'error')) return data;
     if (i === hiveClients.length - 1) {
       return { error: data.error };
     }
     if (data.error) { // #TODO add specific code
-      hiveClient = getHiveClient(hiveClient);
+      this.client = getHiveClient(this.client);
     }
   }
 };

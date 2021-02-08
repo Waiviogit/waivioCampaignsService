@@ -78,19 +78,23 @@ const executeUpvotes = async () => {
     if (post && post.active_votes && _.map(post.active_votes, 'voter').includes(upvote.bot_name)) {
       return;
     } if (currentVotePower >= upvote.min_voting_power) {
-      ({ votePower: weight, voteWeight } = await getNeededVoteWeight(voteWeight, upvote));
-      const { result: vote } = await hiveClient.execute(
-        hiveOperations.likePost,
-        {
-          voter: upvote.bot_name,
-          author: upvote.author,
-          permlink: upvote.permlink,
-          weight,
-          key: process.env.UPVOTE_BOT_KEY,
-        },
-      );
-      if (vote) {
-        await updateDataAfterVote({ upvote, voteWeight, weight });
+      try {
+        ({ votePower: weight, voteWeight } = await getNeededVoteWeight(voteWeight, upvote));
+        const { result: vote } = await hiveClient.execute(
+          hiveOperations.likePost,
+          {
+            voter: upvote.bot_name,
+            author: upvote.author,
+            permlink: upvote.permlink,
+            weight,
+            key: process.env.UPVOTE_BOT_KEY,
+          },
+        );
+        if (vote) {
+          await updateDataAfterVote({ upvote, voteWeight, weight });
+        }
+      } catch (error) {
+        console.log(`Error with match bot upvote: ${error}`);
       }
     }
   }

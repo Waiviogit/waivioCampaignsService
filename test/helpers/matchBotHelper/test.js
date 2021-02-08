@@ -297,7 +297,6 @@ describe('matchBotHelper', async () => {
         });
         it('should call vote method with not full vote weight', async () => {
           await matchBotHelper.executeUpvotes();
-          console.log('yo')
           expect(hiveOperations.likePost.args[1][1].weight).to.be.eq(10000);
         });
 
@@ -374,7 +373,6 @@ describe('matchBotHelper', async () => {
       sinon.stub(hiveOperations, 'likePost').returns(Promise.resolve({ result: true }));
       await matchBotHelper.executeUpvotes();
       const pendingUpvotes = await BotUpvote.find({ status: 'pending' });
-      console.log('yo')
       expect(hiveOperations.likePost.callCount).to.be.eq(1);
       expect(hiveOperations.likePost.args[0][1].weight).to.be.eq(10000);
       expect(pendingUpvotes.length).to.be.eq(1);
@@ -389,7 +387,6 @@ describe('matchBotHelper', async () => {
       await PostFactory.Create(_.pick(upvote, ['author', 'permlink']));
       await matchBotHelper.executeUpvotes();
       const pendingUpvotes = await BotUpvote.find({ status: 'pending' });
-      console.log('yo')
       expect(hiveOperations.likePost.callCount).to.be.eq(2);
       expect(pendingUpvotes.length).to.be.eq(3);
     });
