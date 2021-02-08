@@ -1,6 +1,6 @@
 const {
   matchBotHelper, expect, sinon, dropDatabase, moment, _,
-  steemHelper, BotUpvote, PaymentHistory, MatchBot, faker,
+  BotUpvote, PaymentHistory, MatchBot, faker, hiveOperations,
 } = require('test/testHelper');
 const {
   MatchBotFactory, BotUpvoteFactory, PostFactory, PaymentHistoryFactory, CampaignFactory,
@@ -27,7 +27,7 @@ describe('matchBotHelper', async () => {
     });
 
     it('recount without upvotes', async () => {
-      sinon.stub(steemHelper, 'getPostInfo').returns(Promise.resolve(postInfo));
+      sinon.stub(hiveOperations, 'getPostInfo').returns(Promise.resolve(postInfo));
       await matchBotHelper.executeRecount();
       const botUpvotes = await BotUpvote.find();
       expect(botUpvotes.length).to.be.eq(0);
@@ -41,7 +41,7 @@ describe('matchBotHelper', async () => {
         userName: 'author', sponsor: sponsor1, type: 'review', reviewPermlink: botUpvote.permlink, permlink: botUpvote.reservationPermlink,
       });
 
-      sinon.stub(steemHelper, 'getPostInfo').returns(Promise.resolve(postInfo));
+      sinon.stub(hiveOperations, 'getPostInfo').returns(Promise.resolve(postInfo));
       await matchBotHelper.executeRecount();
 
       const paymentHistories = await PaymentHistory.find();
@@ -61,7 +61,7 @@ describe('matchBotHelper', async () => {
         userName: 'author', sponsor: sponsor1, type: 'review', reviewPermlink: botUpvote.permlink, permlink: botUpvote.reservationPermlink,
       });
 
-      sinon.stub(steemHelper, 'getPostInfo').returns(Promise.resolve(postInfo));
+      sinon.stub(hiveOperations, 'getPostInfo').returns(Promise.resolve(postInfo));
       await matchBotHelper.executeRecount();
 
       const paymentHistories = await PaymentHistory.find();
@@ -77,7 +77,7 @@ describe('matchBotHelper', async () => {
       await BotUpvoteFactory.Create({
         author: 'author', bot_name: matchBot1.bot_name, sponsor: sponsor1, status: 'upvoted',
       });
-      sinon.stub(steemHelper, 'getPostInfo').returns(Promise.resolve(postInfo));
+      sinon.stub(hiveOperations, 'getPostInfo').returns(Promise.resolve(postInfo));
       await matchBotHelper.executeRecount();
       const botUpvotes = await BotUpvote.find();
 
@@ -92,7 +92,7 @@ describe('matchBotHelper', async () => {
       await PaymentHistoryFactory.Create({
         userName: 'author', sponsor: sponsor1, type: 'review', reviewPermlink: botUpvote.permlink, amount: 1.5, permlink: botUpvote.reservationPermlink,
       });
-      sinon.stub(steemHelper, 'getPostInfo').returns(Promise.resolve(postInfo));
+      sinon.stub(hiveOperations, 'getPostInfo').returns(Promise.resolve(postInfo));
       await matchBotHelper.executeRecount();
       const paymentHistories = await PaymentHistory.find();
       const botUpvotes = await BotUpvote.find();
@@ -111,7 +111,7 @@ describe('matchBotHelper', async () => {
           userName: `author${i}`, sponsor: sponsor1, type: 'review', reviewPermlink: bot.permlink, permlink: bot.reservationPermlink,
         });
       }
-      sinon.stub(steemHelper, 'getPostInfo').returns(Promise.resolve(postInfo));
+      sinon.stub(hiveOperations, 'getPostInfo').returns(Promise.resolve(postInfo));
       await matchBotHelper.executeRecount();
       const paymentHistories = await PaymentHistory.find();
       const botUpvotes = await BotUpvote.find();
@@ -161,7 +161,7 @@ describe('matchBotHelper', async () => {
           permlink: bot.reservationPermlink,
         });
       }
-      sinon.stub(steemHelper, 'getPostInfo').returns(Promise.resolve(postInfo));
+      sinon.stub(hiveOperations, 'getPostInfo').returns(Promise.resolve(postInfo));
       await matchBotHelper.executeRecount();
 
       const paymentHistories = await PaymentHistory.find({ recounted: true });
@@ -217,7 +217,7 @@ describe('matchBotHelper', async () => {
         active_votes: [{ voter: matchBot.bot_name, rshares: 4866678620000 }],
       };
       priceInfo = { amount: 0.2 };
-      sinon.stub(steemHelper, 'getPostInfo').returns(Promise.resolve(postInfo));
+      sinon.stub(hiveOperations, 'getPostInfo').returns(Promise.resolve(postInfo));
       await matchBotHelper.executeRecount();
 
       paymentHistories = await PaymentHistory.find({ recounted: true }).lean();
@@ -251,7 +251,7 @@ describe('matchBotHelper', async () => {
       await dropDatabase();
       matchBot1 = await MatchBotFactory.Create({ enabled: true, sponsor });
       matchBot2 = await MatchBotFactory.Create({ enabled: true, sponsor });
-      sinon.stub(steemHelper, 'getPostInfo').returns(Promise.resolve({ active_votes: [{ voter: matchBot1.bot_name }, { voter: bot3 }] }));
+      sinon.stub(hiveOperations, 'getPostInfo').returns(Promise.resolve({ active_votes: [{ voter: matchBot1.bot_name }, { voter: bot3 }] }));
       botUpvote1 = await BotUpvoteFactory.Create({
         bot_name: matchBot1.bot_name, sponsor, createdAt: moment.utc().subtract(1, 'days'), reward: 10, amountToVote: 10,
       });
@@ -270,8 +270,8 @@ describe('matchBotHelper', async () => {
     });
     describe('on Success', async () => {
       beforeEach(async () => {
-        sinon.stub(steemHelper, 'getVotingInfo').returns(Promise.resolve({ currentVotePower: 9500, voteWeight }));
-        sinon.stub(steemHelper, 'likePost').returns(Promise.resolve({ result: true }));
+        sinon.stub(hiveOperations, 'getVotingInfo').returns(Promise.resolve({ currentVotePower: 9500, voteWeight }));
+        sinon.stub(hiveOperations, 'likePost').returns(Promise.resolve({ result: true }));
       });
 
       describe('with many Bots', async () => {
@@ -297,7 +297,8 @@ describe('matchBotHelper', async () => {
         });
         it('should call vote method with not full vote weight', async () => {
           await matchBotHelper.executeUpvotes();
-          expect(steemHelper.likePost.args[1][0].weight).to.be.eq(10000);
+          console.log('yo')
+          expect(hiveOperations.likePost.args[1][1].weight).to.be.eq(10000);
         });
 
         it('should update payment history by all allowed upvote reward', async () => {
@@ -310,7 +311,7 @@ describe('matchBotHelper', async () => {
       it('success executes one upvote', async () => {
         await matchBotHelper.executeUpvotes();
         const pendingUpvotes = await BotUpvote.find({ status: 'pending' });
-        expect(steemHelper.likePost.callCount).to.be.eq(1);
+        expect(hiveOperations.likePost.callCount).to.be.eq(1);
         expect(pendingUpvotes.length).to.be.eq(1);
       });
       it('should take voteAmount from payment history amount after vote', async () => {
@@ -329,7 +330,7 @@ describe('matchBotHelper', async () => {
         await matchBotHelper.executeUpvotes();
         await matchBotHelper.executeUpvotes();
         const pendingUpvotes = await BotUpvote.find({ status: 'pending' });
-        expect(steemHelper.likePost.callCount).to.be.eq(2);
+        expect(hiveOperations.likePost.callCount).to.be.eq(2);
         expect(pendingUpvotes.length).to.be.eq(0);
       });
       it('success executes one upvote per two bots', async () => {
@@ -340,7 +341,7 @@ describe('matchBotHelper', async () => {
         await matchBotHelper.executeUpvotes();
         const pendingUpvotes = await BotUpvote.find({ status: 'pending' });
 
-        expect(steemHelper.likePost.callCount).to.be.eq(2);
+        expect(hiveOperations.likePost.callCount).to.be.eq(2);
         expect(pendingUpvotes.length).to.be.eq(1);
       });
 
@@ -354,42 +355,42 @@ describe('matchBotHelper', async () => {
         await matchBotHelper.executeUpvotes();
         const pendingUpvotes = await BotUpvote.find({ status: 'pending' });
 
-        expect(steemHelper.likePost.callCount).to.be.eq(3);
+        expect(hiveOperations.likePost.callCount).to.be.eq(3);
         expect(pendingUpvotes.length).to.be.eq(0);
       });
     });
     it('success not executes if voting power lower than minimum', async () => {
-      sinon.stub(steemHelper, 'getVotingInfo').returns(Promise.resolve({ currentVotePower: 7800 }));
-      sinon.stub(steemHelper, 'likePost').returns(Promise.resolve({ success: true }));
+      sinon.stub(hiveOperations, 'getVotingInfo').returns(Promise.resolve({ currentVotePower: 7800 }));
+      sinon.stub(hiveOperations, 'likePost').returns(Promise.resolve({ success: true }));
       await matchBotHelper.executeUpvotes(10);
       const pendingUpvotes = await BotUpvote.find({ status: 'pending' });
 
-      expect(steemHelper.likePost.callCount).to.be.eq(0);
+      expect(hiveOperations.likePost.callCount).to.be.eq(0);
       expect(pendingUpvotes.length).to.be.eq(2);
     });
 
     it('check voting percent', async () => {
-      sinon.stub(steemHelper, 'getVotingInfo').returns(Promise.resolve({ currentVotePower: 8500, voteWeight: botUpvote2.reward }));
-      sinon.stub(steemHelper, 'likePost').returns(Promise.resolve({ result: true }));
+      sinon.stub(hiveOperations, 'getVotingInfo').returns(Promise.resolve({ currentVotePower: 8500, voteWeight: botUpvote2.reward }));
+      sinon.stub(hiveOperations, 'likePost').returns(Promise.resolve({ result: true }));
       await matchBotHelper.executeUpvotes();
       const pendingUpvotes = await BotUpvote.find({ status: 'pending' });
-
-      expect(steemHelper.likePost.callCount).to.be.eq(1);
-      expect(steemHelper.likePost.args[0][0].weight).to.be.eq(10000);
+      console.log('yo')
+      expect(hiveOperations.likePost.callCount).to.be.eq(1);
+      expect(hiveOperations.likePost.args[0][1].weight).to.be.eq(10000);
       expect(pendingUpvotes.length).to.be.eq(1);
     });
 
     it('check error from upvote', async () => {
-      sinon.stub(steemHelper, 'getVotingInfo').returns(Promise.resolve({ currentVotePower: 8500 }));
-      sinon.stub(steemHelper, 'likePost').throws('RPC error');
+      sinon.stub(hiveOperations, 'getVotingInfo').returns(Promise.resolve({ currentVotePower: 8500 }));
+      sinon.stub(hiveOperations, 'likePost').throws('RPC error');
       const upvote = await BotUpvoteFactory.Create({
         bot_name: matchBot2.bot_name, sponsor, author: botUpvote1.author,
       });
       await PostFactory.Create(_.pick(upvote, ['author', 'permlink']));
-      await matchBotHelper.executeUpvotes(50);
+      await matchBotHelper.executeUpvotes();
       const pendingUpvotes = await BotUpvote.find({ status: 'pending' });
-
-      expect(steemHelper.likePost.callCount).to.be.eq(2);
+      console.log('yo')
+      expect(hiveOperations.likePost.callCount).to.be.eq(2);
       expect(pendingUpvotes.length).to.be.eq(3);
     });
   });
@@ -417,7 +418,7 @@ describe('matchBotHelper', async () => {
     });
 
     it('check all fields', async () => {
-      await sinon.stub(steemHelper, 'getAccountsInfo').returns(Promise.resolve(accsStub));
+      await sinon.stub(hiveOperations, 'getAccountsInfo').returns(Promise.resolve(accsStub));
       await matchBotHelper.setRule({
         bot_name, sponsor, voting_percent, note, enabled, expiredAt,
       });
@@ -437,7 +438,7 @@ describe('matchBotHelper', async () => {
       await MatchBotFactory.Create({
         bot_name, sponsor, voting_percent, note, enabled, expiredAt,
       });
-      await sinon.stub(steemHelper, 'getAccountsInfo').returns(Promise.resolve(accsStub));
+      await sinon.stub(hiveOperations, 'getAccountsInfo').returns(Promise.resolve(accsStub));
       await matchBotHelper.setRule({
         bot_name, sponsor, voting_percent, note, enabled, expiredAt,
       });
@@ -454,7 +455,7 @@ describe('matchBotHelper', async () => {
       await MatchBotFactory.Create({
         bot_name, sponsor, voting_percent, note, enabled, expiredAt,
       });
-      await sinon.stub(steemHelper, 'getAccountsInfo').returns(Promise.resolve(accsStub));
+      await sinon.stub(hiveOperations, 'getAccountsInfo').returns(Promise.resolve(accsStub));
       await matchBotHelper.setRule({
         bot_name, sponsor, voting_percent, note, enabled, expiredAt,
       });
@@ -470,7 +471,7 @@ describe('matchBotHelper', async () => {
       await MatchBotFactory.Create({
         bot_name, sponsor, voting_percent, note, enabled: false, expiredAt: moment().toDate(),
       });
-      await sinon.stub(steemHelper, 'getAccountsInfo').returns(Promise.resolve(accsStub));
+      await sinon.stub(hiveOperations, 'getAccountsInfo').returns(Promise.resolve(accsStub));
       const { result } = await matchBotHelper.setRule({
         bot_name, sponsor, voting_percent, note, enabled, expiredAt,
       });
@@ -486,7 +487,7 @@ describe('matchBotHelper', async () => {
       await MatchBotFactory.Create({
         bot_name, sponsor, voting_percent, note, enabled: false, expiredAt: moment().toDate(),
       });
-      await sinon.stub(steemHelper, 'getAccountsInfo').returns(Promise.resolve(accsStub));
+      await sinon.stub(hiveOperations, 'getAccountsInfo').returns(Promise.resolve(accsStub));
       const { result } = await matchBotHelper.setRule({
         bot_name, sponsor, voting_percent: 0.01, expiredAt,
       });
@@ -502,7 +503,7 @@ describe('matchBotHelper', async () => {
       await MatchBotFactory.Create({
         bot_name, sponsor, voting_percent, note, enabled,
       });
-      await sinon.stub(steemHelper, 'getAccountsInfo').returns(Promise.resolve(accsStub));
+      await sinon.stub(hiveOperations, 'getAccountsInfo').returns(Promise.resolve(accsStub));
       await matchBotHelper.setRule({
         bot_name, sponsor: 'sponsor2', voting_percent, note, enabled, expiredAt,
       });
@@ -515,7 +516,7 @@ describe('matchBotHelper', async () => {
       await MatchBotFactory.Create({
         bot_name, sponsor, voting_percent, note, enabled,
       });
-      await sinon.stub(steemHelper, 'getAccountsInfo').returns(Promise.resolve(accsStub));
+      await sinon.stub(hiveOperations, 'getAccountsInfo').returns(Promise.resolve(accsStub));
       await matchBotHelper.setRule({
         bot_name: 'some_name', sponsor, voting_percent, note, enabled, expiredAt,
       });
@@ -530,7 +531,7 @@ describe('matchBotHelper', async () => {
       await MatchBotFactory.Create({
         bot_name, sponsor, voting_percent, note, enabled,
       });
-      await sinon.stub(steemHelper, 'getAccountsInfo').returns(Promise.resolve(accsStub));
+      await sinon.stub(hiveOperations, 'getAccountsInfo').returns(Promise.resolve(accsStub));
       await matchBotHelper.setRule({
         bot_name, sponsor, voting_percent, note, enabled,
       });
@@ -546,7 +547,7 @@ describe('matchBotHelper', async () => {
 
     it('check minimum voting percent', async () => {
       voting_percent = 0.01;
-      await sinon.stub(steemHelper, 'getAccountsInfo').returns(Promise.resolve(accsStub));
+      await sinon.stub(hiveOperations, 'getAccountsInfo').returns(Promise.resolve(accsStub));
       await matchBotHelper.setRule({
         bot_name, sponsor, voting_percent, note, enabled, expiredAt,
       });
@@ -558,7 +559,7 @@ describe('matchBotHelper', async () => {
 
     it('check maximum voting percent', async () => {
       voting_percent = 1;
-      await sinon.stub(steemHelper, 'getAccountsInfo').returns(Promise.resolve(accsStub));
+      await sinon.stub(hiveOperations, 'getAccountsInfo').returns(Promise.resolve(accsStub));
       await matchBotHelper.setRule({
         bot_name, sponsor, voting_percent, note, enabled, expiredAt,
       });
@@ -570,7 +571,7 @@ describe('matchBotHelper', async () => {
 
     it('check below minimum voting percent', async () => {
       voting_percent = 0.009;
-      await sinon.stub(steemHelper, 'getAccountsInfo').returns(Promise.resolve(accsStub));
+      await sinon.stub(hiveOperations, 'getAccountsInfo').returns(Promise.resolve(accsStub));
       const { result } = await matchBotHelper.setRule({
         bot_name, sponsor, voting_percent, note, enabled,
       });
@@ -582,7 +583,7 @@ describe('matchBotHelper', async () => {
 
     it('check greater maximum voting percent', async () => {
       voting_percent = 1.001;
-      await sinon.stub(steemHelper, 'getAccountsInfo').returns(Promise.resolve(accsStub));
+      await sinon.stub(hiveOperations, 'getAccountsInfo').returns(Promise.resolve(accsStub));
       const { result } = await matchBotHelper.setRule({
         bot_name, sponsor, voting_percent, note, enabled,
       });
@@ -593,7 +594,7 @@ describe('matchBotHelper', async () => {
     });
 
     it('should created rule with enabled true and has authorize to bot', async () => {
-      await sinon.stub(steemHelper, 'getAccountsInfo').returns(Promise.resolve(accsStub));
+      await sinon.stub(hiveOperations, 'getAccountsInfo').returns(Promise.resolve(accsStub));
       await matchBotHelper.setRule({
         bot_name, sponsor, voting_percent, note, enabled, expiredAt,
       });
@@ -605,7 +606,7 @@ describe('matchBotHelper', async () => {
 
     it('should created rule with enabled false and has authorize to bot', async () => {
       enabled = false;
-      await sinon.stub(steemHelper, 'getAccountsInfo').returns(Promise.resolve(accsStub));
+      await sinon.stub(hiveOperations, 'getAccountsInfo').returns(Promise.resolve(accsStub));
       await matchBotHelper.setRule({
         bot_name, sponsor, voting_percent, note, enabled, expiredAt,
       });
@@ -618,7 +619,7 @@ describe('matchBotHelper', async () => {
     it('should created rule with enabled false and has not authorize to bot', async () => {
       enabled = false;
       accsStub[0].posting.account_auths = [[0, 'some_acc']];
-      await sinon.stub(steemHelper, 'getAccountsInfo').returns(Promise.resolve(accsStub));
+      await sinon.stub(hiveOperations, 'getAccountsInfo').returns(Promise.resolve(accsStub));
       await matchBotHelper.setRule({
         bot_name, sponsor, voting_percent, note, enabled, expiredAt,
       });
@@ -630,7 +631,7 @@ describe('matchBotHelper', async () => {
 
     it('should created rule with enabled true and has not authorize to bot', async () => {
       accsStub[0].posting.account_auths = [[0, 'some_acc']];
-      await sinon.stub(steemHelper, 'getAccountsInfo').returns(Promise.resolve(accsStub));
+      await sinon.stub(hiveOperations, 'getAccountsInfo').returns(Promise.resolve(accsStub));
       await matchBotHelper.setRule({
         bot_name, sponsor, voting_percent, note, enabled, expiredAt,
       });
@@ -642,7 +643,7 @@ describe('matchBotHelper', async () => {
 
     it('should created rule with enabled true and without authorized posting users', async () => {
       accsStub[0].posting.account_auths = [];
-      await sinon.stub(steemHelper, 'getAccountsInfo').returns(Promise.resolve(accsStub));
+      await sinon.stub(hiveOperations, 'getAccountsInfo').returns(Promise.resolve(accsStub));
       await matchBotHelper.setRule({
         bot_name, sponsor, voting_percent, note, enabled, expiredAt,
       });
@@ -654,7 +655,7 @@ describe('matchBotHelper', async () => {
 
     it('should not created rule with not found sponsor or bot acc', async () => {
       accsStub[1] = undefined;
-      await sinon.stub(steemHelper, 'getAccountsInfo').returns(Promise.resolve(accsStub));
+      await sinon.stub(hiveOperations, 'getAccountsInfo').returns(Promise.resolve(accsStub));
       const { result } = await matchBotHelper.setRule({
         bot_name, sponsor, voting_percent, note, enabled, expiredAt,
       });
@@ -666,7 +667,7 @@ describe('matchBotHelper', async () => {
 
     it('should not created rule with not found sponsor and bot acc', async () => {
       accsStub = [];
-      await sinon.stub(steemHelper, 'getAccountsInfo').returns(Promise.resolve(accsStub));
+      await sinon.stub(hiveOperations, 'getAccountsInfo').returns(Promise.resolve(accsStub));
       const { result } = await matchBotHelper.setRule({
         bot_name, sponsor, voting_percent, note, enabled, expiredAt,
       });

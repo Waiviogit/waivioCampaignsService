@@ -1,6 +1,6 @@
 const moment = require('moment');
 const {
-  chai, chaiHttp, app, faker, ObjectID, dropDatabase, steemHelper, sinon, User, _, render,
+  chai, chaiHttp, app, faker, ObjectID, dropDatabase, sinon, User, _, render, hiveOperations
 } = require('test/testHelper');
 const {
   BlacklistFactory, CampaignFactory, PaymentFactory, SubscriptionFactory, UserFactory,
@@ -1764,7 +1764,7 @@ describe('Campaigns', async () => {
     });
 
     it('should create campaign with valid app', async () => {
-      sinon.stub(steemHelper, 'getAccountInfo').returns(Promise.resolve(true));
+      sinon.stub(hiveOperations, 'getAccountInfo').returns(Promise.resolve(true));
       campaignParams.app = 'app';
       const res = await chai.request(app).post('/campaigns-api/create_campaign').send(campaignParams);
 
@@ -1773,7 +1773,7 @@ describe('Campaigns', async () => {
     });
 
     it('should create campaign with invalid valid app', async () => {
-      sinon.stub(steemHelper, 'getAccountInfo').returns(Promise.resolve(false));
+      sinon.stub(hiveOperations, 'getAccountInfo').returns(Promise.resolve(false));
       campaignParams.app = 'app';
       const res = await chai.request(app).post('/campaigns-api/create_campaign').send(campaignParams);
 

@@ -192,7 +192,7 @@ const setRule = async ({
   bot_name, sponsor, voting_percent, note, enabled, expiredAt,
 }) => {
   const [botAcc, sponsorAcc] = await hiveClient.execute(
-    hiveOperations.getAccountInfo,
+    hiveOperations.getAccountsInfo,
     [bot_name, sponsor],
   );
 
