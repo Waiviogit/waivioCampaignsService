@@ -73,7 +73,7 @@ const executeUpvotes = async () => {
         postPermlink: upvote.permlink,
       },
     );
-    const post = await postModel.getOne({ author: upvote.author, permlink: upvote.permlink });
+    const { post } = await postModel.getOne({ author: upvote.author, permlink: upvote.permlink });
 
     if (post && post.active_votes && _.map(post.active_votes, 'voter').includes(upvote.bot_name)) {
       return;
