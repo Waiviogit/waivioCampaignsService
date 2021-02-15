@@ -1,6 +1,6 @@
 const {
   expect, sinon, dropDatabase, ObjectID, expireMatchBotRecount,
-  steemHelper, PaymentHistory, faker, BotUpvote, _, Campaign,
+  PaymentHistory, faker, BotUpvote, _, Campaign, hiveOperations,
 } = require('test/testHelper');
 const {
   CampaignFactory, PaymentHistoryFactory, BotUpvoteFactory,
@@ -62,7 +62,8 @@ describe('expireMatchBotRecount', async () => {
       beforeEach(async () => {
         vote = _.random(1, 10);
         percent = _.random(1000, 10000);
-        sinon.stub(steemHelper, 'getVoteValue').returns(Promise.resolve({ weight: percent, voteValue: vote }));
+        sinon.stub(hiveOperations, 'getVoteValue').returns(Promise.resolve({ weight: percent, voteValue: vote }));
+        sinon.stub(hiveOperations, 'getPostInfo').returns(Promise.resolve({}));
         await expireMatchBotRecount(reqData);
         result = await BotUpvote.findOne({ status: 'upvoted', author: user, permlink: paymentData.reviewPermlink });
       });
@@ -86,7 +87,7 @@ describe('expireMatchBotRecount', async () => {
       let result, percent;
       beforeEach(async () => {
         percent = _.random(-1000, -10000);
-        sinon.stub(steemHelper, 'getVoteValue').returns(Promise.resolve({ weight: percent, voteValue: -1 }));
+        sinon.stub(hiveOperations, 'getVoteValue').returns(Promise.resolve({ weight: percent, voteValue: -1 }));
         await expireMatchBotRecount(reqData);
         result = await BotUpvote.findOne({ status: 'upvoted', author: user, permlink: paymentData.reviewPermlink });
       });
@@ -117,7 +118,7 @@ describe('expireMatchBotRecount', async () => {
       beforeEach(async () => {
         percent = _.random(1000, 10000);
         vote = _.random(1, 10);
-        sinon.stub(steemHelper, 'getVoteValue').returns(Promise.resolve({ weight: percent, voteValue: vote }));
+        sinon.stub(hiveOperations, 'getVoteValue').returns(Promise.resolve({ weight: percent, voteValue: vote }));
         await expireMatchBotRecount(reqData);
         result = await BotUpvote.findOne({ status: 'upvoted', author: user, permlink: paymentData.reviewPermlink });
       });
@@ -139,7 +140,7 @@ describe('expireMatchBotRecount', async () => {
       beforeEach(async () => {
         percent = _.random(-1000, -10000);
         vote = _.random(-1);
-        sinon.stub(steemHelper, 'getVoteValue').returns(Promise.resolve({ weight: percent, voteValue: vote }));
+        sinon.stub(hiveOperations, 'getVoteValue').returns(Promise.resolve({ weight: percent, voteValue: vote }));
         await expireMatchBotRecount(reqData);
         result = await BotUpvote.findOne({ status: 'upvoted', author: user, permlink: paymentData.reviewPermlink });
       });
@@ -173,7 +174,7 @@ describe('expireMatchBotRecount', async () => {
       beforeEach(async () => {
         vote = _.random(2, 10);
         percent = _.random(2000, 10000);
-        sinon.stub(steemHelper, 'getVoteValue').returns(Promise.resolve({ weight: percent, voteValue: vote }));
+        sinon.stub(hiveOperations, 'getVoteValue').returns(Promise.resolve({ weight: percent, voteValue: vote }));
         await expireMatchBotRecount(reqData);
         result = await BotUpvote.findOne({ status: 'upvoted', author: user, permlink: paymentData.reviewPermlink });
       });
@@ -195,7 +196,7 @@ describe('expireMatchBotRecount', async () => {
       beforeEach(async () => {
         percent = _.random(-2000, -10000);
         vote = -1;
-        sinon.stub(steemHelper, 'getVoteValue').returns(Promise.resolve({ weight: percent, voteValue: vote }));
+        sinon.stub(hiveOperations, 'getVoteValue').returns(Promise.resolve({ weight: percent, voteValue: vote }));
         await expireMatchBotRecount(reqData);
         result = await BotUpvote.findOne({ status: 'upvoted', author: user, permlink: paymentData.reviewPermlink });
       });
@@ -229,7 +230,7 @@ describe('expireMatchBotRecount', async () => {
         beforeEach(async () => {
           secondVote = _.random(2, 10);
           secondPercent = _.random(3000, 10000);
-          sinon.stub(steemHelper, 'getVoteValue').returns(Promise.resolve({ weight: secondPercent, voteValue: secondVote }));
+          sinon.stub(hiveOperations, 'getVoteValue').returns(Promise.resolve({ weight: secondPercent, voteValue: secondVote }));
           await expireMatchBotRecount(reqData);
           secondResult = await BotUpvote.findOne({
             status: 'upvoted', author: user, permlink: paymentData.reviewPermlink, botName: secondUpvote.botName,
@@ -245,7 +246,7 @@ describe('expireMatchBotRecount', async () => {
       describe('with downVote', async () => {
         let firstResult, secondResult;
         beforeEach(async () => {
-          sinon.stub(steemHelper, 'getVoteValue').returns(Promise.resolve({ weight: -1000, voteValue: -1 }));
+          sinon.stub(hiveOperations, 'getVoteValue').returns(Promise.resolve({ weight: -1000, voteValue: -1 }));
           await expireMatchBotRecount(reqData);
           secondResult = await BotUpvote.findOne({
             status: 'upvoted', author: user, permlink: paymentData.reviewPermlink, botName: secondUpvote.botName,
@@ -296,7 +297,7 @@ describe('expireMatchBotRecount', async () => {
       beforeEach(async () => {
         percent = _.random(2000, 10000);
         vote = _.random(2, 10);
-        sinon.stub(steemHelper, 'getVoteValue').returns(Promise.resolve({ weight: percent, voteValue: vote }));
+        sinon.stub(hiveOperations, 'getVoteValue').returns(Promise.resolve({ weight: percent, voteValue: vote }));
         await expireMatchBotRecount(reqData);
         result = await BotUpvote.findOne({ status: 'upvoted', author: user, permlink: paymentData.reviewPermlink });
         reviewHistory = await PaymentHistory.findOne({ _id: reviewPayment._id });
@@ -325,7 +326,7 @@ describe('expireMatchBotRecount', async () => {
     describe('with downVote', async () => {
       let result, reviewHistory, benefHistory, compensationHistory;
       beforeEach(async () => {
-        sinon.stub(steemHelper, 'getVoteValue').returns(Promise.resolve({ weight: -1000, voteValue: -1 }));
+        sinon.stub(hiveOperations, 'getVoteValue').returns(Promise.resolve({ weight: -1000, voteValue: -1 }));
         await expireMatchBotRecount(reqData);
         result = await BotUpvote.findOne({ status: 'upvoted', author: user, permlink: paymentData.reviewPermlink });
         reviewHistory = await PaymentHistory.findOne({ _id: reviewPayment._id });

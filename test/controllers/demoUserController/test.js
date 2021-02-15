@@ -1,5 +1,5 @@
 const {
-  chai, chaiHttp, app, dropDatabase, sinon, steemHelper, axios,
+  chai, chaiHttp, app, dropDatabase, sinon, axios, hiveOperations,
 } = require('test/testHelper');
 const { PaymentHistoryFactory } = require('test/factories');
 
@@ -33,8 +33,8 @@ describe('Demo User Controller', async () => {
     });
 
     it('should return success transfer', async () => {
-      sinon.stub(steemHelper, 'getAccountInfo').returns(Promise.resolve(userInfoStub));
-      sinon.stub(steemHelper, 'transfer').returns(Promise.resolve({ result: true }));
+      sinon.stub(hiveOperations, 'getAccountInfo').returns(Promise.resolve(userInfoStub));
+      sinon.stub(hiveOperations, 'transfer').returns(Promise.resolve({ result: true }));
       sinon.stub(axios, 'post').returns(Promise.resolve(validateTokenStub));
       const res = await chai.request(app).post('/campaigns-api/guest/transfer').send({ data: { to, amount } });
 
@@ -42,8 +42,8 @@ describe('Demo User Controller', async () => {
     });
 
     it('should return error with dsteem transfer error', async () => {
-      sinon.stub(steemHelper, 'getAccountInfo').returns(Promise.resolve(userInfoStub));
-      sinon.stub(steemHelper, 'transfer').returns(Promise.resolve({ error: 'some_error' }));
+      sinon.stub(hiveOperations, 'getAccountInfo').returns(Promise.resolve(userInfoStub));
+      sinon.stub(hiveOperations, 'transfer').returns(Promise.resolve({ error: 'some_error' }));
       sinon.stub(axios, 'post').returns(Promise.resolve(validateTokenStub));
       const res = await chai.request(app).post('/campaigns-api/guest/transfer').send({ data: { to, amount } });
 
@@ -53,8 +53,8 @@ describe('Demo User Controller', async () => {
 
     it('should return error with big amount', async () => {
       amount = 100;
-      sinon.stub(steemHelper, 'getAccountInfo').returns(Promise.resolve(userInfoStub));
-      sinon.stub(steemHelper, 'transfer').returns(Promise.resolve({ result: true }));
+      sinon.stub(hiveOperations, 'getAccountInfo').returns(Promise.resolve(userInfoStub));
+      sinon.stub(hiveOperations, 'transfer').returns(Promise.resolve({ result: true }));
       sinon.stub(axios, 'post').returns(Promise.resolve(validateTokenStub));
       const res = await chai.request(app).post('/campaigns-api/guest/transfer').send({ data: { to, amount } });
 
@@ -64,8 +64,8 @@ describe('Demo User Controller', async () => {
 
     it('should return error with no dept user', async () => {
       validateTokenStub.data.user.name = 'some_user';
-      sinon.stub(steemHelper, 'getAccountInfo').returns(Promise.resolve(userInfoStub));
-      sinon.stub(steemHelper, 'transfer').returns(Promise.resolve({ result: true }));
+      sinon.stub(hiveOperations, 'getAccountInfo').returns(Promise.resolve(userInfoStub));
+      sinon.stub(hiveOperations, 'transfer').returns(Promise.resolve({ result: true }));
       sinon.stub(axios, 'post').returns(Promise.resolve(validateTokenStub));
       const res = await chai.request(app).post('/campaigns-api/guest/transfer').send({ data: { to, amount } });
 
@@ -75,8 +75,8 @@ describe('Demo User Controller', async () => {
 
     it('should return error with invalid access-token', async () => {
       validateTokenStub.status = 401;
-      sinon.stub(steemHelper, 'getAccountInfo').returns(Promise.resolve(userInfoStub));
-      sinon.stub(steemHelper, 'transfer').returns(Promise.resolve({ result: true }));
+      sinon.stub(hiveOperations, 'getAccountInfo').returns(Promise.resolve(userInfoStub));
+      sinon.stub(hiveOperations, 'transfer').returns(Promise.resolve({ result: true }));
       sinon.stub(axios, 'post').returns(Promise.resolve(validateTokenStub));
       const res = await chai.request(app).post('/campaigns-api/guest/transfer').send({ data: { to, amount } });
 
@@ -85,8 +85,8 @@ describe('Demo User Controller', async () => {
     });
 
     it('should return error without amount', async () => {
-      sinon.stub(steemHelper, 'getAccountInfo').returns(Promise.resolve(userInfoStub));
-      sinon.stub(steemHelper, 'transfer').returns(Promise.resolve({ result: true }));
+      sinon.stub(hiveOperations, 'getAccountInfo').returns(Promise.resolve(userInfoStub));
+      sinon.stub(hiveOperations, 'transfer').returns(Promise.resolve({ result: true }));
       sinon.stub(axios, 'post').returns(Promise.resolve(validateTokenStub));
       const res = await chai.request(app).post('/campaigns-api/guest/transfer').send({ data: { to } });
 
@@ -94,8 +94,8 @@ describe('Demo User Controller', async () => {
     });
 
     it('should return error without receiver', async () => {
-      sinon.stub(steemHelper, 'getAccountInfo').returns(Promise.resolve(userInfoStub));
-      sinon.stub(steemHelper, 'transfer').returns(Promise.resolve({ result: true }));
+      sinon.stub(hiveOperations, 'getAccountInfo').returns(Promise.resolve(userInfoStub));
+      sinon.stub(hiveOperations, 'transfer').returns(Promise.resolve({ result: true }));
       sinon.stub(axios, 'post').returns(Promise.resolve(validateTokenStub));
       const res = await chai.request(app).post('/campaigns-api/guest/transfer').send({ data: { amount } });
 

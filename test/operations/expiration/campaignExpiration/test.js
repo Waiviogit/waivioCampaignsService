@@ -1,7 +1,7 @@
 const { PAYMENT_DEBT } = require('constants/ttlData');
 const {
-  expect, sinon, dropDatabase, paymentsExpiration,
-  steemHelper, PaymentHistory, faker, _, Campaign, redisSetter,
+  expect, sinon, dropDatabase, paymentsExpiration, hiveOperations,
+  PaymentHistory, faker, _, Campaign, redisSetter,
 } = require('test/testHelper');
 const { CampaignFactory, PaymentHistoryFactory } = require('test/factories');
 
@@ -37,8 +37,8 @@ describe('On campaign expiration', async () => {
       postStub = {
         total_payout_value: '3.34 SBD', beneficiaries: [{ account: process.env.POWER_ACC_NAME, weight: 10000 }], curator_payout_value: '3.34 SBD', json_metadata: JSON.stringify({ comment: { userId: 'demoUser' } }),
       };
-      sinon.stub(steemHelper, 'getPostInfo').returns(Promise.resolve(postStub));
-      sinon.stub(steemHelper, 'getPostAuthorReward').returns(Promise.resolve(2));
+      sinon.stub(hiveOperations, 'getPostInfo').returns(Promise.resolve(postStub));
+      sinon.stub(hiveOperations, 'getPostAuthorReward').returns(Promise.resolve(2));
       author = 'author';
       permlink = 'permlink';
     });
@@ -76,8 +76,8 @@ describe('On campaign expiration', async () => {
     it('check payment record with null reward', async () => {
       sinon.restore();
       postStub.total_payout_value = '0.00 SBD';
-      sinon.stub(steemHelper, 'getPostInfo').returns(Promise.resolve(postStub));
-      sinon.stub(steemHelper, 'getPostAuthorReward').returns(Promise.resolve(0));
+      sinon.stub(hiveOperations, 'getPostInfo').returns(Promise.resolve(postStub));
+      sinon.stub(hiveOperations, 'getPostAuthorReward').returns(Promise.resolve(0));
       await paymentsExpiration.expireDemoPost({ author, permlink });
       const paymentHistories = await PaymentHistory.find();
       expect(paymentHistories.length).to.be.eq(0);

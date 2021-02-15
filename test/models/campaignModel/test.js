@@ -1,6 +1,6 @@
 const {
   expect, faker, dropDatabase, ObjectID, redis, redisSetter, getDashboard, getCampaign,
-  Campaign, sinon, steemHelper, campaignModel, createCampaign, reservationOps,
+  Campaign, sinon, campaignModel, createCampaign, reservationOps, hiveOperations,
   getDataForFirstLoad, getSuitableUsers, _, currencyRequest, campaignActivation,
 } = require('test/testHelper');
 const paymentHistory = require('utilities/operations/paymentHistory');
@@ -66,7 +66,7 @@ describe('Campaign', async () => {
     });
 
     it('should create campaign with app data', async () => {
-      sinon.stub(steemHelper, 'getAccountInfo').returns(Promise.resolve(true));
+      sinon.stub(hiveOperations, 'getAccountInfo').returns(Promise.resolve(true));
       campaignParams.app = 'app';
       const { campaign } = await createCampaign(campaignParams);
 
@@ -1301,7 +1301,7 @@ describe('Campaign', async () => {
       wobject = await WobjectFactory.Create({ author_permlink: faker.random.string(20) });
       payable = _.random(1, 20);
       balance = _.random(1000, 2000);
-      sinon.stub(steemHelper, 'getAccountInfo').returns(Promise.resolve({ balance }));
+      sinon.stub(hiveOperations, 'getAccountInfo').returns(Promise.resolve({ balance }));
       sinon.stub(currencyRequest, 'getHiveCurrency').returns(Promise.resolve({ usdCurrency: 1 }));
       sinon.stub(paymentHistory, 'getPayableHistory').returns(Promise.resolve({ payable }));
       await UserFactory.Create({ name: 'guide2' });

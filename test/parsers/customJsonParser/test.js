@@ -1,5 +1,5 @@
 const {
-  customJsonParser, dropDatabase, expect, sinon, steemHelper, moment, MatchBot,
+  customJsonParser, dropDatabase, expect, sinon, moment, MatchBot, hiveOperations,
 } = require('test/testHelper');
 const { MatchBotFactory } = require('test/factories');
 const { matchBotModel } = require('models');
@@ -33,7 +33,7 @@ describe('custom json Parser', async () => {
     });
 
     it('should set rule with valid params without previously created', async () => {
-      await sinon.stub(steemHelper, 'getAccountsInfo').returns(Promise.resolve(accsStub));
+      await sinon.stub(hiveOperations, 'getAccountsInfo').returns(Promise.resolve(accsStub));
       const json = {
         sponsor: sponsor1, voting_percent, note, enabled, expiredAt,
       };
@@ -49,7 +49,7 @@ describe('custom json Parser', async () => {
     });
 
     it('should set rule with voting percent', async () => {
-      await sinon.stub(steemHelper, 'getAccountsInfo').returns(Promise.resolve(accsStub));
+      await sinon.stub(hiveOperations, 'getAccountsInfo').returns(Promise.resolve(accsStub));
       const json = {
         sponsor: sponsor1, voting_percent, enabled, expiredAt,
       };
@@ -65,7 +65,7 @@ describe('custom json Parser', async () => {
     });
 
     it('should set rule without enabled', async () => {
-      await sinon.stub(steemHelper, 'getAccountsInfo').returns(Promise.resolve(accsStub));
+      await sinon.stub(hiveOperations, 'getAccountsInfo').returns(Promise.resolve(accsStub));
       const json = {
         sponsor: sponsor1, voting_percent, note, expiredAt,
       };
@@ -83,7 +83,7 @@ describe('custom json Parser', async () => {
     });
 
     it('should set rule without expiredAt', async () => {
-      await sinon.stub(steemHelper, 'getAccountsInfo').returns(Promise.resolve(accsStub));
+      await sinon.stub(hiveOperations, 'getAccountsInfo').returns(Promise.resolve(accsStub));
       const json = { sponsor: sponsor1, voting_percent, note };
       const { operation } = await getMocksData({ user: bot_name1, json, id });
 
@@ -97,7 +97,7 @@ describe('custom json Parser', async () => {
     });
 
     it('should not set rule with invalid expiredAt', async () => {
-      await sinon.stub(steemHelper, 'getAccountsInfo').returns(Promise.resolve(accsStub));
+      await sinon.stub(hiveOperations, 'getAccountsInfo').returns(Promise.resolve(accsStub));
       const json = {
         sponsor: sponsor1, voting_percent, note, expiredAt: moment().utc().toDate(),
       };
@@ -108,7 +108,7 @@ describe('custom json Parser', async () => {
     });
 
     it('should not set rule without voting percent', async () => {
-      await sinon.stub(steemHelper, 'getAccountsInfo').returns(Promise.resolve(accsStub));
+      await sinon.stub(hiveOperations, 'getAccountsInfo').returns(Promise.resolve(accsStub));
       const json = {
         sponsor: sponsor1, note, enabled, expiredAt,
       };
@@ -124,7 +124,7 @@ describe('custom json Parser', async () => {
     });
 
     it('should not set rule without sponsor', async () => {
-      await sinon.stub(steemHelper, 'getAccountsInfo').returns(Promise.resolve(accsStub));
+      await sinon.stub(hiveOperations, 'getAccountsInfo').returns(Promise.resolve(accsStub));
       const json = {
         note, voting_percent, enabled, expiredAt,
       };
@@ -139,7 +139,7 @@ describe('custom json Parser', async () => {
     });
 
     it('should not set rule with invalid id', async () => {
-      await sinon.stub(steemHelper, 'getAccountsInfo').returns(Promise.resolve(accsStub));
+      await sinon.stub(hiveOperations, 'getAccountsInfo').returns(Promise.resolve(accsStub));
       const json = {
         sponsor: sponsor1, note, voting_percent, enabled, expiredAt,
       };
@@ -154,7 +154,7 @@ describe('custom json Parser', async () => {
     });
 
     it('should not set rule without json', async () => {
-      await sinon.stub(steemHelper, 'getAccountsInfo').returns(Promise.resolve(accsStub));
+      await sinon.stub(hiveOperations, 'getAccountsInfo').returns(Promise.resolve(accsStub));
       const { operation } = await getMocksData({ user: bot_name1, id });
 
       await customJsonParser.parse(operation);

@@ -1,5 +1,5 @@
 const {
-  expect, voteParser, dropDatabase, faker, ObjectID, sinon, steemHelper, redisSetter, redisGetter,
+  expect, voteParser, dropDatabase, faker, ObjectID, sinon, redisSetter, redisGetter, hiveOperations,
 } = require('test/testHelper');
 const moment = require('moment');
 const { DOWNVOTE_ON_REVIEW, MATCH_BOT_VOTE } = require('constants/ttlData');
@@ -90,7 +90,7 @@ describe('On vote parser', async () => {
     describe('On parse down votes with another users', async () => {
       describe('On new post', async () => {
         beforeEach(async () => {
-          sinon.stub(steemHelper, 'getPostInfo').returns(Promise.resolve(
+          sinon.stub(hiveOperations, 'getPostInfo').returns(Promise.resolve(
             { author: faker.random.string(), created: moment.utc().subtract(1, 'days').toDate() },
           ));
         });
@@ -125,7 +125,7 @@ describe('On vote parser', async () => {
       });
       describe('On old post', async () => {
         beforeEach(async () => {
-          sinon.stub(steemHelper, 'getPostInfo').returns(Promise.resolve(
+          sinon.stub(hiveOperations, 'getPostInfo').returns(Promise.resolve(
             { author: faker.random.string(), created: moment.utc().subtract(10, 'days').toDate() },
           ));
         });

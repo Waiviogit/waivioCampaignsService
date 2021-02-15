@@ -1,8 +1,8 @@
 const _ = require('lodash');
 const campaignModel = require('models/campaignModel.js');
 const { RESERVATION_STATUSES } = require('constants/constants.js');
-const steemHelper = require('utilities/helpers/steemHelper.js');
 const paymentHelper = require('utilities/helpers/paymentsHelper.js');
+const { hiveClient, hiveOperations } = require('utilities/hiveApi');
 
 const prepareCampaignData = (userData, campaign) => ({
   hiveCurrency: userData.hiveCurrency,
@@ -37,9 +37,9 @@ module.exports = async ({
 
   if (paymentData) {
     /** Find post for get beneficiaries from it */
-    const post = await steemHelper.getPostInfo(
-      { author: paymentData.rootAuthor, permlink: paymentData.postPermlink },
-    );
+    const post = await hiveClient.execute(hiveOperations.getPostInfo,
+      { author: paymentData.rootAuthor, permlink: paymentData.postPermlink });
+
     /** Prepare correct campaign data */
     const campaignForReview = prepareCampaignData(userData, campaign);
     /** Create new payment debts, we call this method without title - in order not to create some

@@ -2,9 +2,9 @@ const _ = require('lodash');
 const { withdrawFundsModel, paymentHistoryModel } = require('models');
 const { guestRequests } = require('utilities/requests');
 const { validateTransaction } = require('utilities/helpers/transactionsHelper');
-const steemHelper = require('utilities/helpers/steemHelper');
 const redisSetter = require('utilities/redis/redisSetter');
 const { WITHDRAW_REQUEST } = require('constants/ttlData');
+const { hiveClient, hiveOperations } = require('utilities/hiveApi');
 
 module.exports = async (_id, accessToken) => {
   const { result } = await withdrawFundsModel.findOne({ _id });
@@ -22,13 +22,16 @@ module.exports = async (_id, accessToken) => {
   });
   if (error) return { error };
   if (valid) {
-    const { data, error: transactionError } = await steemHelper.transfer({
-      amount: result.amount,
-      from: process.env.WALLET_ACC_NAME,
-      activeKey: process.env.WALLET_ACC_KEY,
-      to: result.receiver,
-      memo: result.memo,
-    });
+    const { data, error: transactionError } = await hiveClient.execute(
+      hiveOperations.transfer,
+      {
+        amount: result.amount,
+        from: process.env.WALLET_ACC_NAME,
+        activeKey: process.env.WALLET_ACC_KEY,
+        to: result.receiver,
+        memo: result.memo,
+      },
+    );
     if (transactionError) return { error: { status: 503, message: 'Something went wrong, please contact us: support@waivio.com' } };
     const { result: updatedWithdraw } = await withdrawFundsModel.updateOne({ _id }, { status: 'success', transactionId: _.get(data, 'id') });
     const paymentData = {

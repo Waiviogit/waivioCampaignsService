@@ -50,6 +50,7 @@ module.exports = {
   ...require('models'),
   ...require('utilities/operations/parsers/commentParser'),
   ...require('utilities/operations/expiration'),
+  ...require('utilities/hiveApi'),
   Constants,
   ...models,
   Mongoose,

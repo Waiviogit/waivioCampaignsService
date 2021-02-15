@@ -1,6 +1,6 @@
 const {
   expect, sinon, dropDatabase, paymentsExpiration,
-  steemHelper, PaymentHistory, faker,
+  PaymentHistory, faker, hiveOperations,
 } = require('test/testHelper');
 const { UserFactory } = require('test/factories');
 
@@ -14,8 +14,8 @@ describe('On paymentsExpiration', async () => {
         { userMetadata: { settings: { hiveBeneficiaryAccount: realHive } } },
       );
       postStub = { total_payout_value: '3.34 SBD', curator_payout_value: '3.34 SBD', json_metadata: JSON.stringify({ comment: { userId: user.name } }) };
-      sinon.stub(steemHelper, 'getPostInfo').returns(Promise.resolve(postStub));
-      sinon.stub(steemHelper, 'getPostAuthorReward').returns(Promise.resolve(2));
+      sinon.stub(hiveOperations, 'getPostInfo').returns(Promise.resolve(postStub));
+      sinon.stub(hiveOperations, 'getPostAuthorReward').returns(Promise.resolve(2));
     });
     afterEach(async () => {
       sinon.restore();
@@ -40,8 +40,8 @@ describe('On paymentsExpiration', async () => {
         json_metadata: JSON.stringify({ comment: { userId: user } }),
         beneficiaries: [{ account: process.env.POWER_ACC_NAME, weight: 5000 }],
       };
-      sinon.stub(steemHelper, 'getPostInfo').returns(Promise.resolve(postStub));
-      sinon.stub(steemHelper, 'getPostAuthorReward').returns(Promise.resolve(2));
+      sinon.stub(hiveOperations, 'getPostInfo').returns(Promise.resolve(postStub));
+      sinon.stub(hiveOperations, 'getPostAuthorReward').returns(Promise.resolve(2));
       await paymentsExpiration.expireDemoPost(
         { author: faker.name.firstName(), permlink: faker.random.string() },
       );
@@ -70,8 +70,8 @@ describe('On paymentsExpiration', async () => {
         json_metadata: JSON.stringify({ comment: { userId: user } }),
         beneficiaries: [{ account: 'waivio', weight: 2000 }, { account: process.env.POWER_ACC_NAME, weight: 8000 }],
       };
-      sinon.stub(steemHelper, 'getPostInfo').returns(Promise.resolve(postStub));
-      sinon.stub(steemHelper, 'getPostAuthorReward').returns(Promise.resolve(2));
+      sinon.stub(hiveOperations, 'getPostInfo').returns(Promise.resolve(postStub));
+      sinon.stub(hiveOperations, 'getPostAuthorReward').returns(Promise.resolve(2));
       await paymentsExpiration.expireDemoPost(
         { author: faker.name.firstName(), permlink: faker.random.string() },
       );
