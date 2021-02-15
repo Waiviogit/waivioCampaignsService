@@ -1,14 +1,14 @@
 const _ = require('lodash');
 const { campaignModel, userModel } = require('models');
-const { steemHelper } = require('utilities/helpers');
 const { setExpireCampaign } = require('utilities/redis/redisSetter');
+const { hiveClient, hiveOperations } = require('utilities/hiveApi');
 
 module.exports = async (data) => {
   const { user } = await userModel.findOne(data.guideName);
   if (_.get(user, 'auth.provider')) return { error: { status: 422, message: 'Guests cannot create campaigns' } };
 
   if (data.app) {
-    data.app = await steemHelper.getAccountInfo(data.app) ? data.app : null;
+    data.app = await hiveClient.execute(hiveOperations.getAccountInfo, data.app) ? data.app : null;
   }
   if (data.id) {
     const { result: _id, error: idError } = campaignModel.getCampaignId(data.id);

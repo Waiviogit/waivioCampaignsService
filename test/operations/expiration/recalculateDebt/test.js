@@ -1,6 +1,6 @@
 const {
   expect, sinon, dropDatabase, ObjectID, _,
-  steemHelper, PaymentHistory, faker, recalculateDebt,
+  PaymentHistory, faker, recalculateDebt, hiveOperations,
 } = require('test/testHelper');
 const {
   CampaignFactory, PaymentHistoryFactory,
@@ -79,7 +79,7 @@ describe('On recalculateDebt', async () => {
   });
   describe('On removeVoteDebt', async () => {
     beforeEach(async () => {
-      sinon.stub(steemHelper, 'getPostInfo').returns(Promise.resolve({
+      sinon.stub(hiveOperations, 'getPostInfo').returns(Promise.resolve({
         author, json_metadata: '', total_payout_value: '0.000 HBD', curator_payout_value: '0.000 HBD',
       }));
     });
@@ -164,7 +164,7 @@ describe('On recalculateDebt', async () => {
   describe('On recountVoteDebt', async () => {
     const newVoteValue = 0.35;
     beforeEach(async () => {
-      sinon.stub(steemHelper, 'getPostInfo').returns(Promise.resolve({
+      sinon.stub(hiveOperations, 'getPostInfo').returns(Promise.resolve({
         author,
         json_metadata: '',
         total_payout_value: '0.330 HBD',
@@ -172,7 +172,7 @@ describe('On recalculateDebt', async () => {
         percent_steem_dollars: 10000,
         active_votes: [{ rshares: 1000, voter: bot }, { rshares: -500, voter: faker.random.string() }],
       }));
-      sinon.stub(steemHelper, 'getCurrentPriceInfo').returns(Promise.resolve({ currentPrice: 1 }));
+      sinon.stub(hiveOperations, 'getCurrentPriceInfo').returns(Promise.resolve({ currentPrice: 1 }));
     });
     it('should update compensation fee with correct amount', async () => {
       await recalculateDebt(author, permlink);

@@ -9,7 +9,6 @@ module.exports = {
   transferHelper: require('./transferHelper'),
   paymentsHelper: require('./paymentsHelper'),
   matchBotHelper: require('./matchBotHelper'),
-  steemHelper: require('./steemHelper'),
   usersHelper: require('./usersHelper'),
   walletHelper: require('./walletHelper'),
   wobjectHelper: require('./wobjectHelper'),

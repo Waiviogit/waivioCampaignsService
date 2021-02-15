@@ -4,7 +4,7 @@ const { PAYMENT_HISTORIES_TYPES, RESERVATION_STATUSES } = require('constants/con
 const {
   commentParser, paymentHistoryModel, paymentsHelper, dropDatabase, _,
   expect, ObjectID, redis, sinon, currencyRequest, Campaign, faker, redisSetter,
-  BotUpvote, steemHelper, PaymentHistory, campaignActivation, reservationOps,
+  BotUpvote, PaymentHistory, campaignActivation, reservationOps, hiveOperations,
 } = require('test/testHelper');
 const {
   CampaignFactory, WobjectFactory, UserFactory,
@@ -818,6 +818,7 @@ describe('comment Parser', async () => {
     describe('createReview', async () => {
       beforeEach(() => {
         spy = sinon.spy(paymentsHelper, 'createReview');
+        sinon.stub(hiveOperations, 'getPostInfo').returns(Promise.resolve({}));
       });
 
       it('should call create review with valid data', async () => {
@@ -905,6 +906,7 @@ describe('comment Parser', async () => {
       beforeEach(async () => {
         await UserFactory.Create({ name: 'user1', count_posts: 100, followers_count: 100 });
         spy = sinon.spy(paymentHistoryModel, 'addPaymentHistory');
+        sinon.stub(hiveOperations, 'getPostInfo').returns(Promise.resolve({}));
       });
 
       it('should call addPaymentHistory with valid data', async () => {
@@ -1134,7 +1136,7 @@ describe('parseRejectReservationByGuide', async () => {
   describe('without upvote bot with status completed', async () => {
     let updatedCampaign, histories;
     beforeEach(async () => {
-      sinon.stub(steemHelper, 'getPostInfo').returns(Promise.resolve({
+      sinon.stub(hiveOperations, 'getPostInfo').returns(Promise.resolve({
         created: moment.utc().subtract(2, 'day').toString(),
       }));
       await commentParser.parse(comment);
@@ -1186,8 +1188,8 @@ describe('parseRejectReservationByGuide', async () => {
   describe('with upvote bot, and not expired vote', async () => {
     let matchBot;
     beforeEach(async () => {
-      sinon.stub(steemHelper, 'likePost').returns(Promise.resolve({ result: true }));
-      sinon.stub(steemHelper, 'getPostInfo').returns(Promise.resolve({
+      sinon.stub(hiveOperations, 'likePost').returns(Promise.resolve({ result: true }));
+      sinon.stub(hiveOperations, 'getPostInfo').returns(Promise.resolve({
         created: moment.utc().subtract(2, 'day').toString(),
         author: user.name,
       }));
@@ -1209,7 +1211,7 @@ describe('parseRejectReservationByGuide', async () => {
       describe('On success', async () => {
         let histories;
         beforeEach(async () => {
-          sinon.stub(steemHelper, 'getAccountsInfo').returns(Promise.resolve([{ posting: { account_auths: [[process.env.UPVOTE_BOT_NAME, 1]] } }]));
+          sinon.stub(hiveOperations, 'getAccountsInfo').returns(Promise.resolve([{ posting: { account_auths: [[process.env.UPVOTE_BOT_NAME, 1]] } }]));
           await commentParser.parse(comment);
           ({ result: histories } = await paymentHistoryModel.find(
             { 'details.reservation_permlink': reservationPermlink },
@@ -1219,7 +1221,7 @@ describe('parseRejectReservationByGuide', async () => {
           expect(histories).to.have.length(0);
         });
         it('should like post with correct data', async () => {
-          expect(steemHelper.likePost.args[0][0]).to.be.deep.eq({
+          expect(hiveOperations.likePost.args[0][1]).to.be.deep.eq({
             key: process.env.UPVOTE_BOT_KEY,
             voter: matchBot.bot_name,
             author: user.name,
@@ -1231,7 +1233,7 @@ describe('parseRejectReservationByGuide', async () => {
       describe('On errors', async () => {
         let histories;
         beforeEach(async () => {
-          sinon.stub(steemHelper, 'getAccountsInfo').returns(Promise.resolve([{ posting: { account_auths: [] } }]));
+          sinon.stub(hiveOperations, 'getAccountsInfo').returns(Promise.resolve([{ posting: { account_auths: [] } }]));
           await commentParser.parse(comment);
           ({ result: histories } = await paymentHistoryModel.find(
             { 'details.reservation_permlink': reservationPermlink },
@@ -1241,7 +1243,7 @@ describe('parseRejectReservationByGuide', async () => {
           expect(histories).to.have.length(0);
         });
         it('should not like if we dont have permissions to match bot', async () => {
-          expect(steemHelper.likePost.notCalled).to.be.true;
+          expect(hiveOperations.likePost.notCalled).to.be.true;
         });
       });
     });
@@ -1264,38 +1266,38 @@ describe('parseRejectReservationByGuide', async () => {
       describe('On success', async () => {
         let histories;
         beforeEach(async () => {
-          sinon.stub(steemHelper, 'getAccountsInfo').returns(Promise.resolve([{ posting: { account_auths: [[process.env.UPVOTE_BOT_NAME, 1]] } }]));
+          sinon.stub(hiveOperations, 'getAccountsInfo').returns(Promise.resolve([{ posting: { account_auths: [[process.env.UPVOTE_BOT_NAME, 1]] } }]));
           await commentParser.parse(comment);
           ({ result: histories } = await paymentHistoryModel.find(
             { 'details.reservation_permlink': reservationPermlink },
           ));
         });
         it('should remove all votes from review', async () => {
-          expect(steemHelper.likePost.calledTwice).to.be.true;
+          expect(hiveOperations.likePost.calledTwice).to.be.true;
         });
         it('should remove all payments from DB', async () => {
           expect(histories).to.have.length(0);
         });
         it('should like with second bot with correct params', async () => {
-          expect(steemHelper.likePost.args).to.be.deep.eq([[{
+          expect([hiveOperations.likePost.args[0][1], hiveOperations.likePost.args[1][1]]).to.be.deep.eq([{
             key: process.env.UPVOTE_BOT_KEY,
             voter: matchBot.bot_name,
             author: user.name,
             permlink: reviewPermlink,
             weight: 0,
-          }], [{
+          }, {
             key: process.env.UPVOTE_BOT_KEY,
             voter: matchBot1.bot_name,
             author: user.name,
             permlink: reviewPermlink,
             weight: 0,
-          }]]);
+          }]);
         });
       });
       describe('On errors', async () => {
         let histories;
         beforeEach(async () => {
-          sinon.stub(steemHelper, 'getAccountsInfo').returns(Promise.resolve([{ posting: { account_auths: [] } }]));
+          sinon.stub(hiveOperations, 'getAccountsInfo').returns(Promise.resolve([{ posting: { account_auths: [] } }]));
           await commentParser.parse(comment);
           ({ result: histories } = await paymentHistoryModel.find(
             { 'details.reservation_permlink': reservationPermlink },
@@ -1305,7 +1307,7 @@ describe('parseRejectReservationByGuide', async () => {
           expect(histories).to.have.length(0);
         });
         it('should bot call like method', async () => {
-          expect(steemHelper.likePost.notCalled).to.be.true;
+          expect(hiveOperations.likePost.notCalled).to.be.true;
         });
       });
     });
@@ -1314,7 +1316,7 @@ describe('parseRejectReservationByGuide', async () => {
   describe('with upvote bot and expired vote', async () => {
     let matchBot, botUpvote;
     beforeEach(async () => {
-      sinon.spy(steemHelper, 'likePost');
+      sinon.spy(hiveOperations, 'likePost');
 
       matchBot = await MatchBotFactory.Create({});
       botUpvote = await BotUpvoteFactory.Create({
@@ -1340,7 +1342,7 @@ describe('parseRejectReservationByGuide', async () => {
       describe('On success', async () => {
         let histories;
         beforeEach(async () => {
-          sinon.stub(steemHelper, 'getPostInfo').returns(Promise.resolve(
+          sinon.stub(hiveOperations, 'getPostInfo').returns(Promise.resolve(
             { author: user.name, total_payout_value: '1.000 HIVE', active_votes: [{ voter: matchBot.bot_name, rshares: 10000 }] },
           ));
           await commentParser.parse(comment);
@@ -1367,7 +1369,7 @@ describe('parseRejectReservationByGuide', async () => {
       });
       describe('On errors', async () => {
         it('should delete all histories if vote not found', async () => {
-          sinon.stub(steemHelper, 'getPostInfo').returns(Promise.resolve(
+          sinon.stub(hiveOperations, 'getPostInfo').returns(Promise.resolve(
             { author: user.name, total_payout_value: '1.000 HIVE', active_votes: [{ voter: faker.name.firstName(), rshares: 10000 }] },
           ));
           await commentParser.parse(comment);
@@ -1377,7 +1379,7 @@ describe('parseRejectReservationByGuide', async () => {
           expect(result).to.have.length(0);
         });
         it('should delete all histories if total payout eq 0', async () => {
-          sinon.stub(steemHelper, 'getPostInfo').returns(Promise.resolve(
+          sinon.stub(hiveOperations, 'getPostInfo').returns(Promise.resolve(
             { author: user.name, total_payout_value: '0.000 HIVE', active_votes: [{ voter: matchBot.bot_name, rshares: 10000 }] },
           ));
           await commentParser.parse(comment);
@@ -1387,7 +1389,7 @@ describe('parseRejectReservationByGuide', async () => {
           expect(result).to.have.length(0);
         });
         it('should delete all histories if not found post', async () => {
-          sinon.stub(steemHelper, 'getPostInfo').returns(Promise.resolve({ author: '' }));
+          sinon.stub(hiveOperations, 'getPostInfo').returns(Promise.resolve({ author: '' }));
           await commentParser.parse(comment);
           const { result } = await paymentHistoryModel.find(
             { 'details.reservation_permlink': reservationPermlink },
@@ -1411,7 +1413,7 @@ describe('parseRejectReservationByGuide', async () => {
       describe('On success', async () => {
         let histories;
         beforeEach(async () => {
-          sinon.stub(steemHelper, 'getPostInfo').returns(Promise.resolve({
+          sinon.stub(hiveOperations, 'getPostInfo').returns(Promise.resolve({
             created: moment.utc().subtract(8, 'day').toString(),
             author: user.name,
             total_payout_value: '0.500 HIVE',
@@ -1443,7 +1445,7 @@ describe('parseRejectReservationByGuide', async () => {
       });
       describe('On downvote > matchbot vote, but payment exist', async () => {
         it('should create debt for all payout if it < match bot vote', async () => {
-          sinon.stub(steemHelper, 'getPostInfo').returns(Promise.resolve({
+          sinon.stub(hiveOperations, 'getPostInfo').returns(Promise.resolve({
             created: moment.utc().subtract(8, 'day').toString(),
             author: user.name,
             total_payout_value: '0.200 HIVE',
@@ -1459,7 +1461,7 @@ describe('parseRejectReservationByGuide', async () => {
           expect(-_.round(result, 2)).to.be.eq(0.2);
         });
         it('should create debt for all matchbot like if payout > match bot vote', async () => {
-          sinon.stub(steemHelper, 'getPostInfo').returns(Promise.resolve({
+          sinon.stub(hiveOperations, 'getPostInfo').returns(Promise.resolve({
             created: moment.utc().subtract(8, 'day').toString(),
             author: user.name,
             total_payout_value: '2.000 HIVE',
@@ -1480,8 +1482,8 @@ describe('parseRejectReservationByGuide', async () => {
       let matchBot1, botUpvote1, histories;
       beforeEach(async () => {
         sinon.restore();
-        sinon.spy(steemHelper, 'likePost');
-        sinon.stub(steemHelper, 'getAccountsInfo').returns(Promise.resolve([{ posting: { account_auths: [[process.env.UPVOTE_BOT_NAME, 1]] } }]));
+        sinon.spy(hiveOperations, 'likePost');
+        sinon.stub(hiveOperations, 'getAccountsInfo').returns(Promise.resolve([{ posting: { account_auths: [[process.env.UPVOTE_BOT_NAME, 1]] } }]));
 
         await PaymentHistory.updateOne(
           { type: 'beneficiary_fee', userName: beneficiaries[0].account },
@@ -1503,7 +1505,7 @@ describe('parseRejectReservationByGuide', async () => {
       });
       describe('without downvote', async () => {
         beforeEach(async () => {
-          sinon.stub(steemHelper, 'getPostInfo').returns(Promise.resolve({
+          sinon.stub(hiveOperations, 'getPostInfo').returns(Promise.resolve({
             created: moment.utc().subtract(8, 'day').toString(),
             author: user.name,
             total_payout_value: '2.000 HIVE',
@@ -1519,7 +1521,7 @@ describe('parseRejectReservationByGuide', async () => {
           ));
         });
         it('should call like method once', async () => {
-          expect(steemHelper.likePost.notCalled).to.be.true;
+          expect(hiveOperations.likePost.notCalled).to.be.true;
         });
         it('should create debt by all match bot vote sum', async () => {
           const result = _.sumBy(histories, 'amount');
@@ -1537,8 +1539,8 @@ describe('parseRejectReservationByGuide', async () => {
       describe('with downvotes', async () => {
         beforeEach(async () => {
           sinon.restore();
-          sinon.stub(steemHelper, 'getAccountsInfo').returns(Promise.resolve([{ posting: { account_auths: [[process.env.UPVOTE_BOT_NAME, 1]] } }]));
-          sinon.stub(steemHelper, 'getPostInfo').returns(Promise.resolve({
+          sinon.stub(hiveOperations, 'getAccountsInfo').returns(Promise.resolve([{ posting: { account_auths: [[process.env.UPVOTE_BOT_NAME, 1]] } }]));
+          sinon.stub(hiveOperations, 'getPostInfo').returns(Promise.resolve({
             created: moment.utc().subtract(8, 'day').toString(),
             author: user.name,
             total_payout_value: '1.500 HIVE',
@@ -1570,8 +1572,8 @@ describe('parseRejectReservationByGuide', async () => {
       describe('if post doesnt exist', async () => {
         beforeEach(async () => {
           sinon.restore();
-          sinon.stub(steemHelper, 'getPostInfo').returns(Promise.resolve({ author: '' }));
-          sinon.stub(steemHelper, 'getAccountsInfo').returns(Promise.resolve([{ posting: { account_auths: [[process.env.UPVOTE_BOT_NAME, 1]] } }]));
+          sinon.stub(hiveOperations, 'getPostInfo').returns(Promise.resolve({ author: '' }));
+          sinon.stub(hiveOperations, 'getAccountsInfo').returns(Promise.resolve([{ posting: { account_auths: [[process.env.UPVOTE_BOT_NAME, 1]] } }]));
           await commentParser.parse(comment);
           ({ result: histories } = await paymentHistoryModel.find(
             { 'details.reservation_permlink': reservationPermlink },
@@ -1723,8 +1725,8 @@ describe('Reduce review by user', async () => {
     describe('not executed', async () => {
       let botUpvote;
       beforeEach(async () => {
-        sinon.stub(steemHelper, 'getVotingInfo').returns(Promise.resolve({ voteWeight: 10, currentVotePower: 10 }));
-        sinon.stub(steemHelper, 'likePost').returns(Promise.resolve({ result: true }));
+        sinon.stub(hiveOperations, 'getVotingInfo').returns(Promise.resolve({ voteWeight: 10, currentVotePower: 10 }));
+        sinon.stub(hiveOperations, 'likePost').returns(Promise.resolve({ result: true }));
         botUpvote = await BotUpvoteFactory.Create({
           status: 'upvoted',
           reward: 40,
@@ -1736,7 +1738,7 @@ describe('Reduce review by user', async () => {
       });
       it('should reVote if botUpvote not executed', async () => {
         await commentParser.parse(mock.operation);
-        expect(steemHelper.likePost.calledOnce).to.be.true;
+        expect(hiveOperations.likePost.calledOnce).to.be.true;
       });
       it('should update botUpvoteRecord after vote', async () => {
         await commentParser.parse(mock.operation);
@@ -1882,7 +1884,7 @@ describe('Restore reservation', async () => {
         status: RESERVATION_STATUSES.REJECTED,
         rootAuthor: userName,
       }];
-      sinon.stub(steemHelper, 'getPostInfo').returns(Promise.resolve({ beneficiaries: [{ account: beneficiary, weight }] }));
+      sinon.stub(hiveOperations, 'getPostInfo').returns(Promise.resolve({ beneficiaries: [{ account: beneficiary, weight }] }));
       campaign = await CampaignFactory.Create({
         status: 'active', activation_permlink: faker.random.string(10), users, payments, guideName,
       });

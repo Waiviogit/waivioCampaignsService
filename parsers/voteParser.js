@@ -1,9 +1,9 @@
 const _ = require('lodash');
 const moment = require('moment');
-const steemHelper = require('utilities/helpers/steemHelper');
 const { MATCH_BOT_VOTE, DOWNVOTE_ON_REVIEW } = require('constants/ttlData');
 const { campaignModel } = require('models');
 const { redisSetter, redisGetter } = require('utilities/redis');
+const { hiveClient, hiveOperations } = require('utilities/hiveApi');
 
 exports.parse = async (votes) => {
   await Promise.all(votes.map(async (vote) => {
@@ -18,8 +18,9 @@ exports.parse = async (votes) => {
       });
       const { result: existedTTL } = await redisGetter.getTTLData(`expire:${DOWNVOTE_ON_REVIEW}|${vote.author}|${vote.permlink}`);
       if (!result || _.isString(existedTTL)) return;
-
-      const post = await steemHelper.getPostInfo({ author: vote.author, permlink: vote.permlink });
+      const post = await hiveClient.execute(
+        hiveOperations.getPostInfo, { author: vote.author, permlink: vote.permlink },
+      );
       if (!post.author || moment.utc(post.created) < moment.utc().subtract(7, 'days')) return;
 
       const expirationTime = moment.utc(post.created).add(167, 'hours').valueOf();

@@ -1,7 +1,7 @@
 const _ = require('lodash');
 const { paymentHistoryModel } = require('models');
-const steemHelper = require('utilities/helpers/steemHelper');
 const { PAYMENT_HISTORIES_TYPES } = require('constants/constants');
+const { hiveClient, hiveOperations } = require('utilities/hiveApi');
 
 exports.expirePendingTransfer = async (id) => {
   const { result } = await paymentHistoryModel.findOne({ _id: id });
@@ -17,7 +17,7 @@ exports.expirePendingTransfer = async (id) => {
  * @returns {Promise<void>}
  */
 exports.expireDemoPost = async ({ author, permlink }) => {
-  const post = await steemHelper.getPostInfo({ author, permlink });
+  const post = await hiveClient.execute(hiveOperations.getPostInfo, { author, permlink });
   const metadata = JSON.parse(post.json_metadata);
   const payoutPercent = _.get(post, 'percent_steem_dollars', post.percent_hive_dollars);
   const authorPayout = parseFloat(post.total_payout_value);
@@ -25,7 +25,8 @@ exports.expireDemoPost = async ({ author, permlink }) => {
   const totalPayout = payoutPercent
     ? curatorPayout + (authorPayout / (payoutPercent / 10000))
     : curatorPayout * 2;
-  const steemAmount = await steemHelper.getPostAuthorReward(
+  const steemAmount = await hiveClient.execute(
+    hiveOperations.getPostAuthorReward,
     { reward_price: totalPayout },
   );
 

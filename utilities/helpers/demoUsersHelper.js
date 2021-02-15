@@ -1,10 +1,13 @@
 const getDemoDebtHistory = require('utilities/operations/paymentHistory/getDemoDebtHistory');
-const steemHelper = require('./steemHelper');
+const { hiveClient, hiveOperations } = require('utilities/hiveApi');
 
 exports.transfer = async ({
   demoUser, data, id = 'demo_user_transfer', app,
 }) => {
-  const fromData = await steemHelper.getAccountInfo(process.env.WALLET_ACC_NAME);
+  const fromData = await hiveClient.execute(
+    hiveOperations.getAccountInfo,
+    process.env.WALLET_ACC_NAME,
+  );
   const { payable } = await getDemoDebtHistory(
     { userName: demoUser, limit: 0 },
   );
@@ -14,11 +17,14 @@ exports.transfer = async ({
   const demoMemo = app ? `{"id":"${id}", "from":"${demoUser}","to":"${data.to}", "message":"${data.memo}", "app": "${app}"}`
     : `{"id":"${id}", "from":"${demoUser}","to":"${data.to}", "message":"${data.memo}"}`;
 
-  return steemHelper.transfer({
-    from: process.env.WALLET_ACC_NAME,
-    to: data.to,
-    amount: data.amount,
-    activeKey: process.env.WALLET_ACC_KEY,
-    memo: demoMemo,
-  });
+  return hiveClient.execute(
+    hiveOperations.transfer,
+    {
+      from: process.env.WALLET_ACC_NAME,
+      to: data.to,
+      amount: data.amount,
+      activeKey: process.env.WALLET_ACC_KEY,
+      memo: demoMemo,
+    },
+  );
 };
