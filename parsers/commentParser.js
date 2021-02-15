@@ -69,6 +69,7 @@ const parseReviews = async (post, metadata, app, beneficiaries) => {
         beneficiaries,
         owner_account: botName,
         images: _.get(metadata, 'image', []),
+        host: _.get(metadata, 'host', null),
       });
     }
   }

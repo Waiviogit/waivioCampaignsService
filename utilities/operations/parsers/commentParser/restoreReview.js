@@ -2,6 +2,7 @@ const _ = require('lodash');
 const campaignModel = require('models/campaignModel.js');
 const { RESERVATION_STATUSES } = require('constants/constants.js');
 const paymentHelper = require('utilities/helpers/paymentsHelper.js');
+const jsonHelper = require('utilities/helpers/jsonHelper');
 const { hiveClient, hiveOperations } = require('utilities/hiveApi');
 
 const prepareCampaignData = (userData, campaign) => ({
@@ -51,6 +52,7 @@ module.exports = async ({
       objects: [userData.object_permlink],
       beneficiaries: post.beneficiaries,
       permlink: post.permlink,
+      host: _.get(jsonHelper.parseJson(post.json_metadata), 'host', null),
     });
     /** Update debt record with new status, and remove rejection permlink */
     await campaignModel.updateOne({

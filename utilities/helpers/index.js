@@ -13,4 +13,5 @@ module.exports = {
   walletHelper: require('./walletHelper'),
   wobjectHelper: require('./wobjectHelper'),
   detectFraudHelper: require('./detectFraudHelper'),
+  jsonHelper: require('./jsonHelper'),
 };

@@ -28,7 +28,7 @@ const { checkOnHoldStatus } = require('utilities/helpers/campaignsHelper');
  */
 const createReview = async ({
   campaigns, owner_account: owner, beneficiaries,
-  objects, permlink, title, app, images,
+  objects, permlink, title, app, images, host,
 }) => {
   for (const campaign of campaigns) {
     const { payables } = await distributeReward({
@@ -38,6 +38,7 @@ const createReview = async ({
       reviwer: campaign.userName,
       commission: campaign.commissionAgreement,
       isGuest: !!owner,
+      host,
     });
     const objectPermlink = _.find(objects, (object) => campaign.userReservationObject === object);
     if (_.isEmpty(objectPermlink)) return;
@@ -214,11 +215,12 @@ const addCampaignPayment = async ({
  * @param reviwer {string}
  * @param beneficiaries {[Object]}
  * @param isGuest
+ * @param host {string}
  * @returns {Promise<{payables: []}>}
  */
 const distributeReward = async ({
   // eslint-disable-next-line camelcase
-  server_acc, reward, commission, reviwer, beneficiaries, isGuest,
+  server_acc, reward, commission, reviwer, beneficiaries, isGuest, host,
 }) => {
   let payables = [];
   const user = await User.findOne({ name: reviwer }).lean();
@@ -237,7 +239,7 @@ const distributeReward = async ({
     (referral) => referral.type === REFERRAL_TYPES.REWARDS);
   const referralAgent = referralAcc && referralAcc.endedAt > new Date() ? referralAcc.agent : null;
 
-  const commissionPayments = await commissionRecords(reward, commission, server_acc, referralAgent);
+  const commissionPayments = await commissionRecords(reward, commission, server_acc, referralAgent, host);
   payables = _.concat(payables, commissionPayments);
 
   for (const bnf of bnftsData) {
@@ -283,10 +285,10 @@ const executeMatchBots = async ({
 };
 
 // eslint-disable-next-line camelcase
-const commissionRecords = async (reward, commission, server_acc, referralAgent) => {
+const commissionRecords = async (reward, commission, server_acc, referralAgent, host) => {
   const payables = [];
 
-  const { commissions } = await getCommissions(server_acc);
+  const { commissions } = await getCommissions(server_acc, host);
 
   const campaignCommission = _.round(((reward * commission) * commissions.campaignsCommission), 3);
   if (campaignCommission > 0) {
@@ -324,14 +326,18 @@ const commissionRecords = async (reward, commission, server_acc, referralAgent) 
   return payables;
 };
 
-const getCommissions = async (appHost) => {
+const getCommissions = async (appHost, referralHost) => {
   const { result } = await appModel.findOne(appHost);
+  const { result: refApp } = await appModel.findOne(referralHost);
   const commissions = {
     indexCommission: _.get(result, 'app_commissions.index_percent', 0.2),
     indexAccount: _.get(result, 'app_commissions.index_commission_acc', 'waivio.index'),
     campaignsCommission: _.get(result, 'app_commissions.campaigns_percent', 0.3),
     campaignsAccount: _.get(result, 'app_commissions.campaigns_server_acc', 'waivio.campaigns'),
-    referralAccount: _.get(result, 'app_commissions.referral_commission_acc', 'waivio.referrals'),
+    referralAccount:
+      _.get(refApp, 'app_commissions.referral_commission_acc',
+        _.get(refApp, 'owner',
+          _.get(result, 'app_commissions.referral_commission_acc', 'waivio.referrals'))),
   };
   return { commissions };
 };
