@@ -47,7 +47,7 @@ const getConversationsFromHive = async (campaigns) => {
     const { result: comments } = await steemHelper.getPostState(
       { author: users.rootName, permlink: users.permlink, category: 'waivio' },
     );
-    if (!comments.content) return;
+    if (!_.get(comments, 'content')) return;
     let time = 0, replyTime = 0, firstAppealTime = Number.MAX_SAFE_INTEGER;
     let firstAppeal, lastCreated, reply;
 
