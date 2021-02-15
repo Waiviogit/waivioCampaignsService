@@ -3,6 +3,7 @@ const campaignModel = require('models/campaignModel.js');
 const { RESERVATION_STATUSES } = require('constants/constants.js');
 const steemHelper = require('utilities/helpers/steemHelper.js');
 const paymentHelper = require('utilities/helpers/paymentsHelper.js');
+const jsonHelper = require('utilities/helpers/jsonHelper');
 
 const prepareCampaignData = (userData, campaign) => ({
   hiveCurrency: userData.hiveCurrency,
@@ -51,7 +52,7 @@ module.exports = async ({
       objects: [userData.object_permlink],
       beneficiaries: post.beneficiaries,
       permlink: post.permlink,
-      host: _.get(JSON.parse(_.get(post, 'json_metadata', '{}')), 'host', null),
+      host: _.get(jsonHelper.parseJson(post.json_metadata), 'host', null),
     });
     /** Update debt record with new status, and remove rejection permlink */
     await campaignModel.updateOne({
