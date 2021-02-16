@@ -214,7 +214,10 @@ exports.getVotingInfo = async (client, {
     const accountVotingPower = Math.min(10000, acc.voting_power + (10000 * secondsAgo) / 432000);
     // eslint-disable-next-line max-len
     const { voteValue } = await this.calculateVotePower(client, {
-      accountName, weight, postAuthor, postPermlink,
+      name: accountName,
+      voteWeight: weight,
+      author: postAuthor,
+      permlink: postPermlink,
     });
     return {
       voteWeight: _.round(voteValue, 3),
