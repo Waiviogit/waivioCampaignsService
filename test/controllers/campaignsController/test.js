@@ -6,6 +6,7 @@ const {
   BlacklistFactory, CampaignFactory, PaymentFactory, SubscriptionFactory, UserFactory,
   WobjectFactory, PostFactory, PaymentHistoryFactory, AppendObjectFactory, WobjectSubscriptionFactory,
 } = require('test/factories');
+const { RESERVATION_STATUSES, CAMPAIGN_STATUSES } = require('constants/constants');
 const Campaign = require('models/campaignModel');
 
 chai.use(chaiHttp);
@@ -2701,6 +2702,55 @@ describe('route /campaigns-api/rewards/:userName', async () => {
       it('should not call renderSuccess on code 404', async () => {
         await chai.request(app).get(`/campaigns-api/campaign/review-check/${faker.random.string()}`);
         expect(render.renderSuccess.notCalled).to.be.true;
+      });
+    });
+  });
+
+  describe('On /campaigns/reserved/count', async () => {
+    let result;
+    const userName = faker.random.string(20)
+    const count = _.random(5, 10)
+    beforeEach(async () => {
+      for (let i = 0; i < count; i++) {
+        await CampaignFactory.Create({
+          users: [{
+            name: userName,
+            status: RESERVATION_STATUSES.ASSIGNED,
+            object_permlink: faker.random.string(20),
+            hiveCurrency:  1,
+            rewardRaisedBy:  0,
+            permlink: faker.random.string(20),
+            _id: new ObjectID(),
+          }],
+          status: _.sample([CAMPAIGN_STATUSES.ACTIVE, CAMPAIGN_STATUSES.ON_HOLD])
+        });
+      }
+    });
+    describe('On ok', async () => {
+      beforeEach(async () => {
+        result = await chai.request(app).get(`/campaigns-api/campaigns/reserved/count`).query({userName});
+      });
+
+      it('should return write count', async () => {
+        expect(result.body.count).to.be.eq(count);
+      });
+
+      it('should status be 200', async () => {
+        expect(result).to.have.status(200);
+      });
+    });
+
+    describe('On errors', async () => {
+      it('should return 422 when no user name in query', async () => {
+        result = await chai.request(app).get(`/campaigns-api/campaigns/reserved/count`);
+        expect(result).to.have.status(422);
+      });
+
+      it('should return 0 counter when user he has no companies reserved', async () => {
+        result = await chai.request(app)
+          .get(`/campaigns-api/campaigns/reserved/count`)
+          .query({userName: faker.random.string()});
+        expect(result.body.count).to.be.eq(0);
       });
     });
   });
