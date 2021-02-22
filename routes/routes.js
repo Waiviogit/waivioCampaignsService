@@ -1,12 +1,12 @@
 const {
+  blackListsController,
   campaignsController,
+  referralsController,
   payablesController,
   matchBotController,
   demoUserController,
-  blackListsController,
   withdrawController,
   mailerController,
-  referralsController,
 } = require('controllers');
 
 const { guestRequests } = require('utilities/requests');
@@ -14,28 +14,32 @@ const { Router } = require('express');
 
 const campaignsRoutes = new Router();
 const withdrawRoutes = new Router();
-const mailerRoutes = new Router();
 const referralRoutes = new Router();
+const mailerRoutes = new Router();
 const apiRoutes = new Router();
 
+apiRoutes.use('/campaigns-api/referrals', referralRoutes);
 apiRoutes.use('/campaigns-api/withdraw', withdrawRoutes);
 apiRoutes.use('/campaigns-api/mailer', mailerRoutes);
 apiRoutes.use('/campaigns-api', campaignsRoutes);
-apiRoutes.use('/campaigns-api/referrals', referralRoutes);
 
 campaignsRoutes.route('/campaigns/dashboard/:guide_name').get(campaignsController.campaignsDashboard);
+campaignsRoutes.route('/campaigns/reserved/count').get(campaignsController.reservedCampaignsCount);
 campaignsRoutes.route('/campaigns/eligible').post(campaignsController.eligibleCampaigns);
 campaignsRoutes.route('/campaigns/reserved').post(campaignsController.reservedCampaigns);
 campaignsRoutes.route('/campaigns/:guideName/blacklist').get(blackListsController.show);
 campaignsRoutes.route('/campaigns/:campaign_id').delete(campaignsController.destroy);
+campaignsRoutes.route('/campaigns/all').post(campaignsController.allCampaigns);
+campaignsRoutes.route('/campaigns/history').post(campaignsController.history);
+
+campaignsRoutes.route('/campaign/review-check/:campaignId').get(campaignsController.checkReview);
+campaignsRoutes.route('/campaign/:campaign_id').get(campaignsController.show);
+
 campaignsRoutes.route('/statistics').get(campaignsController.getCampaignsStatistic);
 campaignsRoutes.route('/statistics').post(campaignsController.getCampaignsStatistic);
-campaignsRoutes.route('/campaigns/all').post(campaignsController.allCampaigns);
-campaignsRoutes.route('/campaign/:campaign_id').get(campaignsController.show);
-campaignsRoutes.route('/campaign/review-check/:campaignId').get(campaignsController.checkReview);
-campaignsRoutes.route('/campaigns/history').post(campaignsController.history);
-campaignsRoutes.route('/create_campaign').post(campaignsController.create);
+
 campaignsRoutes.route('/rewards/:userName').get(campaignsController.userRewards);
+campaignsRoutes.route('/create_campaign').post(campaignsController.create);
 
 campaignsRoutes.route('/validate_reject_reservation').post(campaignsController.validateRejectAssignCampaign);
 campaignsRoutes.route('/validate_activation').post(campaignsController.validateActivationCampaign);
@@ -61,8 +65,8 @@ mailerRoutes.route('/confirm-email-in-transaction').get(mailerController.confirm
 mailerRoutes.route('/confirm-email-response').get(mailerController.confirmEmailResponse);
 mailerRoutes.route('/confirm-email-request').post(mailerController.confirmEmailRequest);
 
+referralRoutes.route('/check-user-app-blacklist').get(referralsController.blackList);
 referralRoutes.route('/details').get(referralsController.details);
 referralRoutes.route('/status').get(referralsController.status);
-referralRoutes.route('/check-user-app-blacklist').get(referralsController.blackList);
 
 module.exports = apiRoutes;

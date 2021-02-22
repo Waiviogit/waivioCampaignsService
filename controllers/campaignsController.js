@@ -1,18 +1,25 @@
-const { destroyCampaign } = require('models/campaignModel');
 const { preValidationHelper } = require('utilities/helpers');
+const { destroyCampaign } = require('models/campaignModel');
 const validators = require('controllers/validators');
 const {
+  renderCustomError,
+  renderNotFound,
   renderSuccess,
   renderError,
-  renderNotFound,
-  renderCustomError,
 } = require('concerns/renderConcern');
 const {
-  campaigns: {
-    getDashboard, getCampaign, createCampaign, getDataForFirstLoad, checkingReview,
-    getReservedCampaigns, getAllCampaigns, getEligibleCampaigns, getHistory, getUserRewards,
-  },
-} = require('utilities/operations');
+  getReservedCampaignsCount,
+  getEligibleCampaigns,
+  getReservedCampaigns,
+  getDataForFirstLoad,
+  getAllCampaigns,
+  createCampaign,
+  checkingReview,
+  getUserRewards,
+  getDashboard,
+  getCampaign,
+  getHistory,
+} = require('utilities/operations').campaigns;
 
 const reservedCampaigns = async (req, res) => {
   const { params, validationError } = validators.validate(
@@ -32,6 +39,20 @@ const reservedCampaigns = async (req, res) => {
       campaigns, campaigns_types, hasMore, sponsors, radius,
     });
   }
+};
+
+const reservedCampaignsCount = async (req, res) => {
+  const { params, validationError } = validators.validate(
+    req.query,
+    validators.campaigns.reservedCountSchema,
+  );
+
+  if (validationError) return renderError(res, validationError);
+  const { count, error } = await getReservedCampaignsCount(params);
+
+  if (error) renderError(res, { error: error.message });
+
+  renderSuccess(res, { count });
 };
 
 const allCampaigns = async (req, res) => {
@@ -255,6 +276,7 @@ const checkReview = async (req, res) => {
 module.exports = {
   validateRejectAssignCampaign,
   validateActivationCampaign,
+  reservedCampaignsCount,
   validateAssignCampaign,
   getCampaignsStatistic,
   validateStopCampaign,

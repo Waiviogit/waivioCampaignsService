@@ -148,9 +148,13 @@ exports.historySchema = Joi.object().keys({
   limit: Joi.number().default(10),
   reservationPermlink: Joi.string(),
   sort: Joi.string().valid('inquiryDate', 'latest', 'reservation', 'lastAction').default('inquiryDate'),
-  status: Joi.array().items(Joi.string().valid(...Object.values(CAMPAIGN_STATUSES))).default(Object.values(CAMPAIGN_STATUSES)),
+  status: Joi.array()
+    .items(Joi.string().valid(...Object.values(CAMPAIGN_STATUSES)))
+    .default(Object.values(CAMPAIGN_STATUSES)),
   caseStatus: Joi.string().valid('open', 'close', 'all').default('all'),
-  rewards: Joi.array().items(Joi.string().valid(...Object.values(RESERVATION_STATUSES))).default(Object.values(RESERVATION_STATUSES)),
+  rewards: Joi.array()
+    .items(Joi.string().valid(...Object.values(RESERVATION_STATUSES)))
+    .default(Object.values(RESERVATION_STATUSES)),
 });
 
 exports.validateUserRewardsSchema = Joi.object().keys({
@@ -164,4 +168,8 @@ exports.validateCheckReviewSchema = Joi.object().keys({
   userName: Joi.string().required(),
   postPermlink: Joi.string(),
   locale: Joi.string(),
+}).options(options);
+
+exports.reservedCountSchema = Joi.object().keys({
+  userName: Joi.string().required(),
 }).options(options);

@@ -63,6 +63,50 @@
         }
       }
     },
+    "/campaigns/reserved/count": {
+      "get": {
+        "tags": [
+          "Campaign"
+        ],
+        "produces": [
+          "application/json"
+        ],
+        "description": "Get user reservations count",
+        "parameters": [
+          {
+            "name": "userName",
+            "in": "query",
+            "type": "string",
+            "required": true
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "successful operation",
+            "schema": {
+              "type": "object",
+              "properties": {
+                "count": {
+                  "type": "number"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Error",
+            "schema": {
+              "$ref": "#/definitions/validationError"
+            }
+          },
+          "500": {
+            "description": "Error",
+            "schema": {
+              "$ref": "#/definitions/serverError"
+            }
+          }
+        }
+      }
+    },
     "/campaigns/all": {
       "post": {
         "tags": [
