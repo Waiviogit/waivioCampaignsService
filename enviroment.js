@@ -1,5 +1,4 @@
 const logger = require('morgan');
-const config = require('config');
 const { runStream, runStreamRest } = require('processor/processor');
 const Tracing = require('@sentry/tracing');
 const swaggerUi = require('swagger-ui-express');
@@ -9,6 +8,7 @@ const cors = require('cors');
 const Sentry = require('@sentry/node');
 const { routes } = require('routes');
 const { siteUserStatistics } = require('middlewares');
+const { REPLACE_ORIGIN, REPLACE_REFERER } = require('constants/regExp');
 
 require('jobs/matchBotsJob');
 const { sendSentryNotification } = require('utilities/requests/telegramNotificationsRequest');
@@ -51,10 +51,10 @@ module.exports = function (app, express) {
     session.run(() => next());
   });
   app.use((req, res, next) => {
-    let { origin, host } = req.headers;
-    if (origin) {
-      origin = origin.replace('www.', '').replace('https://', '').replace('http://', '');
-    } else origin = host;
+    let { origin, referer } = req.headers;
+    origin
+      ? origin = origin.replace(REPLACE_ORIGIN, '')
+      : origin = referer && referer.replace(REPLACE_REFERER, '');
 
     session.set('host', origin);
     next();
