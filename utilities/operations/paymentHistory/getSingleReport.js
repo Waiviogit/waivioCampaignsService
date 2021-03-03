@@ -39,8 +39,8 @@ const prepareReportData = async ({
   return {
     match_bots: campaign.match_bots,
     createCampaignDate: campaign.createdAt,
-    reservationDate: reservation.createdAt,
-    reviewDate: rewardRecord.createdAt,
+    reservationDate: _.get(reservation, 'createdAt', ''),
+    reviewDate: _.get(rewardRecord, 'createdAt', ''),
     title: _.get(paymentData, 'postTitle', ''),
     activationPermlink: campaign.activation_permlink,
     primaryObject: _.find(wobjects,
