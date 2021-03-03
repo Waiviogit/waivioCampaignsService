@@ -8,7 +8,7 @@ const CampaignModel = require('models/campaignModel');
 const { redisSetter, redisGetter } = require('utilities/redis');
 const currencyRequest = require('utilities/requests/currencyRequest');
 const { RECALCULATION_DEBT, SUSPENDED_WARNING, PAYMENT_DEBT } = require('constants/ttlData');
-const { REFERRAL_TYPES } = require('constants/constants');
+const { REFERRAL_TYPES, GUEST_BNF_ACC } = require('constants/constants');
 const { detectFraudInReview } = require('utilities/helpers/detectFraudHelper');
 const { checkOnHoldStatus } = require('utilities/helpers/campaignsHelper');
 
@@ -226,7 +226,7 @@ const distributeReward = async ({
   const user = await User.findOne({ name: reviwer }).lean();
   if (isGuest) {
     if (!_.get(user, 'user_metadata.settings.hiveBeneficiaryAccount')) {
-      beneficiaries = [];
+      beneficiaries = _.filter(beneficiaries, (el) => el.account !== GUEST_BNF_ACC);
     }
   }
   const bnftsData = _.map(beneficiaries,
