@@ -275,7 +275,7 @@ const removeVotes = async (user, reservationPermlink) => {
   const upvotes = await botUpvoteModel.getExpiredUpvotes(user.postPermlink);
   const post = await hiveClient.execute(
     hiveOperations.getPostInfo,
-    { author: user.userName, permlink: user.postPermlink },
+    { author: user.rootAuthor, permlink: user.postPermlink },
   );
   const reviewHistories = _.filter(paymentHistories, (history) => _.includes(['review', 'beneficiary_fee'], history.type));
   if (upvotes && upvotes.length) {
