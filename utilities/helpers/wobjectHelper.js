@@ -2,7 +2,7 @@ const _ = require('lodash');
 const { getNamespace } = require('cls-hooked');
 const { wobjectModel, appModel } = require('models');
 const {
-  REQUIREDFIELDS_PARENT, MIN_PERCENT_TO_SHOW_UPGATE, FIELDS_NAMES,
+  REQUIREDFIELDS_PARENT, MIN_PERCENT_TO_SHOW_UPGATE, FIELDS_NAMES, ARRAY_FIELDS,
   ADMIN_ROLES, categorySwitcher, CAMPAIGN_FIELDS, VOTE_STATUSES, OBJECT_TYPES,
 } = require('constants/wobjectsData');
 
@@ -147,7 +147,6 @@ const filterFieldValidation = (filter, field, locale, ownership) => {
 
 const getFieldsToDisplay = (fields, locale, filter, permlink, ownership) => {
   locale = locale === 'auto' ? 'en-US' : locale;
-  const arrayFields = ['categoryItem', 'listItem', 'tagCategory', 'galleryAlbum', 'galleryItem', 'rating', 'button', 'phone'];
   const winningFields = {};
   const filteredFields = _.filter(fields,
     (field) => filterFieldValidation(filter, field, locale, ownership));
@@ -158,7 +157,7 @@ const getFieldsToDisplay = (fields, locale, filter, permlink, ownership) => {
     const approvedFields = _.filter(groupedFields[id],
       (field) => _.get(field, 'adminVote.status') === 'approved');
 
-    if (_.includes(arrayFields, id)) {
+    if (_.includes(ARRAY_FIELDS, id)) {
       const result = arrayFieldFilter({
         idFields: groupedFields[id], allFields: groupedFields, filter, id, permlink,
       });
@@ -219,8 +218,10 @@ const getLinkToPageLoad = (obj) => {
   }
   if (obj.object_type === OBJECT_TYPES.LIST) return `/object/${obj.author_permlink}/list`;
   const field = _.find(listItem, { body: obj.sortCustom[0] });
-  if (!field) return `/object/${obj.author_permlink}`;
-  return `/object/${obj.author_permlink}/${field.type === 'menuPage' ? 'page' : 'menu'}#${field.body}`;
+  const blog = _.find(_.get(obj, 'blog', []), (el) => el.permlink === obj.sortCustom[0]);
+  if (blog) return `/object/${obj.author_permlink}/blog/@${blog.body}`;
+  if (field) return `/object/${obj.author_permlink}/${field.type === 'menuPage' ? 'page' : 'menu'}#${field.body}`;
+  return `/object/${obj.author_permlink}`;
 };
 
 const getTopTags = (obj) => {
