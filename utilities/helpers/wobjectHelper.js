@@ -5,6 +5,7 @@ const {
   REQUIREDFIELDS_PARENT, MIN_PERCENT_TO_SHOW_UPGATE, FIELDS_NAMES, ARRAY_FIELDS,
   ADMIN_ROLES, categorySwitcher, CAMPAIGN_FIELDS, VOTE_STATUSES, OBJECT_TYPES,
 } = require('constants/wobjectsData');
+const { DEVICE } = require('constants/constants');
 
 const getSessionApp = async () => {
   const session = getNamespace('request-session');
@@ -124,7 +125,7 @@ const arrayFieldFilter = ({
         break;
     }
   }
-  if (id === FIELDS_NAMES.GALLERY_ALBUM ) {
+  if (id === FIELDS_NAMES.GALLERY_ALBUM) {
     const noAlbumItems = _.filter(allFields[categorySwitcher[id]],
       (item) => item.id === permlink && _.get(item, 'adminVote.status') !== VOTE_STATUSES.REJECTED);
     if (noAlbumItems.length)validFields.push({ items: noAlbumItems, body: 'Photos' });
@@ -185,6 +186,7 @@ const getFieldsToDisplay = (fields, locale, filter, permlink, ownership) => {
 };
 
 const getLinkToPageLoad = (obj) => {
+  if (getNamespace('request-session').get('device') === DEVICE.MOBILE) return `/object/${obj.author_permlink}/about`;
   let listItem = _.get(obj, 'listItem', []);
   if (!_.get(obj, 'sortCustom', []).length) {
     switch (obj.object_type) {
@@ -211,6 +213,7 @@ const getLinkToPageLoad = (obj) => {
             .value();
           return `/object/${obj.author_permlink}/${item.type === 'menuPage' ? 'page' : 'menu'}#${item.body}`;
         }
+        if (_.get(obj, 'blog')) return `/object/${obj.author_permlink}/blog/@${obj.blog[0].body}`;
         return `/object/${obj.author_permlink}`;
       default:
         return `/object/${obj.author_permlink}`;
