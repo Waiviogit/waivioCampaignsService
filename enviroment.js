@@ -51,12 +51,13 @@ module.exports = function (app, express) {
     session.run(() => next());
   });
   app.use((req, res, next) => {
-    let { origin, referer } = req.headers;
+    let { origin, referer, device } = req.headers;
     origin
       ? origin = origin.replace(REPLACE_ORIGIN, '')
       : origin = referer && referer.replace(REPLACE_REFERER, '');
 
     session.set('host', origin);
+    session.set('device', device);
     next();
   });
 

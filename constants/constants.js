@@ -131,6 +131,10 @@ const GPS_DIFF = 0.01;
 
 const GUEST_BNF_ACC = 'waivio.hpower';
 
+const DEVICE = {
+  MOBILE: 'mobile',
+};
+
 module.exports = {
   SORT_TYPES,
   REFERRAL_TYPES,
@@ -159,4 +163,5 @@ module.exports = {
   SECONDS_IN_DAY,
   GPS_DIFF,
   GUEST_BNF_ACC,
+  DEVICE,
 };
