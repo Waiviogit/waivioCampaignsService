@@ -51,6 +51,7 @@ campaignsRoutes.route('/payments/transfers_history').get(payablesController.tran
 campaignsRoutes.route('/payments/demo_payables').get(payablesController.demoDeptHistory);
 campaignsRoutes.route('/payments/payables').post(payablesController.payableHistory);
 campaignsRoutes.route('/payments/report').post(payablesController.report);
+campaignsRoutes.route('/payments/payable-warning').get(payablesController.payableWarning);
 
 campaignsRoutes.route('/guest/transfer').post(guestRequests.validateAuthToken, demoUserController.transfer);
 campaignsRoutes.route('/match_bots').get(matchBotController.sponsorMatchBots);

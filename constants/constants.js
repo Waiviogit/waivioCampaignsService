@@ -145,6 +145,8 @@ const DEVICE = {
   MOBILE: 'mobile',
 };
 
+const DAYS_TO_PAYABLE_WARNING = 21;
+
 module.exports = {
   SORT_TYPES,
   REFERRAL_TYPES,
@@ -175,4 +177,5 @@ module.exports = {
   GUEST_BNF_ACC,
   DEVICE,
   REVIEW_TYPES,
+  DAYS_TO_PAYABLE_WARNING,
 };
