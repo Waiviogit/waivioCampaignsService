@@ -26,13 +26,13 @@ const payableHistory = async (req, res) => {
 
   if (validationError) return renderError(res, validationError);
   const {
-    histories, payable, amount, hasMore, error,
+    histories, payable, amount, hasMore, error, notPayedPeriod,
   } = await getPayableHistory(params);
 
   if (error) renderCustomError(res, error);
   else {
     renderSuccess(res, {
-      histories, payable, amount, hasMore,
+      histories, payable, amount, hasMore, notPayedPeriod,
     });
   }
 };
