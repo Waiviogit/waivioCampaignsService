@@ -4,4 +4,5 @@ module.exports = {
   getTransfersHistory: require('./getTransfersHistory'),
   getSingleReport: require('./getSingleReport'),
   pendingTransfer: require('./setPendingTransfer'),
+  checkPayableWarning: require('./checkPayableWarning'),
 };

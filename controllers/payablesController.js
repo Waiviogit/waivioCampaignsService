@@ -1,6 +1,7 @@
 const {
   paymentHistory: {
-    getDemoDebtHistory, getPayableHistory, getTransfersHistory, getSingleReport, pendingTransfer,
+    getDemoDebtHistory, getPayableHistory, getTransfersHistory,
+    getSingleReport, pendingTransfer, checkPayableWarning,
   },
 } = require('utilities/operations');
 const { renderSuccess, renderError, renderCustomError } = require('concerns/renderConcern');
@@ -26,13 +27,13 @@ const payableHistory = async (req, res) => {
 
   if (validationError) return renderError(res, validationError);
   const {
-    histories, payable, amount, hasMore, error,
+    histories, payable, amount, hasMore, error, notPayedPeriod,
   } = await getPayableHistory(params);
 
   if (error) renderCustomError(res, error);
   else {
     renderSuccess(res, {
-      histories, payable, amount, hasMore,
+      histories, payable, amount, hasMore, notPayedPeriod,
     });
   }
 };
@@ -100,10 +101,22 @@ const setPendingTransfer = async (req, res) => {
   else renderSuccess(res, { result });
 };
 
+const payableWarning = async (req, res) => {
+  const {
+    params,
+    validationError,
+  } = validators.validate(req.query, validators.payables.warningPayables);
+  if (validationError) return renderError(res, validationError);
+  const { warning, error } = await checkPayableWarning(params);
+  if (error) return renderCustomError(res, error);
+  renderSuccess(res, { warning });
+};
+
 module.exports = {
   transfersHistory,
   demoDeptHistory,
   payableHistory,
   report,
   setPendingTransfer,
+  payableWarning,
 };

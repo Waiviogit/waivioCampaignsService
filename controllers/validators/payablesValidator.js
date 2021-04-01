@@ -50,3 +50,7 @@ exports.pendingTransfer = Joi.object().keys({
   amount: Joi.number().required(),
   transactionId: Joi.string().required(),
 }).required().options(options);
+
+exports.warningPayables = Joi.object().keys({
+  userName: Joi.string().required(),
+}).required().options(options);

@@ -1,6 +1,6 @@
 const _ = require('lodash');
 const moment = require('moment');
-const { PAYMENT_HISTORIES_TYPES } = require('constants/constants');
+const { PAYMENT_HISTORIES_TYPES, REVIEW_TYPES, TRANSFER_TYPES } = require('constants/constants');
 const { FIELDS_NAMES } = require('constants/wobjectsData');
 const {
   paymentHistoryModel, userModel, wobjectModel, campaignModel,
@@ -64,6 +64,12 @@ const withoutWrapperPayables = async ({
 
   if (matchData.userName) ({ user, error } = await userModel.findOne(matchData.userName));
   ({ result: histories, error } = await paymentHistoryModel.aggregate(pipeline(matchData)));
+  const oldestNotPayedReview = _.minBy(
+    _.filter(histories, (el) => el.payed === false && _.includes(REVIEW_TYPES, el.type)),
+    'createdAt',
+  );
+  const notPayedPeriod = moment.utc().diff(moment.utc(_.get(oldestNotPayedReview, 'createdAt', {})), 'days');
+
   if (error) return { error: error.message };
 
   ({ histories, error } = await fillPayments(histories, currency));
@@ -100,6 +106,7 @@ const withoutWrapperPayables = async ({
     amount: _.ceil(amount, 3),
     is_demo: user && !!user.auth,
     hasMore: histories.slice(skip, limit + skip).length < histories.length,
+    notPayedPeriod,
   };
 };
 
@@ -186,7 +193,7 @@ const withWrapperPayables = async ({
         reviews: {
           $push: {
             $cond: [
-              { $in: ['$type', ['review', 'campaign_server_fee', 'referral_server_fee', 'beneficiary_fee', 'index_fee', 'compensation_fee', 'overpayment_refund']] },
+              { $in: ['$type', REVIEW_TYPES] },
               '$$ROOT',
               null,
             ],
@@ -195,7 +202,7 @@ const withWrapperPayables = async ({
         transfers: {
           $push: {
             $cond: [
-              { $in: ['$type', ['transfer', 'demo_debt']] },
+              { $in: ['$type', TRANSFER_TYPES] },
               '$$ROOT',
               null,
             ],

@@ -1680,6 +1680,48 @@
         }
       }
     },
+    "/payments/payable-warning": {
+      "get": {
+        "tags": [
+          "Payables"
+        ],
+        "description": "check for warning payables",
+        "produces": [
+          "application/json"
+        ],
+        "parameters": [
+          {
+            "name": "userName",
+            "in": "query",
+            "description": "User name",
+            "type": "string",
+            "required": true
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful operation",
+            "schema": {
+              "type": "object",
+              "properties": {
+                "warning" : {
+                  "type": "boolean"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation error",
+            "schema": {
+              "type": "object",
+              "example": {
+                "message": "Validation error message"
+              }
+            }
+          }
+        }
+      }
+    },
     "/app_commissions": {
       "get": {
         "tags": [
@@ -2192,6 +2234,7 @@
           }
         }
       },
+
     "/mailer/confirm-email-request": {
       "post": {
         "tags": [
