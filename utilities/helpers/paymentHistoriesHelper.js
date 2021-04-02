@@ -6,6 +6,7 @@ const {
   paymentHistoryModel, userModel, wobjectModel, campaignModel,
 } = require('models');
 const { processWobjects, getSessionApp } = require('utilities/helpers/wobjectHelper');
+const BigNumber = require('bignumber.js');
 
 const withoutWrapPipeline = (data) => {
   const pipeline = [
@@ -83,15 +84,13 @@ const withoutWrapperPayables = async ({
       case 'referral_server_fee':
       case 'overpayment_refund':
       case 'review':
-      //  history.amount = _.round(history.amount, 4);
-        history.balance = payable + history.amount;
+        history.balance = new BigNumber(payable).plus(history.amount).toNumber();
         payable = history.balance;
-        amount += history.amount;
+        amount = new BigNumber(amount).plus(history.amount).toNumber();
         break;
       case 'transfer':
       case 'demo_debt':
-        //   history.amount = _.round(history.amount, 4);
-        history.balance = payable - history.amount;
+        history.balance = new BigNumber(payable).minus(history.amount).toNumber();
         payable = history.balance;
         break;
     }
