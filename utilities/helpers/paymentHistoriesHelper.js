@@ -212,7 +212,11 @@ const withWrapperPayables = async ({
     {
       $addFields: {
         payable: { $subtract: [{ $sum: '$reviews.amount' }, { $sum: '$transfers.amount' }] },
-        lastNotPayedReview: { $arrayElemAt: [{ $filter: { input: '$reviews', as: 'review', cond: { $and: [{ $eq: ['$$review.payed', false] }, { $gte: ['$$review.payable', 0] }] } } }, 0] },
+      },
+    },
+    {
+      $addFields: {
+        lastNotPayedReview: { $arrayElemAt: [{ $filter: { input: '$reviews', as: 'review', cond: { $and: [{ $eq: ['$$review.payed', false] }, { $gte: ['$payable', 0] }] } } }, 0] },
       },
     },
     filterPipe(filterPayable, filterDate),
