@@ -106,7 +106,7 @@ const withoutWrapperPayables = async ({
     amount: _.ceil(amount, 3),
     is_demo: user && !!user.auth,
     hasMore: histories.slice(skip, limit + skip).length < histories.length,
-    notPayedPeriod,
+    notPayedPeriod: payable > 0 ? notPayedPeriod : 0,
   };
 };
 
@@ -213,7 +213,7 @@ const withWrapperPayables = async ({
     {
       $addFields: {
         payable: { $subtract: [{ $sum: '$reviews.amount' }, { $sum: '$transfers.amount' }] },
-        lastNotPayedReview: { $arrayElemAt: [{ $filter: { input: '$reviews', as: 'review', cond: { $eq: ['$$review.payed', false] } } }, 0] },
+        lastNotPayedReview: { $arrayElemAt: [{ $filter: { input: '$reviews', as: 'review', cond: { $and: [{ $eq: ['$$review.payed', false] }, { $gte: ['$$review.payable', 0] }] } } }, 0] },
       },
     },
     filterPipe(filterPayable, filterDate),
