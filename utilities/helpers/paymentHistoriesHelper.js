@@ -6,6 +6,7 @@ const {
   paymentHistoryModel, userModel, wobjectModel, campaignModel,
 } = require('models');
 const { processWobjects, getSessionApp } = require('utilities/helpers/wobjectHelper');
+const BigNumber = require('bignumber.js');
 
 const withoutWrapPipeline = (data) => {
   const pipeline = [
@@ -83,15 +84,13 @@ const withoutWrapperPayables = async ({
       case 'referral_server_fee':
       case 'overpayment_refund':
       case 'review':
-      //  history.amount = _.round(history.amount, 4);
-        history.balance = payable + history.amount;
+        history.balance = new BigNumber(payable).plus(history.amount).toNumber();
         payable = history.balance;
-        amount += history.amount;
+        amount = new BigNumber(amount).plus(history.amount).toNumber();
         break;
       case 'transfer':
       case 'demo_debt':
-        //   history.amount = _.round(history.amount, 4);
-        history.balance = payable - history.amount;
+        history.balance = new BigNumber(payable).minus(history.amount).toNumber();
         payable = history.balance;
         break;
     }
@@ -106,7 +105,7 @@ const withoutWrapperPayables = async ({
     amount: _.ceil(amount, 3),
     is_demo: user && !!user.auth,
     hasMore: histories.slice(skip, limit + skip).length < histories.length,
-    notPayedPeriod,
+    notPayedPeriod: payable > 0 ? notPayedPeriod : 0,
   };
 };
 
@@ -213,7 +212,7 @@ const withWrapperPayables = async ({
     {
       $addFields: {
         payable: { $subtract: [{ $sum: '$reviews.amount' }, { $sum: '$transfers.amount' }] },
-        lastNotPayedReview: { $arrayElemAt: [{ $filter: { input: '$reviews', as: 'review', cond: { $eq: ['$$review.payed', false] } } }, 0] },
+        lastNotPayedReview: { $arrayElemAt: [{ $filter: { input: '$reviews', as: 'review', cond: { $and: [{ $eq: ['$$review.payed', false] }, { $gte: ['$$review.payable', 0] }] } } }, 0] },
       },
     },
     filterPipe(filterPayable, filterDate),

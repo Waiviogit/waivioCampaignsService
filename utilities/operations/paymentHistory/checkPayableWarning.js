@@ -42,7 +42,8 @@ const getPipeline = (sponsor) => [
   },
   {
     $addFields: {
-      lastNotPayedReview: { $arrayElemAt: [{ $filter: { input: '$reviews', as: 'review', cond: { $eq: ['$$review.payed', false] } } }, 0] },
+      payable: { $subtract: [{ $sum: '$reviews.amount' }, { $sum: '$transfers.amount' }] },
+      lastNotPayedReview: { $arrayElemAt: [{ $filter: { input: '$reviews', as: 'review', cond: { $and: [{ $eq: ['$$review.payed', false] }, { $gte: ['$$review.payable', 0] }] } } }, 0] },
     },
   },
   {
