@@ -101,8 +101,8 @@ const withoutWrapperPayables = async ({
   }
   return {
     histories: limit === 0 ? histories : histories.slice(skip, limit + skip),
-    payable: _.ceil(payable, 3),
-    amount: _.ceil(amount, 3),
+    payable: _.round(payable, 3),
+    amount: _.round(amount, 3),
     is_demo: user && !!user.auth,
     hasMore: histories.slice(skip, limit + skip).length < histories.length,
     notPayedPeriod: payable > 0 ? notPayedPeriod : 0,
@@ -234,10 +234,18 @@ const withWrapperPayables = async ({
     },
   ]);
   if (error) return { error };
-  const payable = _.ceil(_.sumBy(histories, 'payable'), 3);
+
+  const payable = _.round(
+    _.reduce(
+      histories,
+      (acc, history) => BigNumber(history.payable).plus(acc),
+      BigNumber(0),
+    ).toNumber(),
+    3,
+  );
 
   const result = _.forEach(histories.slice(skip, limit + skip), (history) => {
-    history.payable = _.ceil(history.payable, 3);
+    history.payable = _.round(history.payable, 3);
     if (paymentType === 'payables') {
       history.notPayedPeriod = moment.utc().diff(moment.utc(_.get(history, 'lastNotPayedReview.createdAt', {})), 'days');
       delete history.lastNotPayedReview;

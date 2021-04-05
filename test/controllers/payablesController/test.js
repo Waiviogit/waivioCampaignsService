@@ -296,7 +296,7 @@ describe('Payables', async () => {
           .send({ sponsor: 'sponsor1', userName: 'waivio' });
         res.should.have.status(200);
         res.body.histories.length.should.to.be.eq(2);
-        res.body.payable.should.to.be.eq(0.151);
+        res.body.payable.should.to.be.eq(0.15);
         [_.round(res.body.histories[0].amount, 2),
           _.round(res.body.histories[0].balance, 2)].should.to.be.eql([0.1, 0.15]);
         [_.round(res.body.histories[1].amount, 2),
