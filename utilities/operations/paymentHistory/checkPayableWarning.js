@@ -1,4 +1,4 @@
-const { DAYS_TO_PAYABLE_WARNING, REVIEW_TYPES } = require('constants/constants');
+const { DAYS_TO_PAYABLE_WARNING, REVIEW_TYPES, TRANSFER_TYPES } = require('constants/constants');
 const { paymentHistoryModel } = require('models');
 const moment = require('moment');
 const _ = require('lodash');
@@ -33,6 +33,15 @@ const getPipeline = (sponsor) => [
         $push: {
           $cond: [
             { $in: ['$type', REVIEW_TYPES] },
+            '$$ROOT',
+            null,
+          ],
+        },
+      },
+      transfers: {
+        $push: {
+          $cond: [
+            { $in: ['$type', TRANSFER_TYPES] },
             '$$ROOT',
             null,
           ],
