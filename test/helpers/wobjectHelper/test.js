@@ -1,7 +1,7 @@
 const moment = require('moment');
 const _ = require('lodash');
 const {
-  faker, dropDatabase, expect, wobjectHelper,
+  faker, dropDatabase, expect, wobjectHelper, Wobject,
 } = require('test/testHelper');
 const { AppFactory, AppendObjectFactory } = require('test/factories');
 const { FIELDS_NAMES, OBJECT_TYPES } = require('constants/wobjectsData');
@@ -626,8 +626,13 @@ describe('On wobjectHelper', async () => {
         wobjects: [_.cloneDeep(object)], app, returnArray: false, locale: 'ms-MY',
       });
     });
-    it('should not return field with another locale', async () => {
-      expect(result[FIELDS_NAMES.NAME]).to.be.undefined;
+    it('should get name from field with en-US locale if can\'t find user locale', async () => {
+      expect(result[FIELDS_NAMES.NAME]).to.be.eq(body);
+    });
+
+    it('should field locale be eq en-US ', async () => {
+      const wobject = await Wobject.findOne({ author_permlink: object.author_permlink }).lean();
+      expect(wobject.fields[0].locale).to.be.eq('en-US');
     });
   });
 
