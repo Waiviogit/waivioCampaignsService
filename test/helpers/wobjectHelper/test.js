@@ -1,5 +1,8 @@
 const moment = require('moment');
 const _ = require('lodash');
+const sinon = require('sinon');
+const { DEVICE } = require('constants/constants');
+const { getNamespace } = require('cls-hooked');
 const {
   faker, dropDatabase, expect, wobjectHelper, Wobject,
 } = require('test/testHelper');
@@ -696,6 +699,28 @@ describe('On wobjectHelper', async () => {
     it('should return proper link on obj type list', async () => {
       obj = { object_type: OBJECT_TYPES.LIST, author_permlink: faker.random.string() };
       expectedLink = `/object/${obj.author_permlink}/list`;
+      link = wobjectHelper.getLinkToPageLoad(obj);
+      expect(link).to.be.eq(expectedLink);
+    });
+
+    it('should return /object/author_permlink on hashtag obj type', async () => {
+      sinon.stub(getNamespace('request-session'), 'get').returns(DEVICE.MOBILE);
+      obj = {
+        object_type: OBJECT_TYPES.HASHTAG,
+        author_permlink: faker.random.string(),
+      };
+      expectedLink = `/object/${obj.author_permlink}`;
+      link = wobjectHelper.getLinkToPageLoad(obj);
+      expect(link).to.be.eq(expectedLink);
+    });
+
+    it('should return /object/author_permlink on any obj type except hashtag type', async () => {
+      sinon.stub(getNamespace('request-session'), 'get').returns(DEVICE.MOBILE);
+      obj = {
+        object_type: _.sample(Object.values(_.omit(OBJECT_TYPES, ['HASHTAG']))),
+        author_permlink: faker.random.string(),
+      };
+      expectedLink = `/object/${obj.author_permlink}/about`;
       link = wobjectHelper.getLinkToPageLoad(obj);
       expect(link).to.be.eq(expectedLink);
     });
