@@ -1,7 +1,7 @@
-const _ = require('lodash');
+const { internalExchangeModel, currenciesStatiscticModel } = require('models');
+const { hiveRequests, currencyRequest } = require('utilities/requests');
 const moment = require('moment');
-const { internalExchangeModel } = require('models');
-const { hiveRequests } = require('utilities/requests');
+const _ = require('lodash');
 
 exports.getWalletData = async (name, limit, marker, types, endDate, startDate, tableView) => {
   let result, error;
@@ -40,14 +40,45 @@ exports.getWalletData = async (name, limit, marker, types, endDate, startDate, t
     }
     if (breakFlag) break;
   } while (walletOperations.length <= limit || batchSize === result.length - 1);
+  const hivePriceArr = await getHiveCurrencyHistory(walletOperations);
 
-  return formatHiveHistory(walletOperations);
+  return formatHiveHistory(walletOperations, hivePriceArr);
 };
 
-const formatHiveHistory = (histories) => _.map(histories, (history) => {
+const getHiveCurrencyHistory = async (walletOperations) => {
+  let includeToday = false;
+  const orCondition = _
+    .chain(walletOperations)
+    .map((el) => _.get(el, '[1].timestamp', '').split('T')[0])
+    .uniq()
+    .reduce((acc, el) => {
+      if (moment(el).isSame(Date.now(), 'day')) includeToday = true;
+      acc.push({ createdAt: { $gte: moment.utc(el).startOf('day').format(), $lte: moment.utc(el).endOf('day').format() } });
+      return acc;
+    }, [])
+    .value();
+  const { result = [] } = await currenciesStatiscticModel.find({ type: 'dailyData', $or: orCondition });
+  if (includeToday) {
+    const { usdCurrency, hbdToDollar, error: currencyReqErr } = await currencyRequest.getHiveCurrency(['hive', 'hive_dollar']);
+    if (!currencyReqErr) {
+      result.push({
+        hive: { usd: usdCurrency },
+        hive_dollar: { usd: hbdToDollar },
+        createdAt: new Date(),
+      });
+    }
+  }
+
+  return result;
+};
+
+const formatHiveHistory = (histories, hivePriceArr) => _.map(histories, (history) => {
+  const price = _.find(hivePriceArr, (el) => moment(el.createdAt).isSame(moment(history[1].timestamp), 'day'));
   history[1].timestamp = Math.round(moment.utc(history[1].timestamp).valueOf() / 1000);
   // eslint-disable-next-line prefer-destructuring
   history[1].type = history[1].op[0];
+  history[1].hiveUSD = parseFloat(_.get(price, 'hive.usd', '0'));
+  history[1].hbdUSD = parseFloat(_.get(price, 'hive_dollar.usd', '0'));
   [history[1].operationNum] = history;
   history[1] = Object.assign(history[1], history[1].op[1]);
   return _.omit(history[1], ['op', 'block', 'op_in_trx', 'trx_in_block', 'virtual_op', 'trx_id']);

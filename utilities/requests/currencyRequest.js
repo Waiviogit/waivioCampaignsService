@@ -1,23 +1,29 @@
 const axios = require('axios');
 const config = require('config');
+const _ = require('lodash');
 
-exports.getHiveCurrency = async () => {
+exports.getHiveCurrency = async (ids = ['hive'], currencies = ['usd']) => {
   try {
-    const result = await axios.get(`${config.waivioUrl}currencies-api/marketInfo?ids=hive&currencies=usd`);
-    const usdCurrency = result.data.current.hive.usd;
-    return { usdCurrency };
+    const result = await axios
+      .get(`${config.waivioUrl}currencies-api/marketInfo?ids=${ids.toString()}&currencies=${currencies.toString()}`);
+    return {
+      usdCurrency: _.get(result, 'data.current.hive.usd'),
+      hbdToDollar: _.get(result, 'data.current.hive_dollar.usd'),
+    };
   } catch (error) {
-    return getCurrencyFromCoingecko();
+    return getCurrencyFromCoingecko(ids, currencies);
   }
 };
 
-const getCurrencyFromCoingecko = async () => {
+const getCurrencyFromCoingecko = async (ids, currencies) => {
   try {
-    const result = await axios.get('https://api.coingecko.com/api/v3/simple/price?ids=hive&vs_currencies=usd');
-    const usdCurrency = result.data.hive.usd;
-    return { usdCurrency };
+    const result = await axios
+      .get(`https://api.coingecko.com/api/v3/simple/price?ids=${ids.toString()}&vs_currencies=${currencies.toString()}`);
+    return {
+      usdCurrency: _.get(result, 'data.hive.usd'),
+      hbdToDollar: _.get(result, 'data.hive_dollar.usd'),
+    };
   } catch (error) {
-    // #TODO add event handling if an exception occurs
     console.error(error.message);
     return { error };
   }

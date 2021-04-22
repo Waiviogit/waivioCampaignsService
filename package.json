@@ -12,6 +12,8 @@
     "renameRedisKeys": "NODE_PATH=. node ./utilities/tasks/renameRedisKeys/run.js",
     "checkPendingCampaigns": "NODE_PATH=. node ./utilities/tasks/checkIfPendingCampaignExpired/run.js",
     "checkOnHoldCampaigns": "NODE_PATH=. node ./utilities/tasks/checkOnHoldCampaighns/run.js",
+    "addSteamToCurrency": "NODE_PATH=. node ./utilities/tasks/addSteemToCurrency/run.js",
+    "addMissingDailyData": "NODE_PATH=. node ./utilities/tasks/addMissingDailyData/run.js",
     "test": "NODE_PATH=. NODE_ENV=test nyc --reporter=html mocha"
   },
   "dependencies": {
