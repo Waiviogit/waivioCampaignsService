@@ -114,7 +114,7 @@ const updateMatchBot = async ({
  * type: Number | NumberConstructor, required: boolean}|null), results: (*|Array|*[])}>}
  */
 // eslint-disable-next-line camelcase
-const getMatchBots = async ({ bot_name, skip, limit }) => {
+const getMatchBots = async ({ bot_name, skip = 0, limit }) => {
   const matchBot = await MatchBot.findOne({ bot_name }, { sponsors: { $slice: [skip, limit] } });
   const mappedData = matchBot && _.map(matchBot.sponsors, (sponsor) => (
     {
