@@ -33,13 +33,5 @@ describe('On walletHelper', async () => {
 
       expect(currencyRequest.getHiveCurrency.calledOnce).to.be.true;
     });
-
-    it('should call currencyRequest with proper params', async () => {
-      mock[1].timestamp = moment.utc().format('yyyy-MM-DDTHH:mm:ss');
-      result = await walletHelper.getHiveCurrencyHistory([mock]);
-      const [calledArgs] = currencyRequest.getHiveCurrency.args;
-
-      expect(calledArgs[0]).to.be.deep.eq(['hive', 'hive_dollar']);
-    });
   });
 });
