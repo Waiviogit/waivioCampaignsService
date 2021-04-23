@@ -92,7 +92,7 @@
     "currenciesDB": {
       "host": "localhost",
       "port": 27017,
-      "database": "Currencies"
+      "database": "waiviotest"
     },
     "redis": {
       "notifications" : 14,

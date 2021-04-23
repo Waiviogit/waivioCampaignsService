@@ -7,3 +7,11 @@ exports.findOne = async (condition = {}) => {
     return { error };
   }
 };
+
+exports.find = async (condition = {}) => {
+  try {
+    return { result: await CurrenciesStatistic.find(condition).lean() };
+  } catch (error) {
+    return { error };
+  }
+};
