@@ -2,23 +2,23 @@ const axios = require('axios');
 const config = require('config');
 const _ = require('lodash');
 
-exports.getHiveCurrency = async (ids = ['hive'], currencies = ['usd']) => {
+exports.getHiveCurrency = async () => {
   try {
     const result = await axios
-      .get(`${config.waivioUrl}currencies-api/marketInfo?ids=${ids.toString()}&currencies=${currencies.toString()}`);
+      .get(`${config.waivioUrl}currencies-api/marketInfo?ids=hive&ids=hive_dollar&currencies=usd`);
     return {
       usdCurrency: _.get(result, 'data.current.hive.usd'),
       hbdToDollar: _.get(result, 'data.current.hive_dollar.usd'),
     };
   } catch (error) {
-    return getCurrencyFromCoingecko(ids, currencies);
+    return getCurrencyFromCoingecko();
   }
 };
 
-const getCurrencyFromCoingecko = async (ids, currencies) => {
+const getCurrencyFromCoingecko = async () => {
   try {
     const result = await axios
-      .get(`https://api.coingecko.com/api/v3/simple/price?ids=${ids.toString()}&vs_currencies=${currencies.toString()}`);
+      .get('https://api.coingecko.com/api/v3/simple/price?ids=hive,hive_dollar&vs_currencies=usd');
     return {
       usdCurrency: _.get(result, 'data.hive.usd'),
       hbdToDollar: _.get(result, 'data.hive_dollar.usd'),
