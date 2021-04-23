@@ -36,7 +36,7 @@ const addMissingDate = async ({ startOfDay, endOfDay, date }) => {
   try {
     await CurrenciesStatistic.create(dailyData);
   } catch (error) {
-    return date;
+    return [date, dailyData, error.message];
   }
   return false;
 };

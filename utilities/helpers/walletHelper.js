@@ -49,7 +49,7 @@ const getHiveCurrencyHistory = async (walletOperations) => {
   let includeToday = false;
   const orCondition = _
     .chain(walletOperations)
-    .map((el) => _.get(el, '[1].timestamp', '').split('T')[0])
+    .map((el) => _.get(el, '[1].timestamp', null))
     .uniq()
     .reduce((acc, el) => {
       if (moment(el).isSame(Date.now(), 'day')) includeToday = true;
