@@ -40,12 +40,12 @@ exports.getWalletData = async (name, limit, marker, types, endDate, startDate, t
     }
     if (breakFlag) break;
   } while (walletOperations.length <= limit || batchSize === result.length - 1);
-  const hivePriceArr = await getHiveCurrencyHistory(walletOperations);
+  const hivePriceArr = await this.getHiveCurrencyHistory(walletOperations);
 
   return formatHiveHistory(walletOperations, hivePriceArr);
 };
 
-const getHiveCurrencyHistory = async (walletOperations) => {
+exports.getHiveCurrencyHistory = async (walletOperations) => {
   let includeToday = false;
   const orCondition = _
     .chain(walletOperations)
