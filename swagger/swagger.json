@@ -7780,6 +7780,8 @@
           "_id": "5e8c3ae01ca43c514558b6a7",
           "fillOrKill": false,
           "type": "limitOrder",
+          "hiveUSD": 0.570853,
+          "hbdUSD": 1.48,
           "account": "olegvladim",
           "current_pays": "1 HIVE",
           "open_pays": "0.188 HBD",
@@ -7787,52 +7789,6 @@
           "exchanger": null,
           "orderId": 1586171858,
           "__v": 0
-        },
-        {
-          "_id": "5e8c3b021ca43c514558b6b9",
-          "fillOrKill": false,
-          "type": "fillOrder",
-          "account": "madushanka",
-          "current_pays": "0.357 HBD",
-          "open_pays": "1.586 HIVE",
-          "timestamp": 1586161272000,
-          "exchanger": "deltor",
-          "orderId": 1586171439,
-          "__v": 0
-        },
-        {
-          "_id": "5e8c3aee1ca43c514558b6b0",
-          "fillOrKill": false,
-          "type": "cancelOrder",
-          "account": "madushanka",
-          "timestamp": 1586161149000,
-          "orderId": 1586171921,
-          "__v": 0,
-          "current_pays": "0.01 HBD"
-        },
-        {
-          "timestamp": 1586150025000,
-          "type": "transfer",
-          "amount": "0.205 HBD",
-          "from": "blocktrades",
-          "memo": "exchange",
-          "to": "olegvladim"
-        },
-        {
-          "timestamp": 1586210340000,
-          "type": "curation_reward",
-          "comment_author": "jarvie",
-          "comment_permlink": "st-louis-6-years-ago",
-          "curator": "grampo",
-          "reward": "641.575130 VESTS"
-        },
-        {
-          "timestamp": 1586037384000,
-          "type": "claim_reward_balance",
-          "account": "grampo",
-          "reward_sbd": "0.128 HBD",
-          "reward_steem": "0.129 HIVE",
-          "reward_vests": "7664.160528 VESTS"
         }
       ]
     },

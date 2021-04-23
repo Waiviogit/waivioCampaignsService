@@ -5,6 +5,7 @@ const _ = require('lodash');
 const { expect } = chai;
 const axios = require('axios');
 const { Mongoose, models } = require('database');
+const { models: currenciesModels } = require('currenciesDB');
 const faker = require('faker');
 const sinon = require('sinon');
 const app = require('app');
@@ -17,8 +18,9 @@ const render = require('concerns/renderConcern');
 const { Constants } = require('../constants');
 
 const dropDatabase = async () => {
-  for (const model in models) {
-    await models[model].deleteMany();
+  const allModels = Object.assign(models, currenciesModels);
+  for (const model in allModels) {
+    await allModels[model].deleteMany();
   }
   await redis.lastBlockClient.flushdbAsync();
   await redis.campaigns.flushdbAsync();
