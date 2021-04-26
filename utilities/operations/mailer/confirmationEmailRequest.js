@@ -4,12 +4,12 @@ const {
   DEFAULT_TRANSACTION_REDIS_TTL_TIME,
 } = require('constants/mailer');
 const { withdrawFundsModel, userModel } = require('models');
-const config = require('config');
 const { mailerRequests } = require('utilities/requests');
 const jwt = require('jsonwebtoken');
 const { validateTransaction } = require('utilities/helpers/transactionsHelper');
 const redisSetter = require('utilities/redis/redisSetter');
 const { WITHDRAW_TRANSACTION } = require('constants/ttlData');
+const { getNamespace } = require('cls-hooked');
 
 module.exports = async ({
   email, userName, accessToken, isGuest, transactionData, type,
@@ -38,6 +38,7 @@ const dataSwitcher = async ({
   type, userName, email, transactionData, accessToken,
 }) => {
   let expiresIn, templateId, token;
+  const host = getNamespace('request-session').get('host');
   switch (type) {
     case 'confirmEmail':
       const { user } = await userModel.findOne(userName, '+privateEmail');
@@ -50,9 +51,9 @@ const dataSwitcher = async ({
         templateId,
         templateData: {
           from: process.env.MAILER_FROM,
-          userLink: `${config.waivioUrl}@${userName}`,
+          userLink: `https://${host}/@${userName}`,
           userName,
-          baseLink: `${config.waivioUrl}campaigns-api/mailer/confirm-email-response?userName=${userName}&email=${email}&id=${token}&type=confirm`,
+          baseLink: `https://${host}/campaigns-api/mailer/confirm-email-response?userName=${userName}&email=${email}&id=${token}&type=confirm`,
         },
       };
     case 'confirmTransaction':
@@ -77,13 +78,13 @@ const dataSwitcher = async ({
       if (!withdraw) return { error: { response: { status: 503 } } };
 
       await redisSetter.saveTTL(`expire:${WITHDRAW_TRANSACTION}|${withdraw._id}`, DEFAULT_TRANSACTION_REDIS_TTL_TIME);
-      const baseLink = checkEmail === 'No email' ? `${config.waivioUrl}campaigns-api/mailer/confirm-email-in-transaction?id=${redirectIds.finalConfirmTransaction}&userName=${userName}&token=${withdraw._id}&reqAmount=${transactionData.amount}&inputCoinType=${transactionData.inputCoinType}&outputCoinType=${transactionData.outputCoinType}&depositAcc=${transactionData.address}&memo=${transaction.memo}&commission=${commission}&email=${email}`
-        : `${config.waivioUrl}confirmation?id=${redirectIds.finalConfirmTransaction}&userName=${userName}&token=${withdraw._id}&reqAmount=${transactionData.amount}&inputCoinType=${transactionData.inputCoinType}&outputCoinType=${transactionData.outputCoinType}&depositAcc=${transactionData.address}&memo=${transaction.memo}&commission=${commission}`;
+      const baseLink = checkEmail === 'No email' ? `https://${host}/campaigns-api/mailer/confirm-email-in-transaction?id=${redirectIds.finalConfirmTransaction}&userName=${userName}&token=${withdraw._id}&reqAmount=${transactionData.amount}&inputCoinType=${transactionData.inputCoinType}&outputCoinType=${transactionData.outputCoinType}&depositAcc=${transactionData.address}&memo=${transaction.memo}&commission=${commission}&email=${email}`
+        : `https://${host}/confirmation?id=${redirectIds.finalConfirmTransaction}&userName=${userName}&token=${withdraw._id}&reqAmount=${transactionData.amount}&inputCoinType=${transactionData.inputCoinType}&outputCoinType=${transactionData.outputCoinType}&depositAcc=${transactionData.address}&memo=${transaction.memo}&commission=${commission}`;
       return {
         templateId,
         templateData: {
           from: process.env.MAILER_FROM,
-          userLink: `${config.waivioUrl}@${userName}`,
+          userLink: `https://${host}/@${userName}`,
           userName,
           baseLink,
           transaction: transaction.memo,
@@ -106,9 +107,9 @@ const dataSwitcher = async ({
         oldEmail: User.privateEmail,
         templateData: {
           from: process.env.MAILER_FROM,
-          userLink: `${config.waivioUrl}@${userName}`,
+          userLink: `https://${host}/@${userName}`,
           userName,
-          baseLink: `${config.waivioUrl}campaigns-api/mailer/confirm-email-response?userName=${userName}&id=${token}&type=unlink`,
+          baseLink: `https://${host}/campaigns-api/mailer/confirm-email-response?userName=${userName}&id=${token}&type=unlink`,
         },
       };
   }
