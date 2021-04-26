@@ -45,11 +45,11 @@ exports.getWalletData = async (name, limit, marker, types, endDate, startDate, t
   return formatHiveHistory(walletOperations, hivePriceArr);
 };
 
-exports.getHiveCurrencyHistory = async (walletOperations) => {
+exports.getHiveCurrencyHistory = async (walletOperations, path = '[1].timestamp') => {
   let includeToday = false;
   const orCondition = _
     .chain(walletOperations)
-    .map((el) => _.get(el, '[1].timestamp', null))
+    .map((el) => _.get(el, path, null))
     .uniq()
     .reduce((acc, el) => {
       if (moment(el).isSame(Date.now(), 'day')) includeToday = true;
