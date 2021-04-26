@@ -12,7 +12,6 @@ exports.getWalletData = async (name, limit, marker, types, endDate, startDate, t
   const endDateTimestamp = moment.utc(endDate).valueOf();
 
   do {
-    if (lastId === 0) break;
     ({ result, error } = await hiveRequests.getAccountHistory(
       name, lastId, lastId === -1 ? batchSize : (lastId < batchSize ? lastId : batchSize),
     ));
@@ -38,6 +37,7 @@ exports.getWalletData = async (name, limit, marker, types, endDate, startDate, t
         walletOperations.push(record);
       }
     }
+    if (lastId === 1) breakFlag = true;
     if (breakFlag) break;
   } while (walletOperations.length <= limit || batchSize === result.length - 1);
   const hivePriceArr = await this.getHiveCurrencyHistory(walletOperations);
