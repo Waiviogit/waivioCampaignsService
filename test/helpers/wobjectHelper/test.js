@@ -689,6 +689,36 @@ describe('On wobjectHelper', async () => {
       menuPage = { type: 'menuPage', body: faker.random.string() };
     });
 
+    describe('On mobile device', async () => {
+      beforeEach(async () => {
+        sinon.stub(getNamespace('request-session'), 'get').returns(DEVICE.MOBILE);
+      });
+
+      afterEach(() => {
+        sinon.restore();
+      });
+
+      it('should return /object/author_permlink on hashtag obj type', async () => {
+        obj = {
+          object_type: OBJECT_TYPES.HASHTAG,
+          author_permlink: faker.random.string(),
+        };
+        expectedLink = `/object/${obj.author_permlink}`;
+        link = wobjectHelper.getLinkToPageLoad(obj);
+        expect(link).to.be.eq(expectedLink);
+      });
+
+      it('should return /object/author_permlink on any obj type except hashtag type', async () => {
+        obj = {
+          object_type: _.sample(Object.values(_.omit(OBJECT_TYPES, ['HASHTAG']))),
+          author_permlink: faker.random.string(),
+        };
+        expectedLink = `/object/${obj.author_permlink}/about`;
+        link = wobjectHelper.getLinkToPageLoad(obj);
+        expect(link).to.be.eq(expectedLink);
+      });
+    });
+
     it('should return proper link on obj type page', async () => {
       obj = { object_type: OBJECT_TYPES.PAGE, author_permlink: faker.random.string() };
       expectedLink = `/object/${obj.author_permlink}/page`;
@@ -699,28 +729,6 @@ describe('On wobjectHelper', async () => {
     it('should return proper link on obj type list', async () => {
       obj = { object_type: OBJECT_TYPES.LIST, author_permlink: faker.random.string() };
       expectedLink = `/object/${obj.author_permlink}/list`;
-      link = wobjectHelper.getLinkToPageLoad(obj);
-      expect(link).to.be.eq(expectedLink);
-    });
-
-    it('should return /object/author_permlink on hashtag obj type', async () => {
-      sinon.stub(getNamespace('request-session'), 'get').returns(DEVICE.MOBILE);
-      obj = {
-        object_type: OBJECT_TYPES.HASHTAG,
-        author_permlink: faker.random.string(),
-      };
-      expectedLink = `/object/${obj.author_permlink}`;
-      link = wobjectHelper.getLinkToPageLoad(obj);
-      expect(link).to.be.eq(expectedLink);
-    });
-
-    it('should return /object/author_permlink on any obj type except hashtag type', async () => {
-      sinon.stub(getNamespace('request-session'), 'get').returns(DEVICE.MOBILE);
-      obj = {
-        object_type: _.sample(Object.values(_.omit(OBJECT_TYPES, ['HASHTAG']))),
-        author_permlink: faker.random.string(),
-      };
-      expectedLink = `/object/${obj.author_permlink}/about`;
       link = wobjectHelper.getLinkToPageLoad(obj);
       expect(link).to.be.eq(expectedLink);
     });
