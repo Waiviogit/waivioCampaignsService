@@ -5,10 +5,11 @@ const PaymentHistory = require('models/paymentHistoryModel');
 const BotUpvote = require('models/botUpvoteModel');
 const appModel = require('models/appModel');
 const CampaignModel = require('models/campaignModel');
+const wobjectModel = require('models/wobjectModel');
 const { redisSetter, redisGetter } = require('utilities/redis');
 const currencyRequest = require('utilities/requests/currencyRequest');
 const { RECALCULATION_DEBT, SUSPENDED_WARNING, PAYMENT_DEBT } = require('constants/ttlData');
-const { REFERRAL_TYPES, GUEST_BNF_ACC } = require('constants/constants');
+const { REFERRAL_TYPES, GUEST_BNF_ACC, CAMPAIGN_STATUSES } = require('constants/constants');
 const { detectFraudInReview } = require('utilities/helpers/detectFraudHelper');
 const { checkOnHoldStatus } = require('utilities/helpers/campaignsHelper');
 
@@ -101,7 +102,12 @@ const updateCampaignStatus = async (campaignId) => {
   const thisMonthCompletedUsers = _.filter(campaign.users, (payment) => payment.updatedAt > moment.utc().startOf('month') && payment.status === 'completed');
   if (campaign.budget <= campaign.reward * thisMonthCompletedUsers.length
       || campaign.budget - (campaign.reward * thisMonthCompletedUsers.length) < campaign.reward) {
-    await CampaignModel.updateOne({ _id: campaignId }, { status: 'reachedLimit' });
+    await CampaignModel.updateOne({ _id: campaignId }, { status: CAMPAIGN_STATUSES.REACHED_LIMIT });
+    await wobjectModel.updateCampaignsCount({
+      wobjPermlinks: [campaign.requiredObject, ...campaign.objects],
+      status: CAMPAIGN_STATUSES.REACHED_LIMIT,
+      id: campaignId,
+    });
   }
 };
 

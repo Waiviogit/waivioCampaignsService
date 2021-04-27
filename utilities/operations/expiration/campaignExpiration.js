@@ -1,5 +1,5 @@
 const { CAMPAIGN_STATUSES, RESERVATION_STATUSES } = require('constants/constants');
-const { campaignModel } = require('models');
+const { campaignModel, wobjectModel } = require('models');
 const campaignsHelper = require('utilities/helpers/campaignsHelper');
 const { redisGetter, redisSetter } = require('utilities/redis');
 
@@ -8,11 +8,17 @@ exports.expireCampaign = async (data) => {
   const _id = data.replace('expire:campaign_', '');
   const { result } = await campaignModel.updateOne(
     { _id, status: { $in: [CAMPAIGN_STATUSES.ACTIVE, CAMPAIGN_STATUSES.REACHED_LIMIT] } },
-    { status: 'expired' },
+    { status: CAMPAIGN_STATUSES.EXPIRED },
   );
 
-  if (result) console.log(`Campaign expired: ${_id}`);
-  else console.log(`Campaign not expired: ${_id}`);
+  if (result) {
+    await wobjectModel.updateCampaignsCount({
+      wobjPermlinks: [result.requiredObject, ...result.objects],
+      status: CAMPAIGN_STATUSES.EXPIRED,
+      id: result._id,
+    });
+    console.log(`Campaign expired: ${_id}`);
+  } else console.log(`Campaign not expired: ${_id}`);
 };
 
 /** Listen redis ttl and expire campaigns reservations */

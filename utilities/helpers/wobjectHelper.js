@@ -1,6 +1,6 @@
 const _ = require('lodash');
 const { getNamespace } = require('cls-hooked');
-const { wobjectModel, appModel } = require('models');
+const { wobjectModel, appModel, campaignModel } = require('models');
 const {
   REQUIREDFIELDS_PARENT, MIN_PERCENT_TO_SHOW_UPGATE, FIELDS_NAMES, ARRAY_FIELDS,
   ADMIN_ROLES, categorySwitcher, CAMPAIGN_FIELDS, VOTE_STATUSES, OBJECT_TYPES,
@@ -370,6 +370,24 @@ const getWobjectName = async (permlink) => {
   return { objectName: processedWobj.name || wobject.default_name };
 };
 
+const updateCampaignsCountForManyCampaigns = async (filter, status) => {
+  const { campaigns } = await campaignModel.find(filter);
+  if (_.isEmpty(campaigns)) return;
+  for (const campaign of campaigns) {
+    await wobjectModel.updateCampaignsCount({
+      wobjPermlinks: [campaign.requiredObject, ...campaign.objects],
+      status,
+      id: campaign._id,
+    });
+  }
+};
+
 module.exports = {
-  processWobjects, getWobjects, getWobjectName, getSessionApp, getTopTags, getLinkToPageLoad,
+  updateCampaignsCountForManyCampaigns,
+  getLinkToPageLoad,
+  processWobjects,
+  getWobjectName,
+  getSessionApp,
+  getWobjects,
+  getTopTags,
 };

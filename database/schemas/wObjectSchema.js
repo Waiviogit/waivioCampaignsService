@@ -51,6 +51,8 @@ const WObjectSchema = new Schema({
       type: [Number], // First element - longitude(-180..180), second element - latitude(-90..90)
     }, // [longitude, latitude]
   },
+  activeCampaigns: { type: [mongoose.Types.ObjectId], default: [] },
+  activeCampaignsCount: { type: Number, default: 0 },
 },
 {
   toObject: { virtuals: true }, timestamps: true,
@@ -58,6 +60,7 @@ const WObjectSchema = new Schema({
 
 WObjectSchema.index({ map: '2dsphere' });
 WObjectSchema.index({ weight: -1 });
+WObjectSchema.index({ activeCampaignsCount: -1, weight: -1 });
 
 WObjectSchema.virtual('followers', {
   ref: 'User',
