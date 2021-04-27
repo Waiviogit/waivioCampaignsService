@@ -371,7 +371,7 @@ const getWobjectName = async (permlink) => {
 };
 
 const updateCampaignsCountForManyCampaigns = async (filter, status) => {
-  const { campaigns } = await campaignModel.find(filter);
+  const { campaigns } = await campaignModel.find(filter, '', { objects: 1, requiredObject: 1 });
   if (_.isEmpty(campaigns)) return;
   for (const campaign of campaigns) {
     await wobjectModel.updateCampaignsCount({

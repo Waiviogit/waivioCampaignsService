@@ -40,7 +40,9 @@ const checkForUnblockCampaign = async (guideName) => {
     if (campaign.expired_at < new Date()) status = campaign.deactivation_permlink ? 'unassigned' : 'expired';
     else {
       const completedUsers = _.filter(campaign.users, (user) => user.createdAt > moment.utc().startOf('month').toDate());
-      status = campaign.budget - campaign.reward * completedUsers.length > campaign.reward ? 'active' : 'reachedLimit';
+      status = campaign.budget - campaign.reward * completedUsers.length > campaign.reward
+        ? CAMPAIGN_STATUSES.ACTIVE
+        : CAMPAIGN_STATUSES.REACHED_LIMIT;
     }
     await campaignModel.updateOne({ _id: campaign._id }, { status });
     await wobjectModel.updateCampaignsCount({

@@ -11,7 +11,9 @@ exports.activate = async (campaignId, guideName, permlink) => {
   );
   if (!isValid) return { result: false };
 
-  const { result: campaign } = await campaignModel.findOne({ guideName, status: 'suspended' });
+  const { result: campaign } = await campaignModel.findOne(
+    { guideName, status: CAMPAIGN_STATUSES.SUSPENDED },
+  );
   const status = campaign ? CAMPAIGN_STATUSES.SUSPENDED : CAMPAIGN_STATUSES.ACTIVE;
 
   const { result } = await campaignModel.updateOne(
