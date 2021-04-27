@@ -1,4 +1,4 @@
-const { activeCampaignStatuses } = require('constants/constants');
+const { CAMPAIGN_STATUSES } = require('constants/constants');
 const { Wobject } = require('database').models;
 const _ = require('lodash');
 
@@ -28,7 +28,7 @@ exports.find = async (condition) => {
 
 exports.updateCampaignsCount = async ({ wobjPermlinks = [], status, id }) => {
   try {
-    const updateData = _.includes(activeCampaignStatuses, status)
+    const updateData = status === CAMPAIGN_STATUSES.ACTIVE
       ? { $addToSet: { activeCampaigns: id } }
       : { $pull: { activeCampaigns: id } };
 

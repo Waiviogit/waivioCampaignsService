@@ -4,7 +4,7 @@ const {
 const {
   CampaignFactory, WobjectFactory,
 } = require('test/factories');
-const { CAMPAIGN_STATUSES, activeCampaignStatuses } = require('constants/constants');
+const { CAMPAIGN_STATUSES } = require('constants/constants');
 
 describe('wobject model', async () => {
   describe('On updateCampaignsCount', async () => {
@@ -24,7 +24,7 @@ describe('wobject model', async () => {
         campaign = await CampaignFactory.Create({ requiredObject, objects });
         await wobjectModel.updateCampaignsCount({
           wobjPermlinks: authorPermlinks,
-          status: _.sample(activeCampaignStatuses),
+          status: CAMPAIGN_STATUSES.ACTIVE,
           id: campaign._id,
         });
         wobjects = await Wobject.find({ author_permlink: { $in: authorPermlinks } }).lean();
@@ -50,7 +50,7 @@ describe('wobject model', async () => {
       it('should not increment if campaign same', async () => {
         await wobjectModel.updateCampaignsCount({
           wobjPermlinks: authorPermlinks,
-          status: _.sample(activeCampaignStatuses),
+          status: CAMPAIGN_STATUSES.ACTIVE,
           id: campaign._id,
         });
         wobjects = await Wobject.find({ author_permlink: { $in: authorPermlinks } }).lean();
@@ -63,7 +63,7 @@ describe('wobject model', async () => {
         campaign = await CampaignFactory.Create({ requiredObject, objects });
         await wobjectModel.updateCampaignsCount({
           wobjPermlinks: authorPermlinks,
-          status: _.sample(activeCampaignStatuses),
+          status: CAMPAIGN_STATUSES.ACTIVE,
           id: campaign._id,
         });
         wobjects = await Wobject.find({ author_permlink: { $in: authorPermlinks } }).lean();
@@ -74,8 +74,8 @@ describe('wobject model', async () => {
     });
     describe('On inactive statuses', async () => {
       let randomCampaign, campaignsArr;
-      const inactiveStatuses = _.difference(
-        Object.values(CAMPAIGN_STATUSES), activeCampaignStatuses,
+      const inactiveStatuses = _.filter(
+        Object.values(CAMPAIGN_STATUSES), (el) => !_.isEqual(el, CAMPAIGN_STATUSES.ACTIVE),
       );
       beforeEach(async () => {
         await dropDatabase();
@@ -88,7 +88,7 @@ describe('wobject model', async () => {
           );
           await wobjectModel.updateCampaignsCount({
             wobjPermlinks: [requiredObject],
-            status: _.sample(activeCampaignStatuses),
+            status: CAMPAIGN_STATUSES.ACTIVE,
             id: campaign._id,
           });
           campaignsArr.push(campaign._id);
