@@ -12,7 +12,6 @@ exports.getWalletData = async (name, limit, marker, types, endDate, startDate, t
   const endDateTimestamp = moment.utc(endDate).valueOf();
 
   do {
-    if (lastId === 0) break;
     ({ result, error } = await hiveRequests.getAccountHistory(
       name, lastId, lastId === -1 ? batchSize : (lastId < batchSize ? lastId : batchSize),
     ));
@@ -38,6 +37,7 @@ exports.getWalletData = async (name, limit, marker, types, endDate, startDate, t
         walletOperations.push(record);
       }
     }
+    if (lastId === 1) breakFlag = true;
     if (breakFlag) break;
   } while (walletOperations.length <= limit || batchSize === result.length - 1);
   const hivePriceArr = await this.getHiveCurrencyHistory(walletOperations);
@@ -45,11 +45,11 @@ exports.getWalletData = async (name, limit, marker, types, endDate, startDate, t
   return formatHiveHistory(walletOperations, hivePriceArr);
 };
 
-exports.getHiveCurrencyHistory = async (walletOperations) => {
+exports.getHiveCurrencyHistory = async (walletOperations, path = '[1].timestamp') => {
   let includeToday = false;
   const orCondition = _
     .chain(walletOperations)
-    .map((el) => _.get(el, '[1].timestamp', null))
+    .map((el) => _.get(el, path, null))
     .uniq()
     .reduce((acc, el) => {
       if (moment(el).isSame(Date.now(), 'day')) includeToday = true;
