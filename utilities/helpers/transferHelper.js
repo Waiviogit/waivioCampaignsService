@@ -3,7 +3,8 @@ const moment = require('moment');
 const config = require('config');
 const { MIN_DEBT_TO_SUSPENDED, MIN_TO_PAYED_VALUE } = require('constants/appData');
 const getPayableHistory = require('utilities/operations/paymentHistory/getPayableHistory');
-const { paymentHistoryModel, campaignModel } = require('models');
+const { paymentHistoryModel, campaignModel, wobjectModel } = require('models');
+const { CAMPAIGN_STATUSES } = require('constants/constants');
 
 /** Private methods */
 
@@ -32,15 +33,23 @@ const checkForUnblockCampaign = async (guideName) => {
   }
 
   if (!unblock) return;
-  const { campaigns } = await campaignModel.find({ guideName, status: 'suspended' });
+  const { campaigns } = await campaignModel
+    .find({ guideName, status: CAMPAIGN_STATUSES.SUSPENDED });
   for (const campaign of campaigns) {
     let status;
     if (campaign.expired_at < new Date()) status = campaign.deactivation_permlink ? 'unassigned' : 'expired';
     else {
       const completedUsers = _.filter(campaign.users, (user) => user.createdAt > moment.utc().startOf('month').toDate());
-      status = campaign.budget - campaign.reward * completedUsers.length > campaign.reward ? 'active' : 'reachedLimit';
+      status = campaign.budget - campaign.reward * completedUsers.length > campaign.reward
+        ? CAMPAIGN_STATUSES.ACTIVE
+        : CAMPAIGN_STATUSES.REACHED_LIMIT;
     }
     await campaignModel.updateOne({ _id: campaign._id }, { status });
+    await wobjectModel.updateCampaignsCount({
+      wobjPermlinks: [campaign.requiredObject, ...campaign.objects],
+      status,
+      id: campaign._id,
+    });
   }
 };
 
