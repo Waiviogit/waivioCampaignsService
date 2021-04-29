@@ -388,7 +388,7 @@ exports.processCampaignsByWobject = async ({
   }
 
   return _.reduce(resultArray, (acc, el) => {
-    el.requiredObject === wobject.author.permlink
+    el.requiredObject === wobject.author_permlink
       ? acc.campaigns.push(el)
       : acc.propositions.push(el);
     return acc;

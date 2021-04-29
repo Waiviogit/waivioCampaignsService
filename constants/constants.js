@@ -152,6 +152,7 @@ const CAMPAIGN_FIELDS_FOR_CARDS = [
   'activation_permlink',
   'userRequirements',
   'frequency_assign',
+  'requiredObject',
   'requirements',
   'description',
   'expired_at',
