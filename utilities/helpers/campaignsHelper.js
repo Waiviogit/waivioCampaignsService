@@ -382,7 +382,7 @@ exports.processCampaignsByWobject = async ({
     campaign.object = object;
     campaign.guide = await getGuideInfo(campaign.guideName, users, currentUser);
     campaign.requirement_filters = await getRequirementFilters(campaign, currentUser);
-    if (_.every(Object.values(campaign.requirement_filters))) {
+    if (!currentUser || _.every(Object.values(campaign.requirement_filters))) {
       resultArray.push(_.pick(campaign, CAMPAIGN_FIELDS_FOR_CARDS));
     }
   }
