@@ -9,6 +9,75 @@
   },
   "basePath": "/campaigns-api",
   "paths": {
+    "/campaigns/wobject": {
+      "get": {
+        "tags": [
+          "Campaign"
+        ],
+        "produces": [
+          "application/json"
+        ],
+        "description": "campaigns by wobject author_permlink",
+        "parameters": [
+          {
+            "name": "userName",
+            "in": "query",
+            "type": "string",
+            "required": false
+          },
+          {
+            "name": "authorPermlink",
+            "in": "query",
+            "type": "string",
+            "required": true
+          },
+          {
+            "name": "locale",
+            "in": "header",
+            "type": "string",
+            "required": true
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "successful operation",
+            "schema": {
+              "type": "object",
+              "properties": {
+                "campaigns": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/definitions/campaignsByWobject"
+                  }
+                },
+                "propositions": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/definitions/campaignsByWobject"
+                  }
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Not found",
+            "schema": {
+              "type": "object",
+              "example": {
+                "success": false,
+                "message": "Not Found"
+              }
+            }
+          },
+          "422": {
+            "description": "Error",
+            "schema": {
+              "$ref": "#/definitions/validationError"
+            }
+          }
+        }
+      }
+    },
     "/campaigns/reserved": {
       "post": {
         "tags": [
@@ -2374,6 +2443,131 @@
     }
   },
   "definitions": {
+    "campaignsByWobject": {
+      "type": "object",
+      "properties": {
+        "reservation_timetable" : {
+          "type": "object",
+          "$ref": "#/definitions/reservation_timetable"
+        },
+        "activation_permlink": {
+          "type": "string"
+        },
+        "userRequirements": {
+          "type": "object",
+          "$ref": "#/definitions/userRequirements"
+        },
+        "frequency_assign": {
+          "type": "number"
+        },
+        "requirements": {
+          "type": "object",
+          "$ref": "#/definitions/requirements"
+        },
+        "description": {
+          "type": "string"
+        },
+        "expired_at": {
+          "type": "string"
+        },
+        "updatedAt": {
+          "type": "string"
+        },
+        "createdAt": {
+          "type": "string"
+        },
+        "reward": {
+          "type": "number"
+        },
+        "object": {
+          "type": "object"
+        },
+        "status": {
+          "type": "string"
+        },
+        "guide": {
+          "type": "object",
+          "$ref": "#/definitions/guide"
+        },
+        "name": {
+          "type": "string"
+        }
+      }
+    },
+    "requirements" : {
+      "type": "object",
+      "properties": {
+        "receiptPhoto": {
+          "type": "boolean"
+        },
+        "minPhotos": {
+          "type": "number"
+        }
+      }
+    },
+    "userRequirements": {
+      "type": "object",
+      "properties": {
+        "minPosts": {
+          "type": "number"
+        },
+        "minFollowers": {
+          "type": "number"
+        },
+        "userRequirements": {
+          "type": "number"
+        }
+      }
+    },
+    "reservation_timetable": {
+      "type": "object",
+      "properties": {
+        "monday": {
+          "type": "boolean"
+        },
+        "tuesday": {
+          "type": "boolean"
+        },
+        "wednesday": {
+          "type": "boolean"
+        },
+        "thursday": {
+          "type": "boolean"
+        },
+        "friday": {
+          "type": "boolean"
+        },
+        "saturday": {
+          "type": "boolean"
+        },
+        "sunday": {
+          "type": "boolean"
+        }
+      }
+    },
+    "guide": {
+      "type": "object",
+      "properties": {
+        "youFollows": {
+          "type": "boolean"
+        },
+        "totalPayed": {
+          "type": "number"
+        },
+        "liquidHivePercent": {
+          "type": "number"
+        },
+        "name": {
+          "type": "string"
+        },
+        "wobjects_weight": {
+          "type": "number"
+        },
+        "alias": {
+          "type": "string"
+        }
+      }
+    },
     "blackListStatus": {
       "type": "object",
       "example": {
