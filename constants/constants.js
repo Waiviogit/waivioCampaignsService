@@ -147,6 +147,23 @@ const DEVICE = {
 
 const DAYS_TO_PAYABLE_WARNING = 21;
 
+const CAMPAIGN_FIELDS_FOR_CARDS = [
+  'reservation_timetable',
+  'activation_permlink',
+  'userRequirements',
+  'frequency_assign',
+  'requirements',
+  'description',
+  'expired_at',
+  'updatedAt',
+  'createdAt',
+  'reward',
+  'object',
+  'status',
+  'guide',
+  'name',
+];
+
 module.exports = {
   SORT_TYPES,
   REFERRAL_TYPES,
@@ -178,4 +195,5 @@ module.exports = {
   DEVICE,
   REVIEW_TYPES,
   DAYS_TO_PAYABLE_WARNING,
+  CAMPAIGN_FIELDS_FOR_CARDS,
 };

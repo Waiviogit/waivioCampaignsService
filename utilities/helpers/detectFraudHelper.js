@@ -10,7 +10,7 @@ const { processWobjects } = require('utilities/helpers/wobjectHelper');
 
 exports.getMap = async (permlink = '') => {
   let map = {};
-  const { result } = await wobjectModel.findOne(permlink);
+  const { result } = await wobjectModel.findOne({ author_permlink: permlink });
   if (!result) return { map };
 
   const session = getNamespace('request-session');

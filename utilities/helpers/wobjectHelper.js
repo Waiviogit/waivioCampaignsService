@@ -359,7 +359,7 @@ const getWobjects = async ({
 };
 
 const getWobjectName = async (permlink) => {
-  const { result: wobject } = await wobjectModel.findOne(permlink);
+  const { result: wobject } = await wobjectModel.findOne({ author_permlink: permlink });
   const app = await getSessionApp();
   const processedWobj = await processWobjects({
     wobjects: [wobject],

@@ -10,9 +10,9 @@ exports.aggregate = async (pipeline) => {
   }
 };
 
-exports.findOne = async (authorPermlink) => {
+exports.findOne = async (condition, select = {}) => {
   try {
-    return { result: await Wobject.findOne({ author_permlink: authorPermlink }).lean() };
+    return { result: await Wobject.findOne(condition, select).lean() };
   } catch (error) {
     return { error };
   }

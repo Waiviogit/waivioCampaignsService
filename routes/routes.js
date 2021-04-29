@@ -30,6 +30,7 @@ campaignsRoutes.route('/campaigns/reserved').post(campaignsController.reservedCa
 campaignsRoutes.route('/campaigns/:guideName/blacklist').get(blackListsController.show);
 campaignsRoutes.route('/campaigns/:campaign_id').delete(campaignsController.destroy);
 campaignsRoutes.route('/campaigns/all').post(campaignsController.allCampaigns);
+campaignsRoutes.route('/campaigns/wobject').get(campaignsController.getWobjectCampaigns);
 campaignsRoutes.route('/campaigns/history').post(campaignsController.history);
 
 campaignsRoutes.route('/campaign/review-check/:campaignId').get(campaignsController.checkReview);
