@@ -1,5 +1,6 @@
 module.exports = {
   getReservedCampaignsCount: require('./getReservedCampaignsCount'),
+  getCampaignsByWobject: require('./getCampaignsByWobject'),
   getEligibleCampaigns: require('./getEligibleCampaigns'),
   getReservedCampaigns: require('./getReservedCampigns'),
   getDataForFirstLoad: require('./getDataForFirstLoad'),
