@@ -173,3 +173,9 @@ exports.validateCheckReviewSchema = Joi.object().keys({
 exports.reservedCountSchema = Joi.object().keys({
   userName: Joi.string().required(),
 }).options(options);
+
+exports.campaignsByWobjectSchema = Joi.object().keys({
+  authorPermlink: Joi.string().required(),
+  userName: Joi.string().default(''),
+  locale: Joi.string().default('en-US'),
+}).options(options);

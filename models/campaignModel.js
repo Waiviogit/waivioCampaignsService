@@ -51,9 +51,9 @@ exports.findSponsors = async (matchData) => {
   }
 };
 
-exports.find = async (matchData, sort) => {
+exports.find = async (matchData, sort, select = {}) => {
   try {
-    return { campaigns: await Campaign.find(matchData).sort(sort).lean() };
+    return { campaigns: await Campaign.find(matchData, select).sort(sort).lean() };
   } catch (error) {
     return { error };
   }

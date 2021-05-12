@@ -1,11 +1,12 @@
 const _ = require('lodash');
-const { Campaign, PaymentHistory } = require('database').models;
+const { PaymentHistory } = require('database').models;
 const { campaignModel } = require('models');
 const { redisSetter } = require('utilities/redis');
 const notificationsRequest = require('utilities/requests/notificationsRequest');
 const { SUSPENDED_WARNING } = require('constants/ttlData');
 const { PAYMENT_HISTORIES_TYPES, CAMPAIGN_STATUSES } = require('constants/constants');
 const { MIN_DEBT_TO_SUSPENDED } = require('constants/appData');
+const wobjectHelper = require('utilities/helpers/wobjectHelper');
 
 exports.suspendedWarning = async (permlink, days) => {
   const payments = await PaymentHistory.find({ 'details.reservation_permlink': permlink }).lean();
@@ -46,7 +47,12 @@ exports.expireDebtStatus = async (id) => {
     payment.sponsor, payment.userName, payment.createdAt,
   );
   if (debtsAmount - paymentsAmount < MIN_DEBT_TO_SUSPENDED) return;
-  await Campaign.updateMany({ guideName: payment.sponsor }, { status: CAMPAIGN_STATUSES.SUSPENDED });
+  await campaignModel.updateMany(
+    { guideName: payment.sponsor }, { status: CAMPAIGN_STATUSES.SUSPENDED },
+  );
+  await wobjectHelper.updateCampaignsCountForManyCampaigns(
+    { guideName: payment.sponsor }, CAMPAIGN_STATUSES.SUSPENDED,
+  );
 };
 
 const getPaymentsAmounts = async (sponsor, userName, createdAt) => {

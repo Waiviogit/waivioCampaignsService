@@ -9,6 +9,7 @@ const {
 } = require('concerns/renderConcern');
 const {
   getReservedCampaignsCount,
+  getCampaignsByWobject,
   getEligibleCampaigns,
   getReservedCampaigns,
   getDataForFirstLoad,
@@ -273,6 +274,18 @@ const checkReview = async (req, res) => {
   renderSuccess(res, { campaign });
 };
 
+const getWobjectCampaigns = async (req, res) => {
+  const { params, validationError } = validators.validate(
+    { ...req.query, locale: req.headers.locale }, validators.campaigns.campaignsByWobjectSchema,
+  );
+  if (validationError) return renderError(res, validationError);
+
+  const { campaigns, propositions, error } = await getCampaignsByWobject(params);
+
+  if (error) return renderCustomError(res, error);
+  renderSuccess(res, { campaigns, propositions });
+};
+
 module.exports = {
   validateRejectAssignCampaign,
   validateActivationCampaign,
@@ -280,6 +293,7 @@ module.exports = {
   validateAssignCampaign,
   getCampaignsStatistic,
   validateStopCampaign,
+  getWobjectCampaigns,
   campaignsDashboard,
   eligibleCampaigns,
   reservedCampaigns,

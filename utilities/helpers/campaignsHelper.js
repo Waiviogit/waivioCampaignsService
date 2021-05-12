@@ -1,11 +1,14 @@
 const _ = require('lodash');
 const moment = require('moment');
 const {
-  campaignModel, userModel, paymentHistoryModel, Subscriptions, wobjectSubscriptions,
+  campaignModel, userModel, paymentHistoryModel, Subscriptions, wobjectSubscriptions, appModel,
 } = require('models');
 const {
-  maxMapRadius, minCountMapCampaigns, PAYMENT_HISTORIES_TYPES, CAMPAIGN_STATUSES, RESERVATION_STATUSES,
+  maxMapRadius, minCountMapCampaigns, PAYMENT_HISTORIES_TYPES,
+  CAMPAIGN_STATUSES, RESERVATION_STATUSES, CAMPAIGN_FIELDS_FOR_CARDS,
 } = require('constants/constants');
+const { CAMPAIGN_FIELDS } = require('constants/wobjectsData');
+const { getNamespace } = require('cls-hooked');
 const blackListHelper = require('./blackListHelper');
 const wobjectHelper = require('./wobjectHelper');
 
@@ -362,4 +365,32 @@ exports.checkOnHoldStatus = async (permlink) => {
   if (_.isEmpty(hasAssignedUsers)) {
     await campaignModel.updateOne({ _id: campaign._id }, { status: CAMPAIGN_STATUSES.INACTIVE });
   }
+};
+
+exports.processCampaignsByWobject = async ({
+  campaigns, wobject, userName, locale,
+}) => {
+  const resultArray = [];
+  const { result: app } = await appModel.findOne(getNamespace('request-session').get('host'));
+  const object = await wobjectHelper.processWobjects({
+    wobjects: [wobject], fields: CAMPAIGN_FIELDS, app, returnArray: false, locale,
+  });
+  const { users } = await userModel.findByNames(_.concat(_.map(campaigns, 'guideName'), userName));
+  const currentUser = _.find(users, (user) => user.name === userName);
+
+  for (const campaign of campaigns) {
+    campaign.object = object;
+    campaign.guide = await getGuideInfo(campaign.guideName, users, currentUser);
+    campaign.requirement_filters = await getRequirementFilters(campaign, currentUser);
+    if (!currentUser || _.every(Object.values(campaign.requirement_filters))) {
+      resultArray.push(_.pick(campaign, CAMPAIGN_FIELDS_FOR_CARDS));
+    }
+  }
+
+  return _.reduce(resultArray, (acc, el) => {
+    el.requiredObject === wobject.author_permlink
+      ? acc.campaigns.push(el)
+      : acc.propositions.push(el);
+    return acc;
+  }, { campaigns: [], propositions: [] });
 };
