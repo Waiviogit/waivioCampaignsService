@@ -43,7 +43,9 @@ exports.getWalletData = async (name, limit, marker, types, endDate, startDate, t
   } while (walletOperations.length <= limit || batchSize === result.length - 1);
   const hivePriceArr = await this.getHiveCurrencyHistory(walletOperations);
 
-  return formatHiveHistory(walletOperations, hivePriceArr, tableView);
+  return formatHiveHistory({
+    walletOperations, hivePriceArr, tableView, name,
+  });
 };
 
 exports.getHiveCurrencyHistory = async (walletOperations, path = '[1].timestamp') => {
@@ -73,7 +75,9 @@ exports.getHiveCurrencyHistory = async (walletOperations, path = '[1].timestamp'
   return result;
 };
 
-const formatHiveHistory = (histories, hivePriceArr, tableView) => _.map(histories, (history) => {
+const formatHiveHistory = ({
+  walletOperations, hivePriceArr, tableView, name,
+}) => _.map(walletOperations, (history) => {
   const omitFromOperation = ['op', 'block', 'op_in_trx', 'trx_in_block', 'virtual_op', 'trx_id'];
   const price = _.find(hivePriceArr, (el) => moment(el.createdAt).isSame(moment(history[1].timestamp), 'day'));
   const operation = {
@@ -82,12 +86,31 @@ const formatHiveHistory = (histories, hivePriceArr, tableView) => _.map(historie
     hiveUSD: parseFloat(_.get(price, 'hive.usd', '0')),
     hbdUSD: parseFloat(_.get(price, 'hive_dollar.usd', '0')),
     operationNum: history[0],
+    withdrawDeposit: withdrawDeposit(history[1].op[0], history[1].op[1], name),
     ...history[1].op[1],
   };
 
   if (tableView && _.includes(SAVINGS_TRANSFERS, operation.type)) omitFromOperation.push('amount');
   return _.omit(operation, omitFromOperation);
 });
+
+const withdrawDeposit = (type, op, name) => {
+  if (type === 'transfer') {
+    return op.to === name ? 'd' : 'w';
+  }
+  const data = {
+    transfer_to_vesting: 'd',
+    claim_reward_balance: 'd',
+    transfer_to_savings: '',
+    transfer_from_savings: '',
+    limit_order_cancel: '',
+    limit_order_create: '',
+    fill_order: '',
+    proposal_pay: 'w',
+  };
+  return data[type];
+};
+// #TODO add same to guests
 
 exports.getTransfersHistory = async (hiveHistory) => {
   for (const order of hiveHistory) {
