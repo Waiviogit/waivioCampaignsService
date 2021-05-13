@@ -98,7 +98,7 @@ const withdrawDeposit = (type, op, name) => {
   if (type === 'transfer') {
     return op.to === name ? 'd' : 'w';
   }
-  const data = {
+  const result = {
     transfer_to_vesting: 'd',
     claim_reward_balance: 'd',
     transfer_to_savings: '',
@@ -108,7 +108,7 @@ const withdrawDeposit = (type, op, name) => {
     fill_order: '',
     proposal_pay: 'w',
   };
-  return data[type];
+  return result[type] || '';
 };
 // #TODO add same to guests
 
