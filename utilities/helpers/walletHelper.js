@@ -1,5 +1,6 @@
 const { internalExchangeModel, currenciesStatiscticModel } = require('models');
 const { hiveRequests, currencyRequest } = require('utilities/requests');
+const { SAVINGS_TRANSFERS } = require('constants/walletData');
 const moment = require('moment');
 const _ = require('lodash');
 
@@ -42,7 +43,7 @@ exports.getWalletData = async (name, limit, marker, types, endDate, startDate, t
   } while (walletOperations.length <= limit || batchSize === result.length - 1);
   const hivePriceArr = await this.getHiveCurrencyHistory(walletOperations);
 
-  return formatHiveHistory(walletOperations, hivePriceArr);
+  return formatHiveHistory(walletOperations, hivePriceArr, tableView);
 };
 
 exports.getHiveCurrencyHistory = async (walletOperations, path = '[1].timestamp') => {
@@ -72,16 +73,20 @@ exports.getHiveCurrencyHistory = async (walletOperations, path = '[1].timestamp'
   return result;
 };
 
-const formatHiveHistory = (histories, hivePriceArr) => _.map(histories, (history) => {
+const formatHiveHistory = (histories, hivePriceArr, tableView) => _.map(histories, (history) => {
+  const omitFromOperation = ['op', 'block', 'op_in_trx', 'trx_in_block', 'virtual_op', 'trx_id'];
   const price = _.find(hivePriceArr, (el) => moment(el.createdAt).isSame(moment(history[1].timestamp), 'day'));
-  history[1].timestamp = Math.round(moment.utc(history[1].timestamp).valueOf() / 1000);
-  // eslint-disable-next-line prefer-destructuring
-  history[1].type = history[1].op[0];
-  history[1].hiveUSD = parseFloat(_.get(price, 'hive.usd', '0'));
-  history[1].hbdUSD = parseFloat(_.get(price, 'hive_dollar.usd', '0'));
-  [history[1].operationNum] = history;
-  history[1] = Object.assign(history[1], history[1].op[1]);
-  return _.omit(history[1], ['op', 'block', 'op_in_trx', 'trx_in_block', 'virtual_op', 'trx_id']);
+  const operation = {
+    type: history[1].op[0],
+    timestamp: moment(history[1].timestamp).unix(),
+    hiveUSD: parseFloat(_.get(price, 'hive.usd', '0')),
+    hbdUSD: parseFloat(_.get(price, 'hive_dollar.usd', '0')),
+    operationNum: history[0],
+    ...history[1].op[1],
+  };
+
+  if (tableView && _.includes(SAVINGS_TRANSFERS, operation.type)) omitFromOperation.push('amount');
+  return _.omit(operation, omitFromOperation);
 });
 
 exports.getTransfersHistory = async (hiveHistory) => {
