@@ -75,41 +75,6 @@ exports.getHiveCurrencyHistory = async (walletOperations, path = '[1].timestamp'
   return result;
 };
 
-const formatHiveHistory = ({
-  walletOperations, hivePriceArr, tableView, name,
-}) => _.map(walletOperations, (history) => {
-  const omitFromOperation = ['op', 'block', 'op_in_trx', 'trx_in_block', 'virtual_op', 'trx_id'];
-  const price = _.find(hivePriceArr, (el) => moment(el.createdAt).isSame(moment(history[1].timestamp), 'day'));
-  const operation = {
-    type: history[1].op[0],
-    timestamp: moment(history[1].timestamp).unix(),
-    hiveUSD: parseFloat(_.get(price, 'hive.usd', '0')),
-    hbdUSD: parseFloat(_.get(price, 'hive_dollar.usd', '0')),
-    operationNum: history[0],
-    withdrawDeposit: withdrawDeposit(history[1].op[0], history[1].op[1], name),
-    ...history[1].op[1],
-  };
-
-  if (tableView && _.includes(SAVINGS_TRANSFERS, operation.type)) omitFromOperation.push('amount');
-  return _.omit(operation, omitFromOperation);
-});
-
-const withdrawDeposit = (type, op, name) => {
-  const result = {
-    transfer: op.to === name ? 'd' : 'w',
-    transfer_to_vesting: 'd',
-    claim_reward_balance: 'd',
-    transfer_to_savings: '',
-    transfer_from_savings: '',
-    limit_order_cancel: '',
-    limit_order_create: '',
-    fill_order: '',
-    proposal_pay: 'w',
-  };
-  return result[type] || '';
-};
-// #TODO add same to guests
-
 exports.getTransfersHistory = async (hiveHistory) => {
   for (const order of hiveHistory) {
     if (order.type === 'limit_order_cancel') {
@@ -143,3 +108,41 @@ exports.getTransfersHistory = async (hiveHistory) => {
   }
   return _.orderBy(hiveHistory, ['timestamp', 'type'], ['desc']);
 };
+
+exports.withdrawDeposit = (type, op, name) => {
+  const result = {
+    transfer: _.get(op, 'to') === name ? 'd' : 'w',
+    transfer_to_vesting: 'd',
+    claim_reward_balance: 'd',
+    transfer_to_savings: '',
+    transfer_from_savings: '',
+    limit_order_cancel: '',
+    limit_order_create: '',
+    fill_order: '',
+    proposal_pay: 'w',
+    demo_user_transfer: 'w',
+    user_to_guest_transfer: 'd',
+    demo_post: 'd',
+    demo_debt: 'd',
+  };
+  return result[type] || '';
+};
+
+const formatHiveHistory = ({
+  walletOperations, hivePriceArr, tableView, name,
+}) => _.map(walletOperations, (history) => {
+  const omitFromOperation = ['op', 'block', 'op_in_trx', 'trx_in_block', 'virtual_op', 'trx_id'];
+  const price = _.find(hivePriceArr, (el) => moment(el.createdAt).isSame(moment(history[1].timestamp), 'day'));
+  const operation = {
+    type: history[1].op[0],
+    timestamp: moment(history[1].timestamp).unix(),
+    hiveUSD: parseFloat(_.get(price, 'hive.usd', '0')),
+    hbdUSD: parseFloat(_.get(price, 'hive_dollar.usd', '0')),
+    operationNum: history[0],
+    withdrawDeposit: this.withdrawDeposit(history[1].op[0], history[1].op[1], name),
+    ...history[1].op[1],
+  };
+
+  if (tableView && _.includes(SAVINGS_TRANSFERS, operation.type)) omitFromOperation.push('amount');
+  return _.omit(operation, omitFromOperation);
+});

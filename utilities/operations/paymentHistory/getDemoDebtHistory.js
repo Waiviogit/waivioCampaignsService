@@ -24,6 +24,7 @@ module.exports = async ({
   if (error) return { error };
 
   _.map(histories, (history) => {
+    history.withdrawDeposit = walletHelper.withdrawDeposit(history.type);
     if (_.get(history, 'details.transactionId')) return;
     switch (history.type) {
       case 'user_to_guest_transfer':
