@@ -1,20 +1,24 @@
 const { internalExchangeModel, currenciesStatiscticModel } = require('models');
 const { hiveRequests, currencyRequest } = require('utilities/requests');
-const { SAVINGS_TRANSFERS } = require('constants/walletData');
+const { SAVINGS_TRANSFERS, WALLET_TYPES } = require('constants/walletData');
+const { PAYMENT_HISTORIES_TYPES } = require('constants/constants');
+const jsonHelper = require('utilities/helpers/jsonHelper');
 const moment = require('moment');
 const _ = require('lodash');
 
-exports.getWalletData = async (name, limit, marker, types, endDate, startDate, tableView) => {
+exports.getWalletData = async ({
+  userName, limit, operationNum, types, endDate, startDate, tableView, filterAccounts,
+}) => {
   let result, error;
   const batchSize = 1000;
-  let lastId = marker || -1;
+  let lastId = operationNum || -1;
   const walletOperations = [];
   const startDateTimestamp = moment.utc(startDate).valueOf();
   const endDateTimestamp = moment.utc(endDate).valueOf();
 
   do {
     ({ result, error } = await hiveRequests.getAccountHistory(
-      name, lastId, lastId === -1 ? batchSize : (lastId < batchSize ? lastId : batchSize),
+      userName, lastId, lastId === -1 ? batchSize : (lastId < batchSize ? lastId : batchSize),
     ));
     let breakFlag = false;
     if (error) return [];
@@ -35,6 +39,7 @@ exports.getWalletData = async (name, limit, marker, types, endDate, startDate, t
           break;
         }
         if (tableView && endDateTimestamp < recordTimestamp) continue;
+        if (tableView && multiAccountFilter({ record: record[1].op, filterAccounts })) continue;
         walletOperations.push(record);
       }
     }
@@ -44,7 +49,7 @@ exports.getWalletData = async (name, limit, marker, types, endDate, startDate, t
   const hivePriceArr = await this.getHiveCurrencyHistory(walletOperations);
 
   return formatHiveHistory({
-    walletOperations, hivePriceArr, tableView, name,
+    walletOperations, hivePriceArr, tableView, userName,
   });
 };
 
@@ -109,9 +114,9 @@ exports.getTransfersHistory = async (hiveHistory) => {
   return _.orderBy(hiveHistory, ['timestamp', 'type'], ['desc']);
 };
 
-exports.withdrawDeposit = (type, op, name) => {
+exports.withdrawDeposit = (type, op, userName) => {
   const result = {
-    transfer: _.get(op, 'to') === name ? 'd' : 'w',
+    transfer: _.get(op, 'to') === userName ? 'd' : 'w',
     transfer_to_vesting: 'd',
     claim_reward_balance: 'd',
     transfer_to_savings: '',
@@ -129,7 +134,7 @@ exports.withdrawDeposit = (type, op, name) => {
 };
 
 const formatHiveHistory = ({
-  walletOperations, hivePriceArr, tableView, name,
+  walletOperations, hivePriceArr, tableView, userName,
 }) => _.map(walletOperations, (history) => {
   const omitFromOperation = ['op', 'block', 'op_in_trx', 'trx_in_block', 'virtual_op', 'trx_id'];
   const price = _.find(hivePriceArr, (el) => moment(el.createdAt).isSame(moment(history[1].timestamp), 'day'));
@@ -139,10 +144,22 @@ const formatHiveHistory = ({
     hiveUSD: parseFloat(_.get(price, 'hive.usd', '0')),
     hbdUSD: parseFloat(_.get(price, 'hive_dollar.usd', '0')),
     operationNum: history[0],
-    withdrawDeposit: this.withdrawDeposit(history[1].op[0], history[1].op[1], name),
+    withdrawDeposit: this.withdrawDeposit(history[1].op[0], history[1].op[1], userName),
     ...history[1].op[1],
   };
 
   if (tableView && _.includes(SAVINGS_TRANSFERS, operation.type)) omitFromOperation.push('amount');
   return _.omit(operation, omitFromOperation);
 });
+
+const multiAccountFilter = ({ record, filterAccounts }) => {
+  const [type, operation] = record;
+  if (type !== WALLET_TYPES.TRANSFER) return false;
+
+  if (operation.to === process.env.WALLET_ACC_NAME) {
+    const memo = jsonHelper.parseJson(operation.memo);
+    return memo.id === PAYMENT_HISTORIES_TYPES.USER_TO_GUEST_TRANSFER
+      && _.includes(filterAccounts, memo.to);
+  }
+  return _.includes(filterAccounts, operation.to);
+};

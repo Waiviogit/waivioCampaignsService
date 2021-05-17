@@ -3,11 +3,11 @@ const walletHelper = require('utilities/helpers/walletHelper');
 const { INTERNAL_OPERATIONS } = require('constants/constants');
 
 module.exports = async ({
-  userName, limit, operationNum, types, endDate, startDate, tableView,
+  userName, limit, operationNum, types, endDate, startDate, tableView, filterAccounts,
 }) => {
-  const wallet = await walletHelper.getWalletData(
-    userName, limit + 1, operationNum, types, endDate, startDate, tableView,
-  );
+  const wallet = await walletHelper.getWalletData({
+    userName, limit: limit + 1, operationNum, types, endDate, startDate, tableView, filterAccounts,
+  });
 
   const transfersHistory = _.includes(types, INTERNAL_OPERATIONS)
     ? await walletHelper.getTransfersHistory(wallet)
