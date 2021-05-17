@@ -123,7 +123,7 @@ exports.campaignsSchema = Joi.object().keys({
   update: Joi.boolean().default(false),
   limit: Joi.number().default(10),
   userName: Joi.string(),
-  sort: Joi.string().valid('reward', 'date', 'proximity').default('reward'),
+  sort: Joi.string().valid('reward', 'date', 'proximity', 'payout').default('reward'),
   requiredObject: Joi.string(),
   primaryObject: Joi.string(),
   radius: Joi.number().min(0),

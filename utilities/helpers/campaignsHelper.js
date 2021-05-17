@@ -20,6 +20,8 @@ const sortPrimaryCampaigns = (campaigns, sort) => {
       return _.sortBy(campaigns, (campaign) => campaign.distance);
     case 'reward':
       return _.orderBy(campaigns, ['max_reward', 'last_created'], ['desc']);
+    case 'payout':
+      return _.orderBy(campaigns, ['payout'], ['desc']);
   }
 };
 
@@ -235,6 +237,7 @@ exports.getPrimaryCampaigns = async ({
       distance: area && coordinates.length === 2 ? getDistance(area, coordinates) : null,
       count: groupedCampaigns[key].length,
       required_object: requiredObject,
+      payout: _.sumBy(groupedCampaigns[key], (campaign) => (campaign.status !== 'rejected' ? campaign.payout : 0)),
     });
   }));
   campaigns = sortPrimaryCampaigns(campaigns, firstMapLoad ? 'proximity' : sort);
@@ -284,6 +287,7 @@ exports.getSecondaryCampaigns = async ({
       campaign.required_object.followsObject = wobjectsFollow
         .includes(campaign.requiredObject);
     }
+    campaign.payout = _.round((campaign.reward * campaign.commissionAgreement), 3);
     const objStatus = _.get(campaign, 'required_object.status.title', null);
 
     if (!reserved && (objStatus === 'unavailable'
@@ -299,6 +303,7 @@ exports.getSecondaryCampaigns = async ({
   // campaigns = sortPrimaryCampaigns(campaigns, sort);
   if (sort === 'reward') campaigns = _.orderBy(campaigns, ['reward'], ['desc']);
   if (sort === 'date') campaigns = _.orderBy(campaigns, ['expired_at'], ['desc']);
+  if (sort === 'payout') campaigns = _.orderBy(campaigns, ['payout'], ['desc']);
 
   const eligibleCampaigns = guideNames ? _.filter(campaigns,
     (campaign) => _.includes(guideNames, campaign.guideName)) : campaigns;
