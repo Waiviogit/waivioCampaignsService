@@ -287,7 +287,13 @@ exports.getSecondaryCampaigns = async ({
       campaign.required_object.followsObject = wobjectsFollow
         .includes(campaign.requiredObject);
     }
-    campaign.payout = _.round((campaign.reward * campaign.commissionAgreement), 3);
+
+    const amountReward = _.sumBy(campaign.payments, (payment) => (payment.status !== 'rejected' ? 1 : 0)) * campaign.reward;
+    if (amountReward > 0) {
+      campaign.payout = _.round(amountReward * campaign.commissionAgreement, 3);
+    } else {
+      campaign.payout = _.round((campaign.reward * campaign.commissionAgreement), 3);
+    }
     const objStatus = _.get(campaign, 'required_object.status.title', null);
 
     if (!reserved && (objStatus === 'unavailable'
