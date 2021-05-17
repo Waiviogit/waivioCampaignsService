@@ -1,8 +1,9 @@
 const { internalExchangeModel, currenciesStatiscticModel } = require('models');
 const { hiveRequests, currencyRequest } = require('utilities/requests');
-const { SAVINGS_TRANSFERS, WALLET_TYPES } = require('constants/walletData');
+const { SAVINGS_TRANSFERS, WALLET_TYPES, CURRENCIES } = require('constants/walletData');
 const { PAYMENT_HISTORIES_TYPES } = require('constants/constants');
 const jsonHelper = require('utilities/helpers/jsonHelper');
+const BigNumber = require('bignumber.js');
 const moment = require('moment');
 const _ = require('lodash');
 
@@ -162,4 +163,71 @@ const multiAccountFilter = ({ record, filterAccounts }) => {
       && _.includes(filterAccounts, memo.to);
   }
   return _.includes(filterAccounts, operation.to);
+};
+
+exports.calcDepositWithdrawals = (operations, dynamicProperties) => _
+  .reduce(operations, (acc, el) => {
+    switch (_.get(el, 'withdrawDeposit')) {
+      case 'w':
+        acc.withdrawals = new BigNumber(acc.withdrawals).plus(getPriceInUSD(el)).toNumber();
+        break;
+      case 'd':
+        acc.deposits = new BigNumber(acc.withdrawals)
+          .plus(
+            el.type === WALLET_TYPES.CLAIM_REWARD_BALANCE
+              ? getPriceFromClaimReward(el, dynamicProperties)
+              : getPriceInUSD(el),
+          ).toNumber();
+        break;
+    }
+    return acc;
+  }, { deposits: 0, withdrawals: 0 });
+
+const getPriceInUSD = (record) => {
+  if (!record.amount) return 0;
+  const [value, currency] = record.amount.split(' ');
+  return new BigNumber(value)
+    .times(currency === CURRENCIES.HBD ? record.hbdUSD : record.hiveUSD)
+    .toNumber();
+};
+
+const getPriceFromClaimReward = async (record, dynamicProperties) => {
+  let result = 0;
+  if (!record.reward_hbd || !record.reward_hive || !record.reward_vests) return result;
+
+  if (parseFloat(record.reward_hbd.split(' ')[0]) !== 0) {
+    result = new BigNumber(result)
+      .plus(getPriceInUSD({ ...record, amount: record.reward_hbd }))
+      .toNumber();
+  }
+  if (parseFloat(record.reward_hive.split(' ')[0]) !== 0) {
+    result = new BigNumber(result)
+      .plus(getPriceInUSD({ ...record, amount: record.reward_hive }))
+      .toNumber();
+  }
+  if (parseFloat(record.reward_vests.split(' ')[0]) !== 0) {
+    result = new BigNumber(result)
+      .plus(getPriceInUSD({
+        ...record,
+        amount: getHivePowerFromVests(
+          parseFloat(record.reward_vests.split(' ')[0]),
+          dynamicProperties,
+        ),
+      }))
+      .toNumber();
+  }
+
+  return result;
+};
+
+const getHivePowerFromVests = (vests, dynamicProperties) => {
+  if (!dynamicProperties.total_vesting_fund_hive || !dynamicProperties.total_vesting_shares) return `0.000 ${CURRENCIES.HP}`;
+  const totalVestingFundHive = parseFloat(dynamicProperties.total_vesting_fund_hive);
+  const totalVestingShares = parseFloat(dynamicProperties.total_vesting_shares);
+
+  const hpAmount = new BigNumber(totalVestingFundHive)
+    .times(vests)
+    .dividedBy(totalVestingShares)
+    .toNumber();
+  return `${hpAmount} ${CURRENCIES.HP}`;
 };

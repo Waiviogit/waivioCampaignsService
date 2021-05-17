@@ -67,13 +67,13 @@ const transfersHistory = async (req, res) => {
 
   if (validationError) return renderError(res, validationError);
   const {
-    wallet, error, hasMore, operationNum,
+    wallet, error, hasMore, operationNum, withdrawals, deposits,
   } = await getTransfersHistory(params);
 
   if (error) renderCustomError(res, error);
   else {
     renderSuccess(res, {
-      wallet, operationNum, hasMore,
+      wallet, operationNum, hasMore, withdrawals, deposits,
     });
   }
 };
