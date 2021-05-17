@@ -52,11 +52,15 @@ const demoDeptHistory = async (req, res) => {
   const accessToken = req.headers['access-token'];
   if (validationError) return renderError(res, validationError);
   const {
-    histories, payable, error, hasMore,
+    histories, payable, error, hasMore, deposits, withdrawals,
   } = await getDemoDebtHistory(params, accessToken);
 
   if (error) renderError(res, { error });
-  else renderSuccess(res, { histories, payable, hasMore });
+  else {
+    renderSuccess(res, {
+      histories, payable, hasMore, deposits, withdrawals,
+    });
+  }
 };
 
 const transfersHistory = async (req, res) => {

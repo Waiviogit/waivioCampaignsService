@@ -165,33 +165,35 @@ const multiAccountFilter = ({ record, filterAccounts }) => {
   return _.includes(filterAccounts, operation.to);
 };
 
-exports.calcDepositWithdrawals = (operations, dynamicProperties) => _
+exports.calcDepositWithdrawals = ({ operations, dynamicProperties, guest }) => _
   .reduce(operations, (acc, el) => {
     switch (_.get(el, 'withdrawDeposit')) {
       case 'w':
-        acc.withdrawals = new BigNumber(acc.withdrawals).plus(getPriceInUSD(el)).toNumber();
+        acc.withdrawals = new BigNumber(acc.withdrawals).plus(getPriceInUSD(el, guest)).toNumber();
         break;
       case 'd':
-        acc.deposits = new BigNumber(acc.withdrawals)
+        acc.deposits = new BigNumber(acc.deposits)
           .plus(
             el.type === WALLET_TYPES.CLAIM_REWARD_BALANCE
               ? getPriceFromClaimReward(el, dynamicProperties)
-              : getPriceInUSD(el),
+              : getPriceInUSD(el, guest),
           ).toNumber();
         break;
     }
     return acc;
   }, { deposits: 0, withdrawals: 0 });
 
-const getPriceInUSD = (record) => {
+const getPriceInUSD = (record, guest) => {
   if (!record.amount) return 0;
+  if (guest) return new BigNumber(record.amount).times(record.hiveUSD).toNumber();
+
   const [value, currency] = record.amount.split(' ');
   return new BigNumber(value)
     .times(currency === CURRENCIES.HBD ? record.hbdUSD : record.hiveUSD)
     .toNumber();
 };
 
-const getPriceFromClaimReward = async (record, dynamicProperties) => {
+const getPriceFromClaimReward = (record, dynamicProperties) => {
   let result = 0;
   if (!record.reward_hbd || !record.reward_hive || !record.reward_vests) return result;
 

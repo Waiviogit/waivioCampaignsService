@@ -19,8 +19,8 @@ module.exports = async ({
 
   if (tableView) {
     const dynamicProperties = await redisGetter.getHashAll('dynamic_global_properties');
-    depositWithdrawals = walletHelper.calcDepositWithdrawals(slicedWallet, dynamicProperties);
-    console.log('kek')
+    depositWithdrawals = walletHelper
+      .calcDepositWithdrawals({ operations: slicedWallet, dynamicProperties });
   }
 
   const lastOperationWithNum = _.findLast(slicedWallet,

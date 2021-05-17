@@ -8,6 +8,7 @@ const _ = require('lodash');
 module.exports = async ({
   userName, skip, limit, tableView, endDate, startDate, filterAccounts,
 }, accessToken) => {
+  let depositWithdrawals = {};
   let payable = 0;
   const pipeline = [
     { $match: { userName, type: { $in: GUEST_WALLET_OPERATIONS } } },
@@ -47,10 +48,15 @@ module.exports = async ({
     _.map(histories, (history) => history.withdraw = null);
   }
   const result = await addHivePrice(histories);
+
+  if (tableView) {
+    depositWithdrawals = walletHelper.calcDepositWithdrawals({ operations: result, guest: true });
+  }
   return {
     histories: result.slice(skip, limit + skip),
     payable: _.round(payable, 3),
     hasMore: result.slice(skip, limit + skip + 1).length > limit,
+    ...depositWithdrawals,
   };
 };
 
