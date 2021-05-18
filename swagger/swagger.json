@@ -1549,14 +1549,28 @@
               "enum": [ "transfer", "transfer_to_vesting", "claim_reward_balance", "transfer_to_savings", "transfer_from_savings", "proposal_pay", "internal_operations"]
             },
             "default": ["transfer", "transfer_to_vesting", "claim_reward_balance", "transfer_to_savings", "transfer_from_savings", "proposal_pay", "internal_operations"]
+          },
+          {
+            "name": "filterAccounts",
+            "in": "query",
+            "description": "an array of accounts for which the request is being made",
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
           }
-
         ],
         "responses": {
           "200": {
             "description": "successful operation",
             "schema": {
               "$ref": "#/definitions/wallet_request"
+            }
+          },
+          "422": {
+            "description": "Error",
+            "schema": {
+              "$ref": "#/definitions/validationError"
             }
           }
         }
@@ -1607,74 +1621,27 @@
             "in": "query",
             "description": "start date, default 1 month ago",
             "type": "string"
+          },
+          {
+            "name": "filterAccounts",
+            "in": "query",
+            "description": "an array of accounts for which the request is being made",
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
           }
         ],
         "responses": {
           "200": {
-            "type": "object",
-            "example": {
-              "with_wrapper": {
-                "histories": [
-                  {
-                    "payable": 160,
-                    "userName": "user3"
-                  },
-                  {
-                    "payable": 4,
-                    "userName": "user2"
-                  },
-                  {
-                    "payable": 2,
-                    "userName": "user1"
-                  },
-                  {
-                    "payable": -30,
-                    "userName": "user4"
-                  }
-                ],
-                "payable": 136
-              },
-              "without_wrapper": {
-                "histories": [
-                  {
-                    "_id": "5d920881a266315f76fa1030",
-                    "recounted": false,
-                    "userName": "user1",
-                    "sponsor": "sponsor1",
-                    "type": "review",
-                    "amount": 2,
-                    "createdAt": "2019-09-24T13:52:01.843Z",
-                    "updatedAt": "2019-09-24T13:52:01.843Z",
-                    "__v": 0,
-                    "balance": 2
-                  },
-                  {
-                    "_id": "5d920881a266315f76fa102e",
-                    "recounted": false,
-                    "userName": "user1",
-                    "sponsor": "sponsor1",
-                    "type": "transfer",
-                    "amount": 2,
-                    "createdAt": "2019-09-22T13:52:01.835Z",
-                    "updatedAt": "2019-09-22T13:52:01.835Z",
-                    "__v": 0,
-                    "balance": 0
-                  },
-                  {
-                    "_id": "5d920881a266315f76fa102c",
-                    "recounted": false,
-                    "userName": "user1",
-                    "sponsor": "sponsor1",
-                    "type": "review",
-                    "amount": 2,
-                    "createdAt": "2019-09-20T13:52:01.771Z",
-                    "updatedAt": "2019-09-20T13:52:01.771Z",
-                    "__v": 0,
-                    "balance": 2
-                  }
-                ],
-                "payable": 2
-              }
+            "schema": {
+              "$ref": "#/definitions/demo_payables"
+            }
+          },
+          "422": {
+            "description": "Error",
+            "schema": {
+              "$ref": "#/definitions/validationError"
             }
           }
         }
@@ -2443,6 +2410,70 @@
     }
   },
   "definitions": {
+    "demo_payables": {
+      "type": "object",
+      "properties": {
+        "histories": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "properties": {
+              "userName": {
+                "type": "string"
+              },
+              "sponsor": {
+                "type": "string"
+              },
+              "type": {
+                "type": "string"
+              },
+              "memo": {
+                "type": "string"
+              },
+              "withdrawDeposit": {
+                "type": "string"
+              },
+              "amount": {
+                "type": "number"
+              },
+              "balance": {
+                "type": "number"
+              },
+              "withdraw": {
+                "type": "number"
+              },
+              "hiveUSD": {
+                "type": "number"
+              },
+              "hbdUSD": {
+                "type": "number"
+              },
+              "payed": {
+                "type": "boolean"
+              },
+              "is_demo_account": {
+                "type": "boolean"
+              },
+              "recounted": {
+                "type": "boolean"
+              }
+            }
+          }
+        },
+        "payable": {
+          "type": "number"
+        },
+        "deposits": {
+          "type": "number"
+        },
+        "withdrawals": {
+          "type": "number"
+        },
+        "hasMore": {
+          "type": "boolean"
+        }
+      }
+    },
     "campaignsByWobject": {
       "type": "object",
       "properties": {
@@ -7961,6 +7992,12 @@
         },
         "hasMore": {
           "type": "boolean"
+        },
+        "deposits": {
+          "type": "number"
+        },
+        "withdrawals": {
+          "type": "number"
         }
       },
       "xml" : {
@@ -7976,6 +8013,7 @@
           "type": "limitOrder",
           "hiveUSD": 0.570853,
           "hbdUSD": 1.48,
+          "withdrawDeposit": "w",
           "account": "olegvladim",
           "current_pays": "1 HIVE",
           "open_pays": "0.188 HBD",
