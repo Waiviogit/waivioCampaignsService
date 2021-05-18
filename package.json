@@ -15,6 +15,7 @@
     "addSteamToCurrency": "NODE_PATH=. node ./utilities/tasks/addSteemToCurrency/run.js",
     "addMissingDailyData": "NODE_PATH=. node ./utilities/tasks/addMissingDailyData/run.js",
     "addCampaignCounterForWobject": "NODE_PATH=. node ./utilities/tasks/addCampaignCounterForObjects/run.js",
+    "addDetailsGuestTransfer": "NODE_PATH=. node ./utilities/tasks/addDetailsGuestTransfer/run.js",
     "test": "NODE_PATH=. NODE_ENV=test nyc --reporter=html mocha"
   },
   "dependencies": {

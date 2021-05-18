@@ -64,7 +64,7 @@ const parseCampaignsTransfer = async ({
               userName: memoJson.from,
               type: 'demo_user_transfer',
               payable: amount.match(/.\d*.\d*/)[0],
-              sponsor: from,
+              sponsor: to,
               memo: `Transfer to ${to}, memo: ${memoJson.message.toString()}`,
             });
             break;

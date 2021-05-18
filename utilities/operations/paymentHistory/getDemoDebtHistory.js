@@ -6,8 +6,9 @@ const moment = require('moment');
 const _ = require('lodash');
 
 module.exports = async ({
-  userName, skip, limit, tableView, endDate, startDate,
+  userName, skip, limit, tableView, endDate, startDate, filterAccounts,
 }, accessToken) => {
+  let depositWithdrawals = {};
   let payable = 0;
   const pipeline = [
     { $match: { userName, type: { $in: GUEST_WALLET_OPERATIONS } } },
@@ -19,11 +20,15 @@ module.exports = async ({
       { createdAt: { $gte: startDate } },
       { createdAt: { $lte: endDate } }];
   }
+  if (tableView && !_.isEmpty(filterAccounts)) {
+    pipeline[0].$match.sponsor = { $nin: filterAccounts };
+  }
 
   const { result: histories, error } = await paymentHistoryModel.aggregate(pipeline);
   if (error) return { error };
 
   _.map(histories, (history) => {
+    history.withdrawDeposit = walletHelper.withdrawDeposit(history.type);
     if (_.get(history, 'details.transactionId')) return;
     switch (history.type) {
       case 'user_to_guest_transfer':
@@ -43,10 +48,15 @@ module.exports = async ({
     _.map(histories, (history) => history.withdraw = null);
   }
   const result = await addHivePrice(histories);
+
+  if (tableView) {
+    depositWithdrawals = walletHelper.calcDepositWithdrawals({ operations: result, guest: true });
+  }
   return {
     histories: result.slice(skip, limit + skip),
     payable: _.round(payable, 3),
     hasMore: result.slice(skip, limit + skip + 1).length > limit,
+    ...depositWithdrawals,
   };
 };
 
