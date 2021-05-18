@@ -7,14 +7,17 @@ const { getDemoDebtHistory } = require('utilities/operations/paymentHistory');
 const usersHelper = require('./usersHelper');
 
 exports.validateTransaction = async ({
-  transactionData, userName, email, accessToken, onlyValidate,
+  transactionData, userName, email, accessToken, onlyValidate, validateEmail = true,
 }) => {
+  let checkEmail;
   if (!await guestRequests.validateUser(accessToken, userName)) {
     return { error: { status: 401, message: 'Invalid token' } };
   }
-  const checkEmail = await usersHelper.validateEmail(email, userName);
-  if (!checkEmail) {
-    return { error: { status: 403, message: 'Invalid email' } };
+  if (validateEmail) {
+    checkEmail = await usersHelper.validateEmail(email, userName);
+    if (!checkEmail) {
+      return { error: { status: 403, message: 'Invalid email' } };
+    }
   }
   const { result: wallet } = await blocktradesRequests.validateWallet(
     { crypto: cryptoCoins[transactionData.outputCoinType], address: transactionData.address },
