@@ -5,7 +5,7 @@ const {
 } = require('models');
 const {
   maxMapRadius, minCountMapCampaigns, PAYMENT_HISTORIES_TYPES,
-  CAMPAIGN_STATUSES, RESERVATION_STATUSES, CAMPAIGN_FIELDS_FOR_CARDS,
+  CAMPAIGN_STATUSES, RESERVATION_STATUSES, CAMPAIGN_FIELDS_FOR_CARDS, CAMPAIGN_SORTS,
 } = require('constants/constants');
 const { CAMPAIGN_FIELDS } = require('constants/wobjectsData');
 const { getNamespace } = require('cls-hooked');
@@ -14,13 +14,13 @@ const wobjectHelper = require('./wobjectHelper');
 
 const sortPrimaryCampaigns = (campaigns, sort) => {
   switch (sort) {
-    case 'date':
+    case CAMPAIGN_SORTS.DATE:
       return _.orderBy(campaigns, ['last_created'], ['desc']);
-    case 'proximity':
+    case CAMPAIGN_SORTS.PROXIMITY:
       return _.sortBy(campaigns, (campaign) => campaign.distance);
-    case 'reward':
+    case CAMPAIGN_SORTS.REWARD:
       return _.orderBy(campaigns, ['max_reward', 'last_created'], ['desc']);
-    case 'payout':
+    case CAMPAIGN_SORTS.PAYOUT:
       return _.orderBy(campaigns, ['payout'], ['desc']);
   }
 };
@@ -205,6 +205,11 @@ exports.getPrimaryCampaigns = async ({
     campaigns: allCampaigns, locale, appName, forSecondary: false,
   });
 
+  if (sort === CAMPAIGN_SORTS.PAYOUT) {
+    for (const campaign of allCampaigns) {
+      campaign.payout = amountPayments(campaign);
+    }
+  }
   const groupedCampaigns = _.groupBy(allCampaigns, 'requiredObject');
   await Promise.all(Object.keys(groupedCampaigns).map(async (key) => {
     let requiredObject = _.find(wobjects, (obj) => obj.author_permlink === key);
@@ -237,10 +242,11 @@ exports.getPrimaryCampaigns = async ({
       distance: area && coordinates.length === 2 ? getDistance(area, coordinates) : null,
       count: groupedCampaigns[key].length,
       required_object: requiredObject,
-      payout: _.sumBy(groupedCampaigns[key], (campaign) => (campaign.status !== 'rejected' ? campaign.payout : 0)),
+      payout: _.round(_.sumBy(groupedCampaigns[key],
+        (campaign) => campaign.payout) / groupedCampaigns[key].length, 3),
     });
   }));
-  campaigns = sortPrimaryCampaigns(campaigns, firstMapLoad ? 'proximity' : sort);
+  campaigns = sortPrimaryCampaigns(campaigns, firstMapLoad ? CAMPAIGN_SORTS.PROXIMITY : sort);
 
   if (firstMapLoad) {
     ({ campaigns, radius } = getCampaignsForFirstMapLoad(campaigns, radius));
@@ -259,7 +265,7 @@ exports.getPrimaryCampaigns = async ({
 
 exports.getSecondaryCampaigns = async ({
   allCampaigns, skip, limit, userName, eligible, reserved, needProcess = true,
-  radius, area, sort = 'reward', firstMapLoad, guideNames, appName, locale,
+  radius, area, sort = CAMPAIGN_SORTS.REWARD, firstMapLoad, guideNames, appName, locale,
 }) => {
   let campaigns = [], currentUser, wobjectsFollow = [];
   const { wobjects } = await wobjectHelper.getWobjects({
@@ -288,12 +294,7 @@ exports.getSecondaryCampaigns = async ({
         .includes(campaign.requiredObject);
     }
 
-    const amountReward = _.sumBy(campaign.payments, (payment) => (payment.status !== 'rejected' ? 1 : 0)) * campaign.reward;
-    if (amountReward > 0) {
-      campaign.payout = _.round(amountReward * campaign.commissionAgreement, 3);
-    } else {
-      campaign.payout = _.round((campaign.reward * campaign.commissionAgreement), 3);
-    }
+    if (sort === CAMPAIGN_SORTS.PAYOUT) campaign.payout = amountPayments(campaign);
     const objStatus = _.get(campaign, 'required_object.status.title', null);
 
     if (!reserved && (objStatus === 'unavailable'
@@ -307,9 +308,9 @@ exports.getSecondaryCampaigns = async ({
 
   // sorting stage, by default sort = reward
   // campaigns = sortPrimaryCampaigns(campaigns, sort);
-  if (sort === 'reward') campaigns = _.orderBy(campaigns, ['reward'], ['desc']);
-  if (sort === 'date') campaigns = _.orderBy(campaigns, ['expired_at'], ['desc']);
-  if (sort === 'payout') campaigns = _.orderBy(campaigns, ['payout'], ['desc']);
+  if (sort === CAMPAIGN_SORTS.REWARD) campaigns = _.orderBy(campaigns, ['reward'], ['desc']);
+  if (sort === CAMPAIGN_SORTS.DATE) campaigns = _.orderBy(campaigns, ['expired_at'], ['desc']);
+  if (sort === CAMPAIGN_SORTS.PAYOUT) campaigns = _.orderBy(campaigns, ['payout'], ['desc']);
 
   const eligibleCampaigns = guideNames ? _.filter(campaigns,
     (campaign) => _.includes(guideNames, campaign.guideName)) : campaigns;
@@ -404,4 +405,12 @@ exports.processCampaignsByWobject = async ({
       : acc.propositions.push(el);
     return acc;
   }, { campaigns: [], propositions: [] });
+};
+
+const amountPayments = (campaign) => {
+  const countPayments = _.filter(_.get(campaign, 'payments', []),
+    (payment) => (payment.status !== 'rejected')).length;
+  return countPayments
+    ? _.round((countPayments * campaign.reward * campaign.commissionAgreement), 3)
+    : _.round((campaign.reward * campaign.commissionAgreement), 3);
 };

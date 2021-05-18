@@ -31,6 +31,13 @@ const CAMPAIGN_STATUSES = {
   SUSPENDED: 'suspended',
 };
 
+const CAMPAIGN_SORTS = {
+  REWARD: 'reward',
+  DATE: 'date',
+  PROXIMITY: 'proximity',
+  PAYOUT: 'payout',
+};
+
 const BOT_UPVOTE_STATUSES = {
   UPVOTED: 'upvoted',
   PENDING: 'pending',
@@ -175,6 +182,7 @@ module.exports = {
   BOT_UPVOTE_STATUSES,
   RESERVATION_STATUSES,
   CAMPAIGN_STATUSES,
+  CAMPAIGN_SORTS,
   CAMPAIGN_TYPES,
   PAYMENT_HISTORIES_TYPES,
   INTERNAL_OPERATIONS,
