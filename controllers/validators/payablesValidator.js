@@ -35,6 +35,7 @@ exports.demoDeptSchema = Joi.object().keys({
   tableView: Joi.boolean().default(false),
   endDate: Joi.date().timestamp('unix').less('now').default(new Date()),
   startDate: Joi.date().timestamp('unix').default(moment.utc().subtract(10, 'year').toDate()).less(Joi.ref('endDate')),
+  filterAccounts: Joi.array().items(Joi.string()).single().default([]),
 }).options(options);
 
 exports.reportSchema = Joi.object().keys({
