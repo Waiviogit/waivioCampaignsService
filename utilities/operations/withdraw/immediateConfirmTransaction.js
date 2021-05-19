@@ -1,8 +1,6 @@
-const { validateTransaction } = require('utilities/helpers/transactionsHelper');
 const { withdrawFundsModel, paymentHistoryModel, userModel } = require('models');
+const { validateTransaction } = require('utilities/helpers/transactionsHelper');
 const { hiveClient, hiveOperations } = require('utilities/hiveApi');
-const redisSetter = require('utilities/redis/redisSetter');
-const { WITHDRAW_REQUEST } = require('constants/ttlData');
 const { guestRequests } = require('utilities/requests');
 const _ = require('lodash');
 
@@ -54,7 +52,6 @@ module.exports = async ({
     withdraw: withdraw._id,
   };
 
-  await redisSetter.saveTTL(`expire:${WITHDRAW_REQUEST}|${withdraw._id}`, 15);
   await paymentHistoryModel.addPaymentHistory(paymentData);
   await guestRequests.createWithdraw(paymentData);
 
