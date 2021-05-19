@@ -1,5 +1,5 @@
 const { validateTransaction } = require('utilities/helpers/transactionsHelper');
-const { withdrawFundsModel, paymentHistoryModel } = require('models');
+const { withdrawFundsModel, paymentHistoryModel, userModel } = require('models');
 const { hiveClient, hiveOperations } = require('utilities/hiveApi');
 const redisSetter = require('utilities/redis/redisSetter');
 const { WITHDRAW_REQUEST } = require('constants/ttlData');
@@ -17,12 +17,15 @@ module.exports = async ({
 
   if (validationError) return { error: validationError };
 
+  const { user } = await userModel.findOne(userName, '+auth');
+  if (!user && !user.auth) return { error: { status: 401, message: 'User not found' } };
+
   const { withdraw, error: createWithdrawErr } = await withdrawFundsModel.create({
     commission,
     memo: transaction.memo,
     receiver: transaction.address,
     usdValue,
-    email: 'email', // #TODO
+    auth: user.auth,
     account: userName,
     ..._.pick(transactionData, ['inputCoinType', 'outputCoinType', 'amount', 'address']),
   });

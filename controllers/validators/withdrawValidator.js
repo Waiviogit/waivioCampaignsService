@@ -25,7 +25,6 @@ exports.demoDebtSchema = Joi.object().keys({
 }).options(options);
 
 exports.immediateConfirmSchema = Joi.object().keys({
-  email: Joi.string().email(),
   userName: Joi.string().required(),
   accessToken: Joi.string().required(),
   transactionData: Joi.object().keys({
