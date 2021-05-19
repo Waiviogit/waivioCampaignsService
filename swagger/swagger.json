@@ -2407,6 +2407,81 @@
           }
         }
       }
+    },
+    "/withdraw/immediate-withdraw": {
+      "post": {
+        "tags": [
+          "withdraw"
+        ],
+        "produces": [
+          "application/json"
+        ],
+        "description": "Withdraw for guest user",
+        "parameters": [
+          {
+            "name": "access-token",
+            "in": "header",
+            "description": "Wiavio guest access token",
+            "type": "string",
+            "required": true
+          },
+          {
+            "name": "params",
+            "in": "body",
+            "description": "request body",
+            "schema": {
+              "type": "object",
+              "properties": {
+                "userName": {
+                  "type": "string"
+                },
+                "transactionData": {
+                  "type": "object",
+                  "properties": {
+                    "outputCoinType": {
+                      "type": "string"
+                    },
+                    "inputCoinType": {
+                      "type": "string"
+                    },
+                    "address": {
+                      "type": "string"
+                    },
+                    "amount": {
+                      "type": "number"
+                    }
+                  }
+                }
+              }
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Success",
+            "schema": {
+              "type": "object",
+              "properties": {
+                "result": {
+                  "type": "boolean"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Error",
+            "schema": {
+              "$ref": "#/definitions/validationError"
+            }
+          },
+          "500": {
+            "description": "Error",
+            "schema": {
+              "$ref": "#/definitions/serverError"
+            }
+          }
+        }
+      }
     }
   },
   "definitions": {

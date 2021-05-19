@@ -62,6 +62,8 @@ withdrawRoutes.route('/validate-crypto-wallet').get(withdrawController.validateW
 withdrawRoutes.route('/estimate-output-amount').get(withdrawController.estimateAmount);
 withdrawRoutes.route('/confirm-transaction').get(withdrawController.finalConfirm);
 withdrawRoutes.route('/create-demo-payment').post(withdrawController.demoPayment);
+// temporary solution to an immediate guest withdraw
+withdrawRoutes.route('/immediate-withdraw').post(withdrawController.immediateConfirm);
 
 mailerRoutes.route('/confirm-email-in-transaction').get(mailerController.confirmEmailInTransaction);
 mailerRoutes.route('/confirm-email-response').get(mailerController.confirmEmailResponse);
