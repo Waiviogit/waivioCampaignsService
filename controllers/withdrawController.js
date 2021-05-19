@@ -3,9 +3,9 @@ const validators = require('controllers/validators');
 const { renderCustomError, renderSuccess, renderError } = require('concerns/renderConcern');
 const {
   withdraw: {
-    immediateConfirmTransaction,
     validateCryptoWallet,
     confirmTransaction,
+    immediateWithdraw,
     createDemoPayment,
     transactionStatus,
     getOutputAmount,
@@ -71,7 +71,7 @@ exports.immediateConfirm = async (req, res) => {
   );
   if (validationError) return renderError(res, validationError.message);
 
-  const { result, error } = await immediateConfirmTransaction(params);
+  const { result, error } = await immediateWithdraw(params);
 
   if (error) return renderCustomError(res, error);
   renderSuccess(res, result);

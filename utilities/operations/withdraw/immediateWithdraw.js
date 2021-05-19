@@ -1,7 +1,9 @@
+const { sendSentryNotification } = require('utilities/requests/telegramNotificationsRequest');
 const { withdrawFundsModel, paymentHistoryModel, userModel } = require('models');
 const { validateTransaction } = require('utilities/helpers/transactionsHelper');
 const { hiveClient, hiveOperations } = require('utilities/hiveApi');
 const { guestRequests } = require('utilities/requests');
+const Sentry = require('@sentry/node');
 const _ = require('lodash');
 
 module.exports = async ({
@@ -25,7 +27,7 @@ module.exports = async ({
     usdValue,
     auth: user.auth,
     account: userName,
-    ..._.pick(transactionData, ['inputCoinType', 'outputCoinType', 'amount', 'address']),
+    ...transactionData,
   });
   if (createWithdrawErr) return { error: createWithdrawErr };
 
@@ -39,7 +41,12 @@ module.exports = async ({
       memo: withdraw.memo,
     },
   );
-  if (transactionError) return { error: { status: 503, message: 'Something went wrong, please contact us: support@waivio.com' } };
+  if (transactionError) {
+    Sentry.captureException(transactionError);
+    await sendSentryNotification();
+    return { error: { status: 503, message: 'Something went wrong, please contact us: support@waivio.com' } };
+  }
+
   const { result: updatedWithdraw } = await withdrawFundsModel
     .updateOne({ _id: withdraw._id }, { status: 'success', transactionId: _.get(data, 'id') });
 

@@ -2408,7 +2408,7 @@
         }
       }
     },
-    "/withdraw/immediate-confirm-transaction": {
+    "/withdraw/immediate-withdraw": {
       "post": {
         "tags": [
           "withdraw"
