@@ -1,19 +1,25 @@
 const { internalExchangeModel, currenciesStatiscticModel } = require('models');
 const { hiveRequests, currencyRequest } = require('utilities/requests');
+const { SAVINGS_TRANSFERS, WALLET_TYPES, CURRENCIES } = require('constants/walletData');
+const { PAYMENT_HISTORIES_TYPES } = require('constants/constants');
+const jsonHelper = require('utilities/helpers/jsonHelper');
+const BigNumber = require('bignumber.js');
 const moment = require('moment');
 const _ = require('lodash');
 
-exports.getWalletData = async (name, limit, marker, types, endDate, startDate, tableView) => {
+exports.getWalletData = async ({
+  userName, limit, operationNum, types, endDate, startDate, tableView, filterAccounts,
+}) => {
   let result, error;
   const batchSize = 1000;
-  let lastId = marker || -1;
+  let lastId = operationNum || -1;
   const walletOperations = [];
   const startDateTimestamp = moment.utc(startDate).valueOf();
   const endDateTimestamp = moment.utc(endDate).valueOf();
 
   do {
     ({ result, error } = await hiveRequests.getAccountHistory(
-      name, lastId, lastId === -1 ? batchSize : (lastId < batchSize ? lastId : batchSize),
+      userName, lastId, lastId === -1 ? batchSize : (lastId < batchSize ? lastId : batchSize),
     ));
     let breakFlag = false;
     if (error) return [];
@@ -34,6 +40,7 @@ exports.getWalletData = async (name, limit, marker, types, endDate, startDate, t
           break;
         }
         if (tableView && endDateTimestamp < recordTimestamp) continue;
+        if (tableView && multiAccountFilter({ record: record[1].op, filterAccounts })) continue;
         walletOperations.push(record);
       }
     }
@@ -42,7 +49,9 @@ exports.getWalletData = async (name, limit, marker, types, endDate, startDate, t
   } while (walletOperations.length <= limit || batchSize === result.length - 1);
   const hivePriceArr = await this.getHiveCurrencyHistory(walletOperations);
 
-  return formatHiveHistory(walletOperations, hivePriceArr);
+  return formatHiveHistory({
+    walletOperations, hivePriceArr, tableView, userName,
+  });
 };
 
 exports.getHiveCurrencyHistory = async (walletOperations, path = '[1].timestamp') => {
@@ -71,18 +80,6 @@ exports.getHiveCurrencyHistory = async (walletOperations, path = '[1].timestamp'
 
   return result;
 };
-
-const formatHiveHistory = (histories, hivePriceArr) => _.map(histories, (history) => {
-  const price = _.find(hivePriceArr, (el) => moment(el.createdAt).isSame(moment(history[1].timestamp), 'day'));
-  history[1].timestamp = Math.round(moment.utc(history[1].timestamp).valueOf() / 1000);
-  // eslint-disable-next-line prefer-destructuring
-  history[1].type = history[1].op[0];
-  history[1].hiveUSD = parseFloat(_.get(price, 'hive.usd', '0'));
-  history[1].hbdUSD = parseFloat(_.get(price, 'hive_dollar.usd', '0'));
-  [history[1].operationNum] = history;
-  history[1] = Object.assign(history[1], history[1].op[1]);
-  return _.omit(history[1], ['op', 'block', 'op_in_trx', 'trx_in_block', 'virtual_op', 'trx_id']);
-});
 
 exports.getTransfersHistory = async (hiveHistory) => {
   for (const order of hiveHistory) {
@@ -116,4 +113,123 @@ exports.getTransfersHistory = async (hiveHistory) => {
     }
   }
   return _.orderBy(hiveHistory, ['timestamp', 'type'], ['desc']);
+};
+
+exports.withdrawDeposit = (type, op, userName) => {
+  const result = {
+    transfer: _.get(op, 'to') === userName ? 'd' : 'w',
+    transfer_to_vesting: 'd',
+    claim_reward_balance: 'd',
+    transfer_to_savings: '',
+    transfer_from_savings: '',
+    limit_order_cancel: '',
+    limit_order_create: '',
+    fill_order: '',
+    proposal_pay: 'w',
+    demo_user_transfer: 'w',
+    user_to_guest_transfer: 'd',
+    demo_post: 'd',
+    demo_debt: 'd',
+  };
+  return result[type] || '';
+};
+
+const formatHiveHistory = ({
+  walletOperations, hivePriceArr, tableView, userName,
+}) => _.map(walletOperations, (history) => {
+  const omitFromOperation = ['op', 'block', 'op_in_trx', 'trx_in_block', 'virtual_op', 'trx_id'];
+  const price = _.find(hivePriceArr, (el) => moment(el.createdAt).isSame(moment(history[1].timestamp), 'day'));
+  const operation = {
+    type: history[1].op[0],
+    timestamp: moment(history[1].timestamp).unix(),
+    hiveUSD: parseFloat(_.get(price, 'hive.usd', '0')),
+    hbdUSD: parseFloat(_.get(price, 'hive_dollar.usd', '0')),
+    operationNum: history[0],
+    withdrawDeposit: this.withdrawDeposit(history[1].op[0], history[1].op[1], userName),
+    ...history[1].op[1],
+  };
+
+  if (tableView && _.includes(SAVINGS_TRANSFERS, operation.type)) omitFromOperation.push('amount');
+  return _.omit(operation, omitFromOperation);
+});
+
+const multiAccountFilter = ({ record, filterAccounts }) => {
+  const [type, operation] = record;
+  if (type !== WALLET_TYPES.TRANSFER) return false;
+
+  if (operation.to === process.env.WALLET_ACC_NAME) {
+    const memo = jsonHelper.parseJson(operation.memo);
+    return memo.id === PAYMENT_HISTORIES_TYPES.USER_TO_GUEST_TRANSFER
+      && _.includes(filterAccounts, memo.to);
+  }
+  return _.includes(filterAccounts, operation.to);
+};
+
+exports.calcDepositWithdrawals = ({ operations, dynamicProperties, guest }) => _
+  .reduce(operations, (acc, el) => {
+    switch (_.get(el, 'withdrawDeposit')) {
+      case 'w':
+        acc.withdrawals = new BigNumber(acc.withdrawals).plus(getPriceInUSD(el, guest)).toNumber();
+        break;
+      case 'd':
+        acc.deposits = new BigNumber(acc.deposits)
+          .plus(
+            el.type === WALLET_TYPES.CLAIM_REWARD_BALANCE
+              ? getPriceFromClaimReward(el, dynamicProperties)
+              : getPriceInUSD(el, guest),
+          ).toNumber();
+        break;
+    }
+    return acc;
+  }, { deposits: 0, withdrawals: 0 });
+
+const getPriceInUSD = (record, guest) => {
+  if (!record.amount) return 0;
+  if (guest) return new BigNumber(record.amount).times(record.hiveUSD).toNumber();
+
+  const [value, currency] = record.amount.split(' ');
+  return new BigNumber(value)
+    .times(currency === CURRENCIES.HBD ? record.hbdUSD : record.hiveUSD)
+    .toNumber();
+};
+
+const getPriceFromClaimReward = (record, dynamicProperties) => {
+  let result = 0;
+  if (!record.reward_hbd || !record.reward_hive || !record.reward_vests) return result;
+
+  if (parseFloat(record.reward_hbd.split(' ')[0]) !== 0) {
+    result = new BigNumber(result)
+      .plus(getPriceInUSD({ ...record, amount: record.reward_hbd }))
+      .toNumber();
+  }
+  if (parseFloat(record.reward_hive.split(' ')[0]) !== 0) {
+    result = new BigNumber(result)
+      .plus(getPriceInUSD({ ...record, amount: record.reward_hive }))
+      .toNumber();
+  }
+  if (parseFloat(record.reward_vests.split(' ')[0]) !== 0) {
+    result = new BigNumber(result)
+      .plus(getPriceInUSD({
+        ...record,
+        amount: getHivePowerFromVests(
+          parseFloat(record.reward_vests.split(' ')[0]),
+          dynamicProperties,
+        ),
+      }))
+      .toNumber();
+  }
+
+  return result;
+};
+
+const getHivePowerFromVests = (vests, dynamicProperties) => {
+  if (!dynamicProperties.total_vesting_fund_hive || !dynamicProperties.total_vesting_shares) return `0.000 ${CURRENCIES.HP}`;
+  const totalVestingFundHive = parseFloat(dynamicProperties.total_vesting_fund_hive);
+  const totalVestingShares = parseFloat(dynamicProperties.total_vesting_shares);
+
+  const hpAmount = new BigNumber(totalVestingFundHive)
+    .times(vests)
+    .dividedBy(totalVestingShares)
+    .toNumber();
+  return `${hpAmount} ${CURRENCIES.HP}`;
 };

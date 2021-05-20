@@ -3,7 +3,12 @@ const validators = require('controllers/validators');
 const { renderCustomError, renderSuccess, renderError } = require('concerns/renderConcern');
 const {
   withdraw: {
-    getOutputAmount, validateCryptoWallet, confirmTransaction, createDemoPayment, transactionStatus,
+    validateCryptoWallet,
+    confirmTransaction,
+    immediateWithdraw,
+    createDemoPayment,
+    transactionStatus,
+    getOutputAmount,
   },
 } = require('utilities/operations');
 
@@ -57,4 +62,17 @@ exports.getTransactionStatus = async (req, res) => {
   const { result, error } = await transactionStatus(req.query.id);
   if (error) return renderCustomError(res, error);
   renderSuccess(res, result);
+};
+
+exports.immediateConfirm = async (req, res) => {
+  const accessToken = req.headers['access-token'];
+  const { params, validationError } = validators.validate(
+    { ...req.body, accessToken }, validators.withdraw.immediateConfirmSchema,
+  );
+  if (validationError) return renderError(res, validationError.message);
+
+  const { result, error } = await immediateWithdraw(params);
+
+  if (error) return renderCustomError(res, error);
+  renderSuccess(res, { result });
 };

@@ -5,7 +5,7 @@ const { Schema } = mongoose;
 
 const withdrawSchema = new Schema({
   account: { type: String, required: true },
-  email: { type: String, required: true },
+  email: { type: String },
   inputCoinType: { type: String, required: true },
   outputCoinType: { type: String, required: true },
   amount: { type: Number, required: true },
@@ -18,6 +18,10 @@ const withdrawSchema = new Schema({
   receiver: { type: String, required: true },
   transactionId: { type: String, default: null },
   transactionHash: { type: String, default: null },
+  auth: {
+    id: { type: String },
+    provider: { type: String },
+  },
 });
 
 const withdrawFunds = db.model('withdraw-funds', withdrawSchema);

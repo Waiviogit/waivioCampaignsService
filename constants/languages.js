@@ -38,5 +38,6 @@ module.exports = ['en-US',
   'ko-KR',
   'ja-JP',
   'zh-CN',
+  'af-ZA',
   'auto',
 ];

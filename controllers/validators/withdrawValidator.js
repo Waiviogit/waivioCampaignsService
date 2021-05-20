@@ -23,3 +23,14 @@ exports.demoDebtSchema = Joi.object().keys({
   sponsor: Joi.string().required(),
   memo: Joi.string().required(),
 }).options(options);
+
+exports.immediateConfirmSchema = Joi.object().keys({
+  userName: Joi.string().required(),
+  accessToken: Joi.string().required(),
+  transactionData: Joi.object().keys({
+    outputCoinType: Joi.string().valid(...availableCoins).required(),
+    inputCoinType: Joi.string().valid('hive').required(),
+    amount: Joi.number().greater(0).required(),
+    address: Joi.string().required(),
+  }).required(),
+}).options(options);
