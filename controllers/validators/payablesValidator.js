@@ -28,7 +28,7 @@ exports.payablesSchema = Joi.object().keys({
 exports.demoDeptSchema = Joi.object().keys({
   skip: Joi.number().default(0),
   limit: Joi.number().default(5),
-  userName: Joi.string(),
+  userName: Joi.string().required(),
   operationNum: Joi.number().default(-1),
   types: Joi.array().items(Joi.string().valid(...WALLET_TYPES_FOR_PARSE, ...GUEST_WALLET_OPERATIONS))
     .single().default([...GUEST_WALLET_OPERATIONS, ...WALLET_TYPES_FOR_PARSE]),

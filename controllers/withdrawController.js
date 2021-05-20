@@ -74,5 +74,5 @@ exports.immediateConfirm = async (req, res) => {
   const { result, error } = await immediateWithdraw(params);
 
   if (error) return renderCustomError(res, error);
-  renderSuccess(res, result);
+  renderSuccess(res, { result });
 };
