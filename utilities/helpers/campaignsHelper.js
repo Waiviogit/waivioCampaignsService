@@ -22,6 +22,8 @@ const sortPrimaryCampaigns = (campaigns, sort) => {
       return _.orderBy(campaigns, ['max_reward', 'last_created'], ['desc']);
     case CAMPAIGN_SORTS.PAYOUT:
       return _.orderBy(campaigns, ['payout'], ['desc']);
+    case CAMPAIGN_SORTS.DEFAULT:
+      return _.orderBy(campaigns, [(campaign) => campaign.distance || '', 'payout'], ['desc', 'desc']);
   }
 };
 
@@ -205,7 +207,7 @@ exports.getPrimaryCampaigns = async ({
     campaigns: allCampaigns, locale, appName, forSecondary: false,
   });
 
-  if (sort === CAMPAIGN_SORTS.PAYOUT) {
+  if (sort === CAMPAIGN_SORTS.PAYOUT || CAMPAIGN_SORTS.DEFAULT) {
     for (const campaign of allCampaigns) {
       campaign.payout = amountPayments(campaign);
     }

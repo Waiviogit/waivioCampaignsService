@@ -1,5 +1,7 @@
 const Joi = require('@hapi/joi');
-const { RESERVATION_STATUSES, CAMPAIGN_STATUSES } = require('constants/constants');
+const {
+  RESERVATION_STATUSES, CAMPAIGN_STATUSES, CAMPAIGN_SORTS,
+} = require('constants/constants');
 
 const options = { allowUnknown: true, stripUnknown: true };
 
@@ -123,7 +125,7 @@ exports.campaignsSchema = Joi.object().keys({
   update: Joi.boolean().default(false),
   limit: Joi.number().default(10),
   userName: Joi.string(),
-  sort: Joi.string().valid('reward', 'date', 'proximity', 'payout').default('reward'),
+  sort: Joi.string().valid(...Object.values(CAMPAIGN_SORTS)).default(CAMPAIGN_SORTS.REWARD),
   requiredObject: Joi.string(),
   primaryObject: Joi.string(),
   radius: Joi.number().min(0),

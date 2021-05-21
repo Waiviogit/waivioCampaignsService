@@ -36,6 +36,7 @@ const CAMPAIGN_SORTS = {
   DATE: 'date',
   PROXIMITY: 'proximity',
   PAYOUT: 'payout',
+  DEFAULT: 'default',
 };
 
 const BOT_UPVOTE_STATUSES = {
