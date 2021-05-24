@@ -118,13 +118,7 @@ exports.getTransfersHistory = async (hiveHistory) => {
 exports.withdrawDeposit = (type, op, userName) => {
   const result = {
     transfer: _.get(op, 'to') === userName ? 'd' : 'w',
-    transfer_to_vesting: 'd',
     claim_reward_balance: 'd',
-    transfer_to_savings: '',
-    transfer_from_savings: '',
-    limit_order_cancel: '',
-    limit_order_create: '',
-    fill_order: '',
     proposal_pay: 'w',
     demo_user_transfer: 'w',
     user_to_guest_transfer: 'd',

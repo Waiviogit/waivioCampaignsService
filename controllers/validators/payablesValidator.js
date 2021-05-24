@@ -55,3 +55,14 @@ exports.pendingTransfer = Joi.object().keys({
 exports.warningPayables = Joi.object().keys({
   userName: Joi.string().required(),
 }).required().options(options);
+
+exports.advancedWalletSchema = Joi.object().keys({
+  users: Joi.array().items(Joi.string()).single().min(1)
+    .required(),
+  limit: Joi.number().default(10),
+  operationNum: Joi.number().default(-1),
+  types: Joi.array().items(Joi.string().valid(...WALLET_TYPES_FOR_PARSE, ...GUEST_WALLET_OPERATIONS))
+    .single().default([...GUEST_WALLET_OPERATIONS, ...WALLET_TYPES_FOR_PARSE]),
+  endDate: Joi.date().timestamp('unix').less('now').required(),
+  startDate: Joi.date().timestamp('unix').less(Joi.ref('endDate')).required(),
+}).options(options);

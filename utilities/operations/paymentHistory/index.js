@@ -1,8 +1,9 @@
 module.exports = {
-  getPayableHistory: require('./getPayableHistory'),
-  getDemoDebtHistory: require('./getDemoDebtHistory'),
+  getWalletAdvancedReport: require('./getWalletAdvancedReport'),
   getTransfersHistory: require('./getTransfersHistory'),
-  getSingleReport: require('./getSingleReport'),
-  pendingTransfer: require('./setPendingTransfer'),
   checkPayableWarning: require('./checkPayableWarning'),
+  getDemoDebtHistory: require('./getDemoDebtHistory'),
+  getPayableHistory: require('./getPayableHistory'),
+  pendingTransfer: require('./setPendingTransfer'),
+  getSingleReport: require('./getSingleReport'),
 };
