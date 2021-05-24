@@ -122,14 +122,14 @@ const payableWarning = async (req, res) => {
 };
 
 const advancedReport = async (req, res) => {
-  const {
-    params,
-    validationError,
-  } = validators.validate(req.query, validators.payables.advancedWalletSchema);
+  const { params, validationError } = validators
+    .validate(req.body, validators.payables.advancedWalletSchema);
 
   if (validationError) return renderError(res, validationError);
 
-  await getWalletAdvancedReport({ ...params, res });
+  const result = await getWalletAdvancedReport(params);
+  if (result.error) return renderCustomError(res, result.error);
+  renderSuccess(res, result);
 };
 
 module.exports = {

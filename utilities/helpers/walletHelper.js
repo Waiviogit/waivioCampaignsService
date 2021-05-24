@@ -159,27 +159,27 @@ const multiAccountFilter = ({ record, filterAccounts }) => {
   return _.includes(filterAccounts, operation.to);
 };
 
-exports.calcDepositWithdrawals = ({ operations, dynamicProperties, guest }) => _
+exports.calcDepositWithdrawals = ({ operations, dynamicProperties}) => _
   .reduce(operations, (acc, el) => {
     switch (_.get(el, 'withdrawDeposit')) {
       case 'w':
-        acc.withdrawals = new BigNumber(acc.withdrawals).plus(getPriceInUSD(el, guest)).toNumber();
+        acc.withdrawals = new BigNumber(acc.withdrawals).plus(getPriceInUSD(el)).toNumber();
         break;
       case 'd':
         acc.deposits = new BigNumber(acc.deposits)
           .plus(
             el.type === WALLET_TYPES.CLAIM_REWARD_BALANCE
               ? getPriceFromClaimReward(el, dynamicProperties)
-              : getPriceInUSD(el, guest),
+              : getPriceInUSD(el),
           ).toNumber();
         break;
     }
     return acc;
   }, { deposits: 0, withdrawals: 0 });
 
-const getPriceInUSD = (record, guest) => {
+const getPriceInUSD = (record) => {
   if (!record.amount) return 0;
-  if (guest) return new BigNumber(record.amount).times(record.hiveUSD).toNumber();
+  if (record.guest) return new BigNumber(record.amount).times(record.hiveUSD).toNumber();
 
   const [value, currency] = record.amount.split(' ');
   return new BigNumber(value)

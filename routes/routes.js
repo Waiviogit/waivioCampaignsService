@@ -50,7 +50,7 @@ campaignsRoutes.route('/validate_inactivation').post(campaignsController.validat
 campaignsRoutes.route('/payments/set-pending-transfer').post(payablesController.setPendingTransfer);
 campaignsRoutes.route('/payments/transfers_history').get(payablesController.transfersHistory);
 campaignsRoutes.route('/payments/demo_payables').get(payablesController.demoDeptHistory);
-campaignsRoutes.route('/payments/advanced-report').get(payablesController.advancedReport);
+campaignsRoutes.route('/payments/advanced-report').post(payablesController.advancedReport);
 campaignsRoutes.route('/payments/payables').post(payablesController.payableHistory);
 campaignsRoutes.route('/payments/report').post(payablesController.report);
 campaignsRoutes.route('/payments/payable-warning').get(payablesController.payableWarning);
