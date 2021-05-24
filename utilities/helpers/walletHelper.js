@@ -134,6 +134,7 @@ const formatHiveHistory = ({
   const omitFromOperation = ['op', 'block', 'op_in_trx', 'trx_in_block', 'virtual_op', 'trx_id'];
   const price = _.find(hivePriceArr, (el) => moment(el.createdAt).isSame(moment(history[1].timestamp), 'day'));
   const operation = {
+    userName,
     type: history[1].op[0],
     timestamp: moment(history[1].timestamp).unix(),
     hiveUSD: parseFloat(_.get(price, 'hive.usd', '0')),

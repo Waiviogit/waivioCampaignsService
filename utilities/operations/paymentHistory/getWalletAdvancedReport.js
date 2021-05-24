@@ -7,8 +7,38 @@ const moment = require('moment');
 module.exports = async ({
   accounts, startDate, endDate, types, limit,
 }) => {
-  const filterAccounts = _.map(accounts, 'name');
+  accounts = await addWalletDataToAccounts({
+    accounts, startDate, endDate, limit, types,
+  });
 
+  const usersJointArr = _
+    .chain(accounts)
+    .reduce((acc, el) => _.concat(acc, el.wallet), [])
+    .orderBy(['timestamp'], ['desc'])
+    .value();
+
+  const resultArray = _.take(usersJointArr, limit);
+
+  const resAccounts = _.reduce(accounts,
+    (acc, el) => (!el.guest
+      ? accumulateHiveAcc(resultArray, el, acc)
+      : accumulateGuestAcc(resultArray, el, acc)), []);
+
+  const dynamicProperties = await redisGetter.getHashAll('dynamic_global_properties');
+  const depositWithdrawals = calcDepositWithdrawals({ operations: resultArray, dynamicProperties });
+
+  return {
+    wallet: resultArray,
+    accounts: resAccounts,
+    hasMore: usersJointArr.length > resultArray.length,
+    ...depositWithdrawals,
+  };
+};
+
+const addWalletDataToAccounts = async ({
+  accounts, startDate, endDate, limit, types,
+}) => {
+  const filterAccounts = _.map(accounts, 'name');
   for (const account of accounts) {
     if (account.guest) {
       const { histories, hasMore } = await getDemoDebtHistory({
@@ -42,29 +72,7 @@ module.exports = async ({
     });
     account.hasMore = account.wallet.length > limit;
   }
-
-  const usersJointArr = _
-    .chain(accounts)
-    .reduce((acc, el) => _.concat(acc, el.wallet), [])
-    .orderBy(['timestamp'], ['desc'])
-    .value();
-
-  const resultArray = _.take(usersJointArr, limit);
-
-  const resAccounts = _.reduce(accounts,
-    (acc, el) => (!el.guest
-      ? accumulateHiveAcc(resultArray, el, acc)
-      : accumulateGuestAcc(resultArray, el, acc)), []);
-
-  const dynamicProperties = await redisGetter.getHashAll('dynamic_global_properties');
-  const depositWithdrawals = calcDepositWithdrawals({ operations: resultArray, dynamicProperties });
-
-  return {
-    wallet: resultArray,
-    accounts: resAccounts,
-    hasMore: usersJointArr.length > resultArray.length,
-    ...depositWithdrawals,
-  };
+  return accounts;
 };
 
 const accumulateHiveAcc = (resultArray, account, acc) => {
