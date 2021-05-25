@@ -1,14 +1,15 @@
 const getDemoDebtHistory = require('utilities/operations/paymentHistory/getDemoDebtHistory');
 const { getWalletData, calcDepositWithdrawals } = require('utilities/helpers/walletHelper');
+const { ADVANCED_WALLET_TYPES } = require('constants/constants');
 const { redisGetter } = require('utilities/redis');
 const _ = require('lodash');
 const moment = require('moment');
 
 module.exports = async ({
-  accounts, startDate, endDate, types, limit,
+  accounts, startDate, endDate, limit, filterAccounts,
 }) => {
   accounts = await addWalletDataToAccounts({
-    accounts, startDate, endDate, limit, types,
+    accounts, startDate, endDate, limit, filterAccounts,
   });
 
   const usersJointArr = _
@@ -27,18 +28,20 @@ module.exports = async ({
   const dynamicProperties = await redisGetter.getHashAll('dynamic_global_properties');
   const depositWithdrawals = calcDepositWithdrawals({ operations: resultArray, dynamicProperties });
 
+  const hasMore = usersJointArr.length > resultArray.length
+    || _.some(accounts, (acc) => !!acc.hasMore);
+
   return {
     wallet: resultArray,
     accounts: resAccounts,
-    hasMore: usersJointArr.length > resultArray.length,
+    hasMore,
     ...depositWithdrawals,
   };
 };
 
 const addWalletDataToAccounts = async ({
-  accounts, startDate, endDate, limit, types,
+  accounts, startDate, endDate, limit, filterAccounts,
 }) => {
-  const filterAccounts = _.map(accounts, 'name');
   for (const account of accounts) {
     if (account.guest) {
       const { histories, hasMore } = await getDemoDebtHistory({
@@ -62,13 +65,13 @@ const addWalletDataToAccounts = async ({
     }
     account.wallet = await getWalletData({
       operationNum: account.operationNum,
+      types: ADVANCED_WALLET_TYPES,
       userName: account.name,
       limit: limit + 1,
       tableView: true,
       filterAccounts,
       startDate,
       endDate,
-      types,
     });
     account.hasMore = account.wallet.length > limit;
   }

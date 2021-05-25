@@ -151,11 +151,14 @@ const formatHiveHistory = ({
 const multiAccountFilter = ({ record, filterAccounts }) => {
   const [type, operation] = record;
   if (type !== WALLET_TYPES.TRANSFER) return false;
+  const memo = jsonHelper.parseJson(operation.memo);
 
   if (operation.to === process.env.WALLET_ACC_NAME) {
-    const memo = jsonHelper.parseJson(operation.memo);
     return memo.id === PAYMENT_HISTORIES_TYPES.USER_TO_GUEST_TRANSFER
       && _.includes(filterAccounts, memo.to);
+  }
+  if (operation.from === process.env.WALLET_ACC_NAME) {
+    return memo.id === 'waivio_guest_transfer' && _.includes(filterAccounts, memo.from);
   }
   return _.includes(filterAccounts, operation.to);
 };

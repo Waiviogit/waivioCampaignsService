@@ -57,17 +57,15 @@ exports.warningPayables = Joi.object().keys({
 }).required().options(options);
 
 exports.advancedWalletSchema = Joi.object().keys({
-  // #todo proper validation skip limit
   accounts: Joi.array().items(Joi.object().keys({
     name: Joi.string().required(),
     guest: Joi.boolean().required(),
-    skip: Joi.number(),
-    operationNum: Joi.number(),
+    skip: Joi.when('guest', { is: true, then: Joi.number().default(0) }),
+    operationNum: Joi.when('guest', { is: false, then: Joi.number().default(-1) }),
   })).single().min(1)
     .required(),
   endDate: Joi.date().timestamp('unix').less('now').default(new Date()),
   startDate: Joi.date().timestamp('unix').default(moment.utc().subtract(10, 'year').toDate()).less(Joi.ref('endDate')),
+  filterAccounts: Joi.array().items(Joi.string()).min(1).required(),
   limit: Joi.number().default(10),
-  types: Joi.array().items(Joi.string().valid(...WALLET_TYPES_FOR_PARSE, ...GUEST_WALLET_OPERATIONS))
-    .single().default([...GUEST_WALLET_OPERATIONS, ...WALLET_TYPES_FOR_PARSE]),
 }).options(options);
