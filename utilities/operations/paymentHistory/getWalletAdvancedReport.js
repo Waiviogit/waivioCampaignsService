@@ -41,42 +41,40 @@ module.exports = async ({
 
 const addWalletDataToAccounts = async ({
   accounts, startDate, endDate, limit, filterAccounts,
-}) => {
-  for (const account of accounts) {
-    if (account.guest) {
-      const { histories, hasMore } = await getDemoDebtHistory({
-        userName: account.name,
-        skip: account.skip,
-        tableView: true,
-        filterAccounts,
-        startDate,
-        endDate,
-        limit,
-      });
-
-      _.forEach(histories, (el) => {
-        el.timestamp = moment.utc(el.createdAt).valueOf();
-        el.guest = true;
-      });
-
-      account.wallet = histories;
-      account.hasMore = hasMore;
-      continue;
-    }
-    account.wallet = await getWalletData({
-      operationNum: account.operationNum,
-      types: ADVANCED_WALLET_TYPES,
+}) => Promise.all(accounts.map(async (account) => {
+  if (account.guest) {
+    const { histories, hasMore } = await getDemoDebtHistory({
       userName: account.name,
-      limit: limit + 1,
+      skip: account.skip,
       tableView: true,
       filterAccounts,
       startDate,
       endDate,
+      limit,
     });
-    account.hasMore = account.wallet.length > limit;
+
+    _.forEach(histories, (el) => {
+      el.timestamp = moment.utc(el.createdAt).valueOf();
+      el.guest = true;
+    });
+
+    account.wallet = histories;
+    account.hasMore = hasMore;
+    return account;
   }
-  return accounts;
-};
+  account.wallet = await getWalletData({
+    operationNum: account.operationNum,
+    types: ADVANCED_WALLET_TYPES,
+    userName: account.name,
+    limit: limit + 1,
+    tableView: true,
+    filterAccounts,
+    startDate,
+    endDate,
+  });
+  account.hasMore = account.wallet.length > limit;
+  return account;
+}));
 
 const accumulateHiveAcc = (resultArray, account, acc) => {
   const lastOpNum = _.get(_.last(account.wallet), 'operationNum', 1);
