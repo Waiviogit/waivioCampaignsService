@@ -23,7 +23,7 @@ const sortPrimaryCampaigns = (campaigns, sort) => {
     case CAMPAIGN_SORTS.PAYOUT:
       return _.orderBy(campaigns, ['payout'], ['desc']);
     case CAMPAIGN_SORTS.DEFAULT:
-      return _.orderBy(campaigns, [(campaign) => campaign.distance || '', 'payout'], ['desc', 'desc']);
+      return _.orderBy(campaigns, [(campaign) => campaign.distance, 'payout'], ['asc', 'desc']);
   }
 };
 
@@ -207,7 +207,7 @@ exports.getPrimaryCampaigns = async ({
     campaigns: allCampaigns, locale, appName, forSecondary: false,
   });
 
-  if (sort === CAMPAIGN_SORTS.PAYOUT || CAMPAIGN_SORTS.DEFAULT) {
+  if (sort === CAMPAIGN_SORTS.PAYOUT || sort === CAMPAIGN_SORTS.DEFAULT) {
     for (const campaign of allCampaigns) {
       campaign.payout = amountPayments(campaign);
     }
@@ -244,8 +244,10 @@ exports.getPrimaryCampaigns = async ({
       distance: area && coordinates.length === 2 ? getDistance(area, coordinates) : null,
       count: groupedCampaigns[key].length,
       required_object: requiredObject,
-      payout: _.round(_.sumBy(groupedCampaigns[key],
-        (campaign) => campaign.payout) / groupedCampaigns[key].length, 3),
+      payout: (sort === CAMPAIGN_SORTS.PAYOUT || sort === CAMPAIGN_SORTS.DEFAULT)
+        ? _.sumBy(groupedCampaigns[key],
+          (campaign) => campaign.payout) / groupedCampaigns[key].length
+        : 0,
     });
   }));
   campaigns = sortPrimaryCampaigns(campaigns, firstMapLoad ? CAMPAIGN_SORTS.PROXIMITY : sort);
@@ -413,6 +415,6 @@ const amountPayments = (campaign) => {
   const countPayments = _.filter(_.get(campaign, 'payments', []),
     (payment) => (payment.status !== 'rejected')).length;
   return countPayments
-    ? _.round((countPayments * campaign.reward * campaign.commissionAgreement), 3)
-    : _.round((campaign.reward * campaign.commissionAgreement), 3);
+    ? (countPayments * campaign.reward * campaign.commissionAgreement)
+    : (campaign.reward * campaign.commissionAgreement);
 };

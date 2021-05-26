@@ -107,7 +107,7 @@ exports.validateStatisticsSchema = Joi.object().keys({
   locale: Joi.string().default('en-US'),
   appName: Joi.string().default('waivio'),
   limit: Joi.number().default(10),
-  sort: Joi.string().valid('reward', 'date', 'proximity').default('reward'),
+  sort: Joi.string().valid(...Object.values(CAMPAIGN_SORTS)).default(CAMPAIGN_SORTS.REWARD),
   status: Joi.array().default(['active']),
   area: Joi.array().ordered(
     Joi.number().min(-90).max(90),
