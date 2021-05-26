@@ -40,7 +40,7 @@ exports.getWalletData = async ({
           break;
         }
         if (tableView && endDateTimestamp < recordTimestamp) continue;
-        if (tableView && multiAccountFilter({ record: record[1].op, filterAccounts })) continue;
+        if (tableView && multiAccountFilter({ record: record[1].op, filterAccounts, userName })) continue;
         walletOperations.push(record);
       }
     }
@@ -148,7 +148,8 @@ const formatHiveHistory = ({
   return _.omit(operation, omitFromOperation);
 });
 
-const multiAccountFilter = ({ record, filterAccounts }) => {
+const multiAccountFilter = ({ record, filterAccounts, userName }) => {
+  filterAccounts = _.filter(filterAccounts, (el) => el !== userName);
   const [type, operation] = record;
   if (type !== WALLET_TYPES.TRANSFER) return false;
   const memo = jsonHelper.parseJson(operation.memo);
@@ -160,10 +161,10 @@ const multiAccountFilter = ({ record, filterAccounts }) => {
   if (operation.from === process.env.WALLET_ACC_NAME) {
     return memo.id === 'waivio_guest_transfer' && _.includes(filterAccounts, memo.from);
   }
-  return _.includes(filterAccounts, operation.to);
+  return _.includes(filterAccounts, operation.to) || _.includes(filterAccounts, operation.from);
 };
 
-exports.calcDepositWithdrawals = ({ operations, dynamicProperties}) => _
+exports.calcDepositWithdrawals = ({ operations, dynamicProperties }) => _
   .reduce(operations, (acc, el) => {
     switch (_.get(el, 'withdrawDeposit')) {
       case 'w':
