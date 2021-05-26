@@ -118,13 +118,7 @@ exports.getTransfersHistory = async (hiveHistory) => {
 exports.withdrawDeposit = (type, op, userName) => {
   const result = {
     transfer: _.get(op, 'to') === userName ? 'd' : 'w',
-    transfer_to_vesting: 'd',
     claim_reward_balance: 'd',
-    transfer_to_savings: '',
-    transfer_from_savings: '',
-    limit_order_cancel: '',
-    limit_order_create: '',
-    fill_order: '',
     proposal_pay: 'w',
     demo_user_transfer: 'w',
     user_to_guest_transfer: 'd',
@@ -140,6 +134,7 @@ const formatHiveHistory = ({
   const omitFromOperation = ['op', 'block', 'op_in_trx', 'trx_in_block', 'virtual_op', 'trx_id'];
   const price = _.find(hivePriceArr, (el) => moment(el.createdAt).isSame(moment(history[1].timestamp), 'day'));
   const operation = {
+    userName,
     type: history[1].op[0],
     timestamp: moment(history[1].timestamp).unix(),
     hiveUSD: parseFloat(_.get(price, 'hive.usd', '0')),
@@ -156,36 +151,39 @@ const formatHiveHistory = ({
 const multiAccountFilter = ({ record, filterAccounts }) => {
   const [type, operation] = record;
   if (type !== WALLET_TYPES.TRANSFER) return false;
+  const memo = jsonHelper.parseJson(operation.memo);
 
   if (operation.to === process.env.WALLET_ACC_NAME) {
-    const memo = jsonHelper.parseJson(operation.memo);
     return memo.id === PAYMENT_HISTORIES_TYPES.USER_TO_GUEST_TRANSFER
       && _.includes(filterAccounts, memo.to);
+  }
+  if (operation.from === process.env.WALLET_ACC_NAME) {
+    return memo.id === 'waivio_guest_transfer' && _.includes(filterAccounts, memo.from);
   }
   return _.includes(filterAccounts, operation.to);
 };
 
-exports.calcDepositWithdrawals = ({ operations, dynamicProperties, guest }) => _
+exports.calcDepositWithdrawals = ({ operations, dynamicProperties}) => _
   .reduce(operations, (acc, el) => {
     switch (_.get(el, 'withdrawDeposit')) {
       case 'w':
-        acc.withdrawals = new BigNumber(acc.withdrawals).plus(getPriceInUSD(el, guest)).toNumber();
+        acc.withdrawals = new BigNumber(acc.withdrawals).plus(getPriceInUSD(el)).toNumber();
         break;
       case 'd':
         acc.deposits = new BigNumber(acc.deposits)
           .plus(
             el.type === WALLET_TYPES.CLAIM_REWARD_BALANCE
               ? getPriceFromClaimReward(el, dynamicProperties)
-              : getPriceInUSD(el, guest),
+              : getPriceInUSD(el),
           ).toNumber();
         break;
     }
     return acc;
   }, { deposits: 0, withdrawals: 0 });
 
-const getPriceInUSD = (record, guest) => {
+const getPriceInUSD = (record) => {
   if (!record.amount) return 0;
-  if (guest) return new BigNumber(record.amount).times(record.hiveUSD).toNumber();
+  if (record.guest) return new BigNumber(record.amount).times(record.hiveUSD).toNumber();
 
   const [value, currency] = record.amount.split(' ');
   return new BigNumber(value)

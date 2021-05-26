@@ -105,17 +105,31 @@ const minCountMapCampaigns = 5;
 const INTERNAL_OPERATIONS = 'internal_operations';
 const SUSPENDED_DAYS = 30;
 
-const WALLET_TYPES_FOR_PARSE = [
+const HIVE_OPERATIONS_TYPES = {
   INTERNAL_OPERATIONS,
-  'transfer',
-  'transfer_to_vesting',
-  'claim_reward_balance',
-  'transfer_to_savings',
-  'transfer_from_savings',
-  'limit_order_cancel',
-  'limit_order_create',
-  'fill_order',
-  'proposal_pay',
+  TRANSFER: 'transfer',
+  TRANSFER_TO_VESTING: 'transfer_to_vesting',
+  CLAIM_REWARD_BALANCE: 'claim_reward_balance',
+  TRANSFER_TO_SAVINGS: 'transfer_to_savings',
+  TRANSFER_FROM_SAVINGS: 'transfer_from_savings',
+  LIMIT_ORDER_CREATE: 'limit_order_create',
+  LIMIT_ORDER_CANCEL: 'limit_order_cancel',
+  FILL_ORDER: 'fill_order',
+  PROPOSAL_PAY: 'proposal_pay',
+};
+
+const WALLET_TYPES_FOR_PARSE = Object.values(HIVE_OPERATIONS_TYPES);
+
+const ADVANCED_WALLET_TYPES = [
+  INTERNAL_OPERATIONS,
+  HIVE_OPERATIONS_TYPES.TRANSFER,
+  HIVE_OPERATIONS_TYPES.TRANSFER_TO_VESTING,
+  HIVE_OPERATIONS_TYPES.CLAIM_REWARD_BALANCE,
+  HIVE_OPERATIONS_TYPES.TRANSFER_TO_SAVINGS,
+  HIVE_OPERATIONS_TYPES.TRANSFER_FROM_SAVINGS,
+  HIVE_OPERATIONS_TYPES.LIMIT_ORDER_CANCEL,
+  HIVE_OPERATIONS_TYPES.FILL_ORDER,
+  HIVE_OPERATIONS_TYPES.PROPOSAL_PAY,
 ];
 
 const GUEST_WALLET_OPERATIONS = [
@@ -206,4 +220,5 @@ module.exports = {
   REVIEW_TYPES,
   DAYS_TO_PAYABLE_WARNING,
   CAMPAIGN_FIELDS_FOR_CARDS,
+  ADVANCED_WALLET_TYPES,
 };

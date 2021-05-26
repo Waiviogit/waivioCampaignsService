@@ -50,6 +50,7 @@ campaignsRoutes.route('/validate_inactivation').post(campaignsController.validat
 campaignsRoutes.route('/payments/set-pending-transfer').post(payablesController.setPendingTransfer);
 campaignsRoutes.route('/payments/transfers_history').get(payablesController.transfersHistory);
 campaignsRoutes.route('/payments/demo_payables').get(payablesController.demoDeptHistory);
+campaignsRoutes.route('/payments/advanced-report').post(payablesController.advancedReport);
 campaignsRoutes.route('/payments/payables').post(payablesController.payableHistory);
 campaignsRoutes.route('/payments/report').post(payablesController.report);
 campaignsRoutes.route('/payments/payable-warning').get(payablesController.payableWarning);
@@ -62,6 +63,8 @@ withdrawRoutes.route('/validate-crypto-wallet').get(withdrawController.validateW
 withdrawRoutes.route('/estimate-output-amount').get(withdrawController.estimateAmount);
 withdrawRoutes.route('/confirm-transaction').get(withdrawController.finalConfirm);
 withdrawRoutes.route('/create-demo-payment').post(withdrawController.demoPayment);
+// temporary solution to an immediate guest withdraw
+withdrawRoutes.route('/immediate-withdraw').post(withdrawController.immediateConfirm);
 
 mailerRoutes.route('/confirm-email-in-transaction').get(mailerController.confirmEmailInTransaction);
 mailerRoutes.route('/confirm-email-response').get(mailerController.confirmEmailResponse);
