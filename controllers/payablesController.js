@@ -1,7 +1,12 @@
 const {
   paymentHistory: {
-    getDemoDebtHistory, getPayableHistory, getTransfersHistory,
-    getSingleReport, pendingTransfer, checkPayableWarning,
+    getWalletAdvancedReport,
+    checkPayableWarning,
+    getTransfersHistory,
+    getDemoDebtHistory,
+    getPayableHistory,
+    getSingleReport,
+    pendingTransfer,
   },
 } = require('utilities/operations');
 const { renderSuccess, renderError, renderCustomError } = require('concerns/renderConcern');
@@ -116,6 +121,17 @@ const payableWarning = async (req, res) => {
   renderSuccess(res, { warning });
 };
 
+const advancedReport = async (req, res) => {
+  const { params, validationError } = validators
+    .validate(req.body, validators.payables.advancedWalletSchema);
+
+  if (validationError) return renderError(res, validationError);
+
+  const result = await getWalletAdvancedReport(params);
+  if (result.error) return renderCustomError(res, result.error);
+  renderSuccess(res, result);
+};
+
 module.exports = {
   transfersHistory,
   demoDeptHistory,
@@ -123,4 +139,5 @@ module.exports = {
   report,
   setPendingTransfer,
   payableWarning,
+  advancedReport,
 };

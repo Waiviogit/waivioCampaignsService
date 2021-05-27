@@ -1576,6 +1576,81 @@
         }
       }
     },
+    "/payments/advanced-report": {
+      "post": {
+        "tags": [
+          "Payables"
+        ],
+        "summary": "Get all wallet info for user or multiple users",
+        "description": "Return wallet, accounts skip limit properties,deposits, withdrawals and hasMore flag",
+        "produces": [
+          "application/json"
+        ],
+        "parameters": [
+          {
+            "name": "params",
+            "in": "body",
+            "description": "If the account is a guest account, the skip property is added, otherwise the property operationNum\nfilterAccounts - array of all requested accounts names\nNot required properties: startDate, endDate, limit",
+            "schema": {
+              "type": "object",
+              "properties": {
+                "accounts": {
+                  "$ref": "#/definitions/advancedWalletAccounts"
+                },
+                "filterAccounts": {
+                  "type": "array",
+                  "items": {
+                    "type": "string"
+                  }
+                },
+                "startDate": {
+                  "type": "number",
+                  "example": 1619816400
+                },
+                "endDate": {
+                  "type": "number",
+                  "example": 1621857636
+                },
+                "limit": {
+                  "type": "number"
+                }
+              }
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "ok",
+            "schema": {
+              "type": "object",
+              "properties": {
+                "wallet" : {
+                  "$ref" : "#/definitions/advancedWallet"
+                },
+                "accounts": {
+                  "$ref": "#/definitions/advancedWalletAccounts"
+                },
+                "hasMore": {
+                  "type": "boolean"
+                },
+                "deposits": {
+                  "type": "number"
+                },
+                "withdrawals": {
+                  "type": "number"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Error",
+            "schema": {
+              "$ref": "#/definitions/validationError"
+            }
+          }
+        }
+      }
+    },
     "/payments/demo_payables": {
       "get": {
         "tags": [
@@ -8079,6 +8154,87 @@
         "name" : "User"
       }
     },
+    "advancedWalletAccounts": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "properties": {
+          "name": {
+            "type": "string"
+          },
+          "guest": {
+            "type": "boolean"
+          },
+          "skip": {
+            "type": "number"
+          },
+          "operationNum": {
+            "type": "number",
+            "example": -1
+          }
+        }
+      }
+    },
+    "advancedWallet": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "properties": {
+          "userName": {
+            "type": "string"
+          },
+          "sponsor": {
+            "type": "string"
+          },
+          "type": {
+            "type": "string"
+          },
+          "memo": {
+            "type": "string"
+          },
+          "withdrawDeposit": {
+            "type": "string"
+          },
+          "from": {
+            "type": "string"
+          },
+          "to": {
+            "type": "string"
+          },
+          "amount": {
+            "type": "number"
+          },
+          "balance": {
+            "type": "number"
+          },
+          "withdraw": {
+            "type": "number"
+          },
+          "operationNum": {
+            "type": "number"
+          },
+          "hiveUSD": {
+            "type": "number"
+          },
+          "hbdUSD": {
+            "type": "number"
+          },
+          "timestamp": {
+            "type": "number",
+            "example": 1621667718
+          },
+          "payed": {
+            "type": "boolean"
+          },
+          "is_demo_account": {
+            "type": "boolean"
+          },
+          "recounted": {
+            "type": "boolean"
+          }
+        }
+      }
+    },
     "wallet": {
       "type": "array",
       "example": [
@@ -8090,6 +8246,7 @@
           "hbdUSD": 1.48,
           "withdrawDeposit": "w",
           "account": "olegvladim",
+          "userName": "olegvladim",
           "current_pays": "1 HIVE",
           "open_pays": "0.188 HBD",
           "timestamp": 1586161065000,
