@@ -4,8 +4,8 @@ const {
   campaignModel, userModel, paymentHistoryModel, Subscriptions, wobjectSubscriptions, appModel,
 } = require('models');
 const {
-  maxMapRadius, minCountMapCampaigns, PAYMENT_HISTORIES_TYPES,
-  CAMPAIGN_STATUSES, RESERVATION_STATUSES, CAMPAIGN_FIELDS_FOR_CARDS, CAMPAIGN_SORTS,
+  maxMapRadius, minCountMapCampaigns, PAYMENT_HISTORIES_TYPES, CAMPAIGN_STATUSES,
+  RESERVATION_STATUSES, CAMPAIGN_FIELDS_FOR_CARDS, CAMPAIGN_SORTS, CAMPAIGN_PAYMENT_SORTS,
 } = require('constants/constants');
 const { CAMPAIGN_FIELDS } = require('constants/wobjectsData');
 const { getNamespace } = require('cls-hooked');
@@ -207,7 +207,7 @@ exports.getPrimaryCampaigns = async ({
     campaigns: allCampaigns, locale, appName, forSecondary: false,
   });
 
-  if (sort === CAMPAIGN_SORTS.PAYOUT || sort === CAMPAIGN_SORTS.DEFAULT) {
+  if (_.includes(CAMPAIGN_PAYMENT_SORTS, sort)) {
     for (const campaign of allCampaigns) {
       campaign.payout = amountPayments(campaign);
     }
@@ -244,10 +244,7 @@ exports.getPrimaryCampaigns = async ({
       distance: area && coordinates.length === 2 ? getDistance(area, coordinates) : null,
       count: groupedCampaigns[key].length,
       required_object: requiredObject,
-      payout: (sort === CAMPAIGN_SORTS.PAYOUT || sort === CAMPAIGN_SORTS.DEFAULT)
-        ? _.sumBy(groupedCampaigns[key],
-          (campaign) => campaign.payout) / groupedCampaigns[key].length
-        : 0,
+      payout: primaryCampaignsPayout(groupedCampaigns[key], sort),
     });
   }));
   campaigns = sortPrimaryCampaigns(campaigns, firstMapLoad ? CAMPAIGN_SORTS.PROXIMITY : sort);
@@ -418,3 +415,7 @@ const amountPayments = (campaign) => {
     ? (countPayments * campaign.reward * campaign.commissionAgreement)
     : (campaign.reward * campaign.commissionAgreement);
 };
+
+const primaryCampaignsPayout = (campaigns, sort) => (_.includes(CAMPAIGN_PAYMENT_SORTS, sort)
+  ? _.sumBy(campaigns, (campaign) => campaign.payout) / campaigns.length
+  : 0);
