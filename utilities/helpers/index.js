@@ -14,4 +14,5 @@ module.exports = {
   wobjectHelper: require('./wobjectHelper'),
   detectFraudHelper: require('./detectFraudHelper'),
   jsonHelper: require('./jsonHelper'),
+  calcHelper: require('./calcHelper'),
 };
