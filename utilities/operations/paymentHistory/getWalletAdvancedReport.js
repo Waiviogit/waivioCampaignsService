@@ -54,7 +54,7 @@ const addWalletDataToAccounts = async ({
     });
 
     _.forEach(histories, (el) => {
-      el.timestamp = moment.utc(el.createdAt).valueOf();
+      el.timestamp = moment(el.createdAt).unix();
       el.guest = true;
     });
 
