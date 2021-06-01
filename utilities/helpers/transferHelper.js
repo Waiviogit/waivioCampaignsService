@@ -1,10 +1,11 @@
-const _ = require('lodash');
+const getPayableHistory = require('utilities/operations/paymentHistory/getPayableHistory');
+const { MIN_DEBT_TO_SUSPENDED, MIN_TO_PAYED_VALUE } = require('constants/appData');
+const { paymentHistoryModel, campaignModel, wobjectModel } = require('models');
+const { sumBy, add, subtract } = require('utilities/helpers/calcHelper');
+const { CAMPAIGN_STATUSES } = require('constants/constants');
 const moment = require('moment');
 const config = require('config');
-const { MIN_DEBT_TO_SUSPENDED, MIN_TO_PAYED_VALUE } = require('constants/appData');
-const getPayableHistory = require('utilities/operations/paymentHistory/getPayableHistory');
-const { paymentHistoryModel, campaignModel, wobjectModel } = require('models');
-const { CAMPAIGN_STATUSES } = require('constants/constants');
+const _ = require('lodash');
 
 /** Private methods */
 
@@ -73,11 +74,11 @@ exports.recountDebtAfterTransfer = async ({
       { _id: { $in: _.map(transferHistories, '_id') } },
       { payed: true, 'details.remaining': 0 },
     );
-    transferAmount = _.sumBy(transferHistories, (history) => _.get(history, 'details.remaining', 0));
+    transferAmount = sumBy(transferHistories, (history) => _.get(history, 'details.remaining', 0));
   }
 
   const debtHistories = _.filter(histories, (history) => !_.includes(['demo_debt', 'transfer'], history.type) && !history.payed);
-  amount += transferAmount;
+  amount = add(amount, transferAmount);
   if (!debtHistories.length) return { remaining: _.round(amount, 3), payed: false };
 
   for (const id in debtHistories) {
@@ -85,19 +86,19 @@ exports.recountDebtAfterTransfer = async ({
       ? debtHistories[id].details.remaining
       : debtHistories[id].amount;
 
-    if (_.round(amount, 4) - _.round(remaining, 3) < -MIN_TO_PAYED_VALUE && +id === 0) {
+    if (subtract(amount, remaining) < -MIN_TO_PAYED_VALUE && +id === 0) {
       return { remaining: amount, payed: false };
     }
 
     await paymentHistoryModel.updateOne({ _id: debtHistories[+id]._id },
       _.get(debtHistories[id], 'details.remaining') ? { payed: true } : { payed: true, 'details.remaining': 0 });
-    amount = _.round(amount - remaining, 4);
+    amount = subtract(amount, remaining);
 
     if (debtHistories[+id + 1]) {
       const nextRemaining = debtHistories[+id + 1].type === 'overpayment_refund'
         ? debtHistories[+id + 1].details.remaining
         : debtHistories[+id + 1].amount;
-      if ((_.round(amount, 4) - _.round(nextRemaining, 3)) < -MIN_TO_PAYED_VALUE) break;
+      if (subtract(amount, nextRemaining) < -MIN_TO_PAYED_VALUE) break;
     }
   }
   if (suspended) await checkForUnblockCampaign(guideName);
