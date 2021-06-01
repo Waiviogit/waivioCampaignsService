@@ -28,7 +28,7 @@ exports.execute = async (method, params) => {
     if (i === hiveClients.length - 1) {
       return { error: data.error };
     }
-    if (data.error) { // #TODO add specific code
+    if (data.error) {
       this.client = getHiveClient(this.client);
     }
   }
