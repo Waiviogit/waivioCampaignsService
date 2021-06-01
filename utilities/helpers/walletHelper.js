@@ -1,7 +1,7 @@
-const { SAVINGS_TRANSFERS, WALLET_TYPES, CURRENCIES } = require('constants/walletData');
+const { SAVINGS_TRANSFERS, CURRENCIES, ACCOUNT_FILTER_TYPES } = require('constants/walletData');
+const { PAYMENT_HISTORIES_TYPES, HIVE_OPERATIONS_TYPES } = require('constants/constants');
 const { internalExchangeModel, currenciesStatiscticModel } = require('models');
 const { hiveRequests, currencyRequest } = require('utilities/requests');
-const { PAYMENT_HISTORIES_TYPES } = require('constants/constants');
 const jsonHelper = require('utilities/helpers/jsonHelper');
 const { add } = require('utilities/helpers/calcHelper');
 const BigNumber = require('bignumber.js');
@@ -118,22 +118,29 @@ exports.getTransfersHistory = async (hiveHistory) => {
 
 exports.withdrawDeposit = (type, op, userName) => {
   const result = {
-    transfer: _.get(op, 'to') === userName ? 'd' : 'w',
-    transfer_to_vesting: _.get(op, 'from') === userName ? '' : 'd',
-    claim_reward_balance: 'd',
-    proposal_pay: 'w',
-    demo_user_transfer: 'w',
-    user_to_guest_transfer: 'd',
-    demo_post: 'd',
-    demo_debt: 'd',
+    [HIVE_OPERATIONS_TYPES.TRANSFER]: _.get(op, 'to') === userName ? 'd' : 'w',
+    [HIVE_OPERATIONS_TYPES.TRANSFER_TO_VESTING]: getPowerDepositWithdraws(op, userName),
+    [HIVE_OPERATIONS_TYPES.FILL_VESTING_WITHDRAW]: getPowerDepositWithdraws(op, userName),
+    [HIVE_OPERATIONS_TYPES.CLAIM_REWARD_BALANCE]: 'd',
+    [HIVE_OPERATIONS_TYPES.PROPOSAL_PAY]: 'w',
+    [PAYMENT_HISTORIES_TYPES.DEMO_USER_TRANSFER]: 'w',
+    [PAYMENT_HISTORIES_TYPES.USER_TO_GUEST_TRANSFER]: 'd',
+    [PAYMENT_HISTORIES_TYPES.DEMO_POST]: 'd',
+    [PAYMENT_HISTORIES_TYPES.DEMO_DEBT]: 'd',
   };
   return result[type] || '';
+};
+
+const getPowerDepositWithdraws = (op, userName) => {
+  if (op.from === userName && op.to !== userName) return 'w';
+  if (op.from !== userName && op.to === userName) return 'd';
+  return '';
 };
 
 const formatHiveHistory = ({
   walletOperations, hivePriceArr, tableView, userName,
 }) => _.map(walletOperations, (history) => {
-  const omitFromOperation = ['op', 'block', 'op_in_trx', 'trx_in_block', 'virtual_op', 'trx_id'];
+  const omitFromOperation = ['op', 'block', 'op_in_trx', 'trx_in_block', 'virtual_op', 'trx_id', 'deposited', 'from_account', 'to_account'];
   const price = _.find(hivePriceArr, (el) => moment(el.createdAt).isSame(moment(history[1].timestamp), 'day'));
   const operation = {
     userName,
@@ -142,9 +149,13 @@ const formatHiveHistory = ({
     hiveUSD: parseFloat(_.get(price, 'hive.usd', '0')),
     hbdUSD: parseFloat(_.get(price, 'hive_dollar.usd', '0')),
     operationNum: history[0],
-    withdrawDeposit: this.withdrawDeposit(history[1].op[0], history[1].op[1], userName),
     ...history[1].op[1],
   };
+  if (operation.type === HIVE_OPERATIONS_TYPES.FILL_VESTING_WITHDRAW) {
+    Object.assign(operation,
+      { from: operation.from_account, to: operation.to_account, amount: operation.deposited });
+  }
+  operation.withdrawDeposit = this.withdrawDeposit(operation.type, operation, userName);
 
   if (tableView && _.includes(SAVINGS_TRANSFERS, operation.type)) omitFromOperation.push('amount');
   return _.omit(operation, omitFromOperation);
@@ -153,9 +164,19 @@ const formatHiveHistory = ({
 const multiAccountFilter = ({ record, filterAccounts, userName }) => {
   filterAccounts = _.filter(filterAccounts, (el) => el !== userName);
   const [type, operation] = record;
-  if (type !== WALLET_TYPES.TRANSFER) return false;
+  if (!_.includes(ACCOUNT_FILTER_TYPES, type)) return false;
   const memo = jsonHelper.parseJson(operation.memo);
+  switch (type) {
+    case HIVE_OPERATIONS_TYPES.TRANSFER:
+      return filterTypeTransfer({ operation, memo, filterAccounts });
+    case HIVE_OPERATIONS_TYPES.TRANSFER_TO_VESTING:
+      return filterFromTo(filterAccounts, [operation.from, operation.to]);
+    case HIVE_OPERATIONS_TYPES.FILL_VESTING_WITHDRAW:
+      return filterFromTo(filterAccounts, [operation.from_account, operation.to_account]);
+  }
+};
 
+const filterTypeTransfer = ({ operation, memo, filterAccounts }) => {
   if (operation.to === process.env.WALLET_ACC_NAME) {
     return memo.id === PAYMENT_HISTORIES_TYPES.USER_TO_GUEST_TRANSFER
       && _.includes(filterAccounts, memo.to);
@@ -163,8 +184,11 @@ const multiAccountFilter = ({ record, filterAccounts, userName }) => {
   if (operation.from === process.env.WALLET_ACC_NAME) {
     return memo.id === 'waivio_guest_transfer' && _.includes(filterAccounts, memo.from);
   }
-  return _.includes(filterAccounts, operation.to) || _.includes(filterAccounts, operation.from);
+  return filterFromTo(filterAccounts, [operation.to, operation.from]);
 };
+
+const filterFromTo = (filterAccounts, fromToArr) => (
+  _.some(filterAccounts, (el) => _.includes(fromToArr, el)));
 
 exports.calcDepositWithdrawals = ({ operations, field }) => _
   .reduce(operations, (acc, el) => {
@@ -181,7 +205,7 @@ exports.calcDepositWithdrawals = ({ operations, field }) => _
 
 exports.addCurrencyToOperations = ({ operations, dynamicProperties }) => _
   .map(operations, (op) => {
-    op.usd = op.type === WALLET_TYPES.CLAIM_REWARD_BALANCE
+    op.usd = op.type === HIVE_OPERATIONS_TYPES.CLAIM_REWARD_BALANCE
       ? getPriceFromClaimReward(op, dynamicProperties)
       : getPriceInUSD(op);
 
