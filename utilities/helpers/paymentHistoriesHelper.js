@@ -1,12 +1,14 @@
-const _ = require('lodash');
-const moment = require('moment');
-const { PAYMENT_HISTORIES_TYPES, REVIEW_TYPES, TRANSFER_TYPES } = require('constants/constants');
-const { FIELDS_NAMES } = require('constants/wobjectsData');
+const {
+  PAYMENT_HISTORIES_TYPES, REVIEW_TYPES, TRANSFER_TYPES, NOT_PAYED_DEBT_TYPES,
+} = require('constants/constants');
 const {
   paymentHistoryModel, userModel, wobjectModel, campaignModel,
 } = require('models');
 const { processWobjects, getSessionApp } = require('utilities/helpers/wobjectHelper');
-const BigNumber = require('bignumber.js');
+const { sumBy, add, subtract } = require('utilities/helpers/calcHelper');
+const { FIELDS_NAMES } = require('constants/wobjectsData');
+const moment = require('moment');
+const _ = require('lodash');
 
 const withoutWrapPipeline = (data) => {
   const pipeline = [
@@ -65,11 +67,11 @@ const withoutWrapperPayables = async ({
 
   if (matchData.userName) ({ user, error } = await userModel.findOne(matchData.userName));
   ({ result: histories, error } = await paymentHistoryModel.aggregate(pipeline(matchData)));
-  const oldestNotPayedReview = _.minBy(
-    _.filter(histories, (el) => el.payed === false && _.includes(REVIEW_TYPES, el.type)),
+  const oldestNotPayedDebt = _.minBy(
+    _.filter(histories, (el) => el.payed === false && _.includes(NOT_PAYED_DEBT_TYPES, el.type)),
     'createdAt',
   );
-  const notPayedPeriod = moment.utc().diff(moment.utc(_.get(oldestNotPayedReview, 'createdAt', {})), 'days');
+  const notPayedPeriod = moment.utc().diff(moment.utc(_.get(oldestNotPayedDebt, 'createdAt', {})), 'days');
 
   if (error) return { error: error.message };
 
@@ -84,13 +86,13 @@ const withoutWrapperPayables = async ({
       case 'referral_server_fee':
       case 'overpayment_refund':
       case 'review':
-        history.balance = new BigNumber(payable).plus(history.amount).toNumber();
+        history.balance = add(payable, history.amount);
         payable = history.balance;
-        amount = new BigNumber(amount).plus(history.amount).toNumber();
+        amount = add(amount, history.amount);
         break;
       case 'transfer':
       case 'demo_debt':
-        history.balance = new BigNumber(payable).minus(history.amount).toNumber();
+        history.balance = subtract(payable, history.amount);
         payable = history.balance;
         break;
     }
@@ -216,7 +218,17 @@ const withWrapperPayables = async ({
     },
     {
       $addFields: {
-        lastNotPayedReview: { $arrayElemAt: [{ $filter: { input: '$reviews', as: 'review', cond: { $and: [{ $eq: ['$$review.payed', false] }, { $gte: ['$payable', 0] }] } } }, 0] },
+        lastNotPayedReview: {
+          $arrayElemAt: [
+            {
+              $filter: {
+                input: '$reviews',
+                as: 'review',
+                cond:
+                  { $and: [{ $eq: ['$$review.payed', false] }, { $gte: ['$payable', 0] }, { $ne: ['$$review.type', 'overpayment_refund'] }] },
+              },
+            }, 0],
+        },
       },
     },
     filterPipe(filterPayable, filterDate),
@@ -235,14 +247,7 @@ const withWrapperPayables = async ({
   ]);
   if (error) return { error };
 
-  const payable = _.round(
-    _.reduce(
-      histories,
-      (acc, history) => BigNumber(history.payable).plus(acc),
-      BigNumber(0),
-    ).toNumber(),
-    3,
-  );
+  const payable = _.round(sumBy(histories, (history) => history.payable), 3);
 
   const result = _.forEach(histories.slice(skip, limit + skip), (history) => {
     history.payable = _.round(history.payable, 3);

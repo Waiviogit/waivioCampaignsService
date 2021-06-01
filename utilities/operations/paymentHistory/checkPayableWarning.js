@@ -56,7 +56,17 @@ const getPipeline = (sponsor) => [
   },
   {
     $addFields: {
-      lastNotPayedReview: { $arrayElemAt: [{ $filter: { input: '$reviews', as: 'review', cond: { $and: [{ $eq: ['$$review.payed', false] }, { $gte: ['$payable', 0] }] } } }, 0] },
+      lastNotPayedReview: {
+        $arrayElemAt: [
+          {
+            $filter: {
+              input: '$reviews',
+              as: 'review',
+              cond:
+                { $and: [{ $eq: ['$$review.payed', false] }, { $gte: ['$payable', 0] }, { $ne: ['$$review.type', 'overpayment_refund'] }] },
+            },
+          }, 0],
+      },
     },
   },
   {
