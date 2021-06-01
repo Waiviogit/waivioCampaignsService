@@ -9,4 +9,5 @@ exports.CURRENCIES = {
   HIVE: 'HIVE',
   HBD: 'HBD',
   HP: 'HP',
+  USD: 'usd',
 };

@@ -8223,6 +8223,9 @@
             "type": "number",
             "example": 1621667718
           },
+          "usd": {
+            "type": "number"
+          },
           "payed": {
             "type": "boolean"
           },
