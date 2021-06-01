@@ -1,8 +1,9 @@
+const { SAVINGS_TRANSFERS, WALLET_TYPES, CURRENCIES } = require('constants/walletData');
 const { internalExchangeModel, currenciesStatiscticModel } = require('models');
 const { hiveRequests, currencyRequest } = require('utilities/requests');
-const { SAVINGS_TRANSFERS, WALLET_TYPES, CURRENCIES } = require('constants/walletData');
 const { PAYMENT_HISTORIES_TYPES } = require('constants/constants');
 const jsonHelper = require('utilities/helpers/jsonHelper');
+const { add } = require('utilities/helpers/calcHelper');
 const BigNumber = require('bignumber.js');
 const moment = require('moment');
 const _ = require('lodash');
@@ -164,23 +165,27 @@ const multiAccountFilter = ({ record, filterAccounts, userName }) => {
   return _.includes(filterAccounts, operation.to) || _.includes(filterAccounts, operation.from);
 };
 
-exports.calcDepositWithdrawals = ({ operations, dynamicProperties }) => _
+exports.calcDepositWithdrawals = ({ operations, field }) => _
   .reduce(operations, (acc, el) => {
     switch (_.get(el, 'withdrawDeposit')) {
       case 'w':
-        acc.withdrawals = new BigNumber(acc.withdrawals).plus(getPriceInUSD(el)).toNumber();
+        acc.withdrawals = add(acc.withdrawals, el[field]);
         break;
       case 'd':
-        acc.deposits = new BigNumber(acc.deposits)
-          .plus(
-            el.type === WALLET_TYPES.CLAIM_REWARD_BALANCE
-              ? getPriceFromClaimReward(el, dynamicProperties)
-              : getPriceInUSD(el),
-          ).toNumber();
+        acc.deposits = add(acc.deposits, el[field]);
         break;
     }
     return acc;
   }, { deposits: 0, withdrawals: 0 });
+
+exports.addCurrencyToOperations = ({ operations, dynamicProperties }) => _
+  .map(operations, (op) => {
+    op.usd = op.type === WALLET_TYPES.CLAIM_REWARD_BALANCE
+      ? getPriceFromClaimReward(op, dynamicProperties)
+      : getPriceInUSD(op);
+
+    return op;
+  });
 
 const getPriceInUSD = (record) => {
   if (!record.amount) return 0;
