@@ -1,7 +1,9 @@
-const { SAVINGS_TRANSFERS, WALLET_TYPES, CURRENCIES } = require('constants/walletData');
+const {
+  SAVINGS_TRANSFERS, WALLET_TYPES, CURRENCIES, ACCOUNT_FILTER_TYPES,
+} = require('constants/walletData');
+const { PAYMENT_HISTORIES_TYPES, HIVE_OPERATIONS_TYPES } = require('constants/constants');
 const { internalExchangeModel, currenciesStatiscticModel } = require('models');
 const { hiveRequests, currencyRequest } = require('utilities/requests');
-const { PAYMENT_HISTORIES_TYPES } = require('constants/constants');
 const jsonHelper = require('utilities/helpers/jsonHelper');
 const { add } = require('utilities/helpers/calcHelper');
 const BigNumber = require('bignumber.js');
@@ -159,9 +161,17 @@ const formatHiveHistory = ({
 const multiAccountFilter = ({ record, filterAccounts, userName }) => {
   filterAccounts = _.filter(filterAccounts, (el) => el !== userName);
   const [type, operation] = record;
-  if (type !== WALLET_TYPES.TRANSFER) return false;
+  if (!_.includes(ACCOUNT_FILTER_TYPES, type)) return false;
   const memo = jsonHelper.parseJson(operation.memo);
+  switch (type) {
+    case HIVE_OPERATIONS_TYPES.TRANSFER:
+      return filterTypeTransfer({ operation, memo, filterAccounts });
+    case HIVE_OPERATIONS_TYPES.TRANSFER_TO_VESTING:
+      return filterFromTo(filterAccounts, [operation.from, operation.to]);
+  }
+};
 
+const filterTypeTransfer = ({ operation, memo, filterAccounts }) => {
   if (operation.to === process.env.WALLET_ACC_NAME) {
     return memo.id === PAYMENT_HISTORIES_TYPES.USER_TO_GUEST_TRANSFER
       && _.includes(filterAccounts, memo.to);
@@ -169,8 +179,11 @@ const multiAccountFilter = ({ record, filterAccounts, userName }) => {
   if (operation.from === process.env.WALLET_ACC_NAME) {
     return memo.id === 'waivio_guest_transfer' && _.includes(filterAccounts, memo.from);
   }
-  return _.includes(filterAccounts, operation.to) || _.includes(filterAccounts, operation.from);
+  return filterFromTo(filterAccounts, [operation.to, operation.from]);
 };
+
+const filterFromTo = (filterAccounts, fromToArr) => (
+  _.some(filterAccounts, (el) => _.includes(fromToArr, el)));
 
 exports.calcDepositWithdrawals = ({ operations, field }) => _
   .reduce(operations, (acc, el) => {
