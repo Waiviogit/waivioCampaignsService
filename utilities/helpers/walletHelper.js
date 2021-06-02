@@ -133,8 +133,8 @@ exports.withdrawDeposit = (type, op, userName) => {
 };
 
 const getPowerDepositWithdraws = (op, userName) => {
-  if (op.from === userName && op.to !== userName) return 'w';
-  if (op.from !== userName && op.to === userName) return 'd';
+  if (_.get(op, 'from') === userName && _.get(op, 'to') !== userName) return 'w';
+  if (_.get(op, 'from') !== userName && _.get(op, 'to') === userName) return 'd';
   return '';
 };
 
