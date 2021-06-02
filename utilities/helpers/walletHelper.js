@@ -119,7 +119,7 @@ exports.getTransfersHistory = async (hiveHistory) => {
 exports.withdrawDeposit = (type, op, userName) => {
   const result = {
     transfer: _.get(op, 'to') === userName ? 'd' : 'w',
-    transfer_to_vesting: _.get(op, 'from') === userName ? '' : 'd',
+    transfer_to_vesting: getPowerDepositWithdraws(op, userName),
     claim_reward_balance: 'd',
     proposal_pay: 'w',
     demo_user_transfer: 'w',
@@ -128,6 +128,12 @@ exports.withdrawDeposit = (type, op, userName) => {
     demo_debt: 'd',
   };
   return result[type] || '';
+};
+
+const getPowerDepositWithdraws = (op, userName) => {
+  if (op.from === userName && op.to !== userName) return 'w';
+  if (op.from !== userName && op.to === userName) return 'd';
+  return '';
 };
 
 const formatHiveHistory = ({
