@@ -1,8 +1,11 @@
+const {
+  SAVINGS_TRANSFERS, WALLET_TYPES, CURRENCIES, ACCOUNT_FILTER_TYPES,
+} = require('constants/walletData');
+const { PAYMENT_HISTORIES_TYPES, HIVE_OPERATIONS_TYPES } = require('constants/constants');
 const { internalExchangeModel, currenciesStatiscticModel } = require('models');
 const { hiveRequests, currencyRequest } = require('utilities/requests');
-const { SAVINGS_TRANSFERS, WALLET_TYPES, CURRENCIES } = require('constants/walletData');
-const { PAYMENT_HISTORIES_TYPES } = require('constants/constants');
 const jsonHelper = require('utilities/helpers/jsonHelper');
+const { add } = require('utilities/helpers/calcHelper');
 const BigNumber = require('bignumber.js');
 const moment = require('moment');
 const _ = require('lodash');
@@ -118,6 +121,7 @@ exports.getTransfersHistory = async (hiveHistory) => {
 exports.withdrawDeposit = (type, op, userName) => {
   const result = {
     transfer: _.get(op, 'to') === userName ? 'd' : 'w',
+    transfer_to_vesting: getPowerDepositWithdraws(op, userName),
     claim_reward_balance: 'd',
     proposal_pay: 'w',
     demo_user_transfer: 'w',
@@ -126,6 +130,12 @@ exports.withdrawDeposit = (type, op, userName) => {
     demo_debt: 'd',
   };
   return result[type] || '';
+};
+
+const getPowerDepositWithdraws = (op, userName) => {
+  if (_.get(op, 'from') === userName && _.get(op, 'to') !== userName) return 'w';
+  if (_.get(op, 'from') !== userName && _.get(op, 'to') === userName) return 'd';
+  return '';
 };
 
 const formatHiveHistory = ({
@@ -151,9 +161,17 @@ const formatHiveHistory = ({
 const multiAccountFilter = ({ record, filterAccounts, userName }) => {
   filterAccounts = _.filter(filterAccounts, (el) => el !== userName);
   const [type, operation] = record;
-  if (type !== WALLET_TYPES.TRANSFER) return false;
+  if (!_.includes(ACCOUNT_FILTER_TYPES, type)) return false;
   const memo = jsonHelper.parseJson(operation.memo);
+  switch (type) {
+    case HIVE_OPERATIONS_TYPES.TRANSFER:
+      return filterTypeTransfer({ operation, memo, filterAccounts });
+    case HIVE_OPERATIONS_TYPES.TRANSFER_TO_VESTING:
+      return filterFromTo(filterAccounts, [operation.from, operation.to]);
+  }
+};
 
+const filterTypeTransfer = ({ operation, memo, filterAccounts }) => {
   if (operation.to === process.env.WALLET_ACC_NAME) {
     return memo.id === PAYMENT_HISTORIES_TYPES.USER_TO_GUEST_TRANSFER
       && _.includes(filterAccounts, memo.to);
@@ -161,26 +179,33 @@ const multiAccountFilter = ({ record, filterAccounts, userName }) => {
   if (operation.from === process.env.WALLET_ACC_NAME) {
     return memo.id === 'waivio_guest_transfer' && _.includes(filterAccounts, memo.from);
   }
-  return _.includes(filterAccounts, operation.to) || _.includes(filterAccounts, operation.from);
+  return filterFromTo(filterAccounts, [operation.to, operation.from]);
 };
 
-exports.calcDepositWithdrawals = ({ operations, dynamicProperties }) => _
+const filterFromTo = (filterAccounts, fromToArr) => (
+  _.some(filterAccounts, (el) => _.includes(fromToArr, el)));
+
+exports.calcDepositWithdrawals = ({ operations, field }) => _
   .reduce(operations, (acc, el) => {
     switch (_.get(el, 'withdrawDeposit')) {
       case 'w':
-        acc.withdrawals = new BigNumber(acc.withdrawals).plus(getPriceInUSD(el)).toNumber();
+        acc.withdrawals = add(acc.withdrawals, el[field]);
         break;
       case 'd':
-        acc.deposits = new BigNumber(acc.deposits)
-          .plus(
-            el.type === WALLET_TYPES.CLAIM_REWARD_BALANCE
-              ? getPriceFromClaimReward(el, dynamicProperties)
-              : getPriceInUSD(el),
-          ).toNumber();
+        acc.deposits = add(acc.deposits, el[field]);
         break;
     }
     return acc;
   }, { deposits: 0, withdrawals: 0 });
+
+exports.addCurrencyToOperations = ({ operations, dynamicProperties }) => _
+  .map(operations, (op) => {
+    op.usd = op.type === WALLET_TYPES.CLAIM_REWARD_BALANCE
+      ? getPriceFromClaimReward(op, dynamicProperties)
+      : getPriceInUSD(op);
+
+    return op;
+  });
 
 const getPriceInUSD = (record) => {
   if (!record.amount) return 0;
