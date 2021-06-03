@@ -844,7 +844,7 @@
           {
             "in": "body",
             "name": "params",
-            "description": "**sort** - value to order result campaigns: *reward*, *proximity* (if you want to sort by proximity, add this flag with area but without radius!),\n**area** -latitude first, longitude last. Example [90,120].\n**skip** - skip first records for infinity scroll\n**limit** - limit count records",
+            "description": "**sort** - value to order result campaigns: *reward*, *payout*, *proximity* (if you want to sort by proximity, add this flag with area but without radius!), *default*(at first sort by proximity, after that sort by payout),\n**area** -latitude first, longitude last. Example [90,120].\n**skip** - skip first records for infinity scroll\n**limit** - limit count records",
             "required": false,
             "schema": {
               "example": {
