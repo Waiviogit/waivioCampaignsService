@@ -1,4 +1,9 @@
-const { getWalletData, calcDepositWithdrawals, addCurrencyToOperations } = require('utilities/helpers/walletHelper');
+const {
+  addCurrencyToOperations,
+  calcDepositWithdrawals,
+  getHiveCurrencyHistory,
+  getWalletData,
+} = require('utilities/helpers/walletHelper');
 const getDemoDebtHistory = require('utilities/operations/paymentHistory/getDemoDebtHistory');
 const { ADVANCED_WALLET_TYPES } = require('constants/constants');
 const { CURRENCIES } = require('constants/walletData');
@@ -20,26 +25,26 @@ module.exports = async ({
     .orderBy(['timestamp'], ['desc'])
     .value();
 
-  const resultArray = addCurrencyToOperations({
-    operations: _.take(usersJointArr, limit),
-    dynamicProperties,
-  });
+  const limitedWallet = _.take(usersJointArr, limit);
+
+  const walletWithHivePrice = await addHivePrice(limitedWallet);
+  const resultWallet = addCurrencyToOperations({ walletWithHivePrice, dynamicProperties });
 
   const resAccounts = _.reduce(accounts,
     (acc, el) => (!el.guest
-      ? accumulateHiveAcc(resultArray, el, acc)
-      : accumulateGuestAcc(resultArray, el, acc)), []);
+      ? accumulateHiveAcc(resultWallet, el, acc)
+      : accumulateGuestAcc(resultWallet, el, acc)), []);
 
   const depositWithdrawals = calcDepositWithdrawals({
-    operations: resultArray,
+    operations: resultWallet,
     field: CURRENCIES.USD,
   });
 
-  const hasMore = usersJointArr.length > resultArray.length
+  const hasMore = usersJointArr.length > resultWallet.length
     || _.some(accounts, (acc) => !!acc.hasMore);
 
   return {
-    wallet: resultArray,
+    wallet: resultWallet,
     accounts: resAccounts,
     hasMore,
     ...depositWithdrawals,
@@ -104,4 +109,17 @@ const accumulateGuestAcc = (resultArray, account, acc) => {
   }
   acc.push(_.omit(account, ['wallet', 'hasMore']));
   return acc;
+};
+
+const addHivePrice = async (records = []) => {
+  if (_.isEmpty(records)) return records;
+  const hivePriceArr = await getHiveCurrencyHistory(records, 'timestamp');
+  return _.map(records, (record) => {
+    const price = _.find(hivePriceArr, (el) => moment(el.createdAt).isSame(moment.unix(record.timestamp), 'day'));
+    return {
+      ...record,
+      hiveUSD: parseFloat(_.get(price, 'hive.usd', '0')),
+      hbdUSD: parseFloat(_.get(price, 'hive_dollar.usd', '0')),
+    };
+  });
 };
