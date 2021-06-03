@@ -2,6 +2,7 @@ const {
   addCurrencyToOperations,
   calcDepositWithdrawals,
   getHiveCurrencyHistory,
+  withdrawDeposit,
   getWalletData,
 } = require('utilities/helpers/walletHelper');
 const getDemoDebtHistory = require('utilities/operations/paymentHistory/getDemoDebtHistory');
@@ -66,6 +67,7 @@ const addWalletDataToAccounts = async ({
     });
 
     _.forEach(histories, (el) => {
+      el.withdrawDeposit = withdrawDeposit(el.type);
       el.timestamp = moment(el.createdAt).unix();
       el.guest = true;
     });
@@ -83,6 +85,9 @@ const addWalletDataToAccounts = async ({
     filterAccounts,
     startDate,
     endDate,
+  });
+  _.forEach(account.wallet, (el) => {
+    el.withdrawDeposit = withdrawDeposit(el.type, el, account.name);
   });
   account.hasMore = account.wallet.length > limit;
   return account;

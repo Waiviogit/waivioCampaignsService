@@ -157,9 +157,6 @@ const formatHiveHistory = ({ walletOperations, tableView, userName }) => (
         { from: operation.from_account, to: operation.to_account, amount: operation.deposited });
     }
     if (tableView && _.includes(SAVINGS_TRANSFERS, operation.type)) omitFromOperation.push('amount');
-    if (tableView) {
-      operation.withdrawDeposit = this.withdrawDeposit(operation.type, operation, userName);
-    }
 
     return _.omit(operation, omitFromOperation);
   }));
@@ -168,10 +165,13 @@ const multiAccountFilter = ({ record, filterAccounts, userName }) => {
   filterAccounts = _.filter(filterAccounts, (el) => el !== userName);
   const [type, operation] = record;
   if (!_.includes(ACCOUNT_FILTER_TYPES, type)) return false;
-  const memo = jsonHelper.parseJson(operation.memo);
   switch (type) {
     case HIVE_OPERATIONS_TYPES.TRANSFER:
-      return filterTypeTransfer({ operation, memo, filterAccounts });
+      return filterTypeTransfer({
+        memo: jsonHelper.parseJson(operation.memo),
+        filterAccounts,
+        operation,
+      });
     case HIVE_OPERATIONS_TYPES.TRANSFER_TO_VESTING:
       return filterFromTo(filterAccounts, [operation.from, operation.to]);
     case HIVE_OPERATIONS_TYPES.FILL_VESTING_WITHDRAW:

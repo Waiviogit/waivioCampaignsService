@@ -1,6 +1,5 @@
 const { GUEST_WALLET_OPERATIONS } = require('constants/constants');
 const guestRequests = require('utilities/requests/guestRequests');
-const walletHelper = require('utilities/helpers/walletHelper');
 const { paymentHistoryModel } = require('models');
 const _ = require('lodash');
 
@@ -26,10 +25,6 @@ module.exports = async ({
   if (error) return { error };
 
   _.map(histories, (history) => {
-    if (tableView) {
-      history.withdrawDeposit = walletHelper.withdrawDeposit(history.type);
-    }
-
     if (_.get(history, 'details.transactionId')) return;
     switch (history.type) {
       case 'user_to_guest_transfer':
