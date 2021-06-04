@@ -58,6 +58,8 @@ module.exports = function (app, express) {
 
     session.set('host', origin);
     session.set('device', device);
+    session.set('access-token', req.headers['access-token']);
+    session.set('waivio-auth', Boolean(req.headers['waivio-auth']));
     next();
   });
 

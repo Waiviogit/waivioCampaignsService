@@ -14,4 +14,5 @@ module.exports = {
   reservationCurrencyModel: require('./reservationCurrencyModel'),
   currenciesStatiscticModel: require('./currenciesStatisticModel'),
   wobjectSubscriptions: require('./wobjectSubscriptionModel'),
+  walletExemptionsModel: require('./walletExemptionsModel'),
 };
