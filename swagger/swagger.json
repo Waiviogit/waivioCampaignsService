@@ -188,7 +188,7 @@
           {
             "in": "body",
             "name": "params",
-            "description": "**requiredObject** - get reserved campaigns of requiredObject,\n**sort** - value to order result campaigns: *reward*, *proximity* (if you want to sort by proximity, add this flag with area but without radius!),*date*(default *date*),\n**area** -latitude first, longitude last. Example [90,120]. Filter by area\n**radius** -(if you want to find campaigns by search area, add radius, and area) Radius of area geo location, use only with **area** coordinates filter,\n**coordinates** - latitude first, longitude last. Example [90,120]. Current user coordinates\n**skip** - skip first records for infinity scroll\n**limit** - limit count records\n *primaryObject* - to load primary campaign at object",
+            "description": "**requiredObject** - get reserved campaigns of requiredObject,\n**sort** - value to order result campaigns: *reward*, *payout*, *proximity* (if you want to sort by proximity, add this flag with area but without radius!), *date*(default *date*), *default*(at first sort by proximity, after that sort by payout),\n**area** -latitude first, longitude last. Example [90,120]. Filter by area\n**radius** -(if you want to find campaigns by search area, add radius, and area) Radius of area geo location, use only with **area** coordinates filter,\n**coordinates** - latitude first, longitude last. Example [90,120]. Current user coordinates\n**skip** - skip first records for infinity scroll\n**limit** - limit count records\n *primaryObject* - to load primary campaign at object",
             "required": false,
             "schema": {
               "example": {
@@ -844,7 +844,7 @@
           {
             "in": "body",
             "name": "params",
-            "description": "**sort** - value to order result campaigns: *reward*, *proximity* (if you want to sort by proximity, add this flag with area but without radius!),\n**area** -latitude first, longitude last. Example [90,120].\n**skip** - skip first records for infinity scroll\n**limit** - limit count records",
+            "description": "**sort** - value to order result campaigns: *reward*, *payout*, *proximity* (if you want to sort by proximity, add this flag with area but without radius!), *default*(at first sort by proximity, after that sort by payout),\n**area** -latitude first, longitude last. Example [90,120].\n**skip** - skip first records for infinity scroll\n**limit** - limit count records",
             "required": false,
             "schema": {
               "example": {
