@@ -32,10 +32,8 @@ exports.demoDeptSchema = Joi.object().keys({
   operationNum: Joi.number().default(-1),
   types: Joi.array().items(Joi.string().valid(...WALLET_TYPES_FOR_PARSE, ...GUEST_WALLET_OPERATIONS))
     .single().default([...GUEST_WALLET_OPERATIONS, ...WALLET_TYPES_FOR_PARSE]),
-  tableView: Joi.boolean().default(false),
   endDate: Joi.date().timestamp('unix').less('now').default(new Date()),
   startDate: Joi.date().timestamp('unix').default(moment.utc().subtract(10, 'year').toDate()).less(Joi.ref('endDate')),
-  filterAccounts: Joi.array().items(Joi.string()).single().default([]),
 }).options(options);
 
 exports.reportSchema = Joi.object().keys({

@@ -1,6 +1,4 @@
-const {
-  SAVINGS_TRANSFERS, WALLET_TYPES, CURRENCIES, ACCOUNT_FILTER_TYPES,
-} = require('constants/walletData');
+const { SAVINGS_TRANSFERS, CURRENCIES, ACCOUNT_FILTER_TYPES } = require('constants/walletData');
 const { PAYMENT_HISTORIES_TYPES, HIVE_OPERATIONS_TYPES } = require('constants/constants');
 const { internalExchangeModel, currenciesStatiscticModel } = require('models');
 const { hiveRequests, currencyRequest } = require('utilities/requests');
@@ -50,22 +48,25 @@ exports.getWalletData = async ({
     if (lastId === 1) breakFlag = true;
     if (breakFlag) break;
   } while (walletOperations.length <= limit || batchSize === result.length - 1);
-  const hivePriceArr = await this.getHiveCurrencyHistory(walletOperations);
 
-  return formatHiveHistory({
-    walletOperations, hivePriceArr, tableView, userName,
-  });
+  return formatHiveHistory({ walletOperations, tableView, userName });
 };
 
-exports.getHiveCurrencyHistory = async (walletOperations, path = '[1].timestamp') => {
+/**
+ * Get HiveCurrencyHistory according to el dates
+ * @param walletOperations {Array}
+ * @param path {String} have to be unix timestamp(s)
+ * @returns {Promise<*[]>}
+ */
+exports.getHiveCurrencyHistory = async (walletOperations, path = 'timestamp') => {
   let includeToday = false;
   const orCondition = _
     .chain(walletOperations)
     .map((el) => _.get(el, path, null))
     .uniq()
     .reduce((acc, el) => {
-      if (moment(el).isSame(Date.now(), 'day')) includeToday = true;
-      acc.push({ createdAt: { $gte: moment.utc(el).startOf('day').format(), $lte: moment.utc(el).endOf('day').format() } });
+      if (moment.unix(el).isSame(Date.now(), 'day')) includeToday = true;
+      acc.push({ createdAt: { $gte: moment.unix(el).startOf('day').format(), $lte: moment.unix(el).endOf('day').format() } });
       return acc;
     }, [])
     .value();
@@ -120,14 +121,15 @@ exports.getTransfersHistory = async (hiveHistory) => {
 
 exports.withdrawDeposit = (type, op, userName) => {
   const result = {
-    transfer: _.get(op, 'to') === userName ? 'd' : 'w',
-    transfer_to_vesting: getPowerDepositWithdraws(op, userName),
-    claim_reward_balance: 'd',
-    proposal_pay: 'w',
-    demo_user_transfer: 'w',
-    user_to_guest_transfer: 'd',
-    demo_post: 'd',
-    demo_debt: 'd',
+    [HIVE_OPERATIONS_TYPES.TRANSFER]: _.get(op, 'to') === userName ? 'd' : 'w',
+    [HIVE_OPERATIONS_TYPES.TRANSFER_TO_VESTING]: getPowerDepositWithdraws(op, userName),
+    [HIVE_OPERATIONS_TYPES.FILL_VESTING_WITHDRAW]: getPowerDepositWithdraws(op, userName),
+    [HIVE_OPERATIONS_TYPES.CLAIM_REWARD_BALANCE]: 'd',
+    [HIVE_OPERATIONS_TYPES.PROPOSAL_PAY]: 'w',
+    [PAYMENT_HISTORIES_TYPES.DEMO_USER_TRANSFER]: 'w',
+    [PAYMENT_HISTORIES_TYPES.USER_TO_GUEST_TRANSFER]: 'd',
+    [PAYMENT_HISTORIES_TYPES.DEMO_POST]: 'd',
+    [PAYMENT_HISTORIES_TYPES.DEMO_DEBT]: 'd',
   };
   return result[type] || '';
 };
@@ -138,36 +140,42 @@ const getPowerDepositWithdraws = (op, userName) => {
   return '';
 };
 
-const formatHiveHistory = ({
-  walletOperations, hivePriceArr, tableView, userName,
-}) => _.map(walletOperations, (history) => {
-  const omitFromOperation = ['op', 'block', 'op_in_trx', 'trx_in_block', 'virtual_op', 'trx_id'];
-  const price = _.find(hivePriceArr, (el) => moment(el.createdAt).isSame(moment(history[1].timestamp), 'day'));
-  const operation = {
-    userName,
-    type: history[1].op[0],
-    timestamp: moment(history[1].timestamp).unix(),
-    hiveUSD: parseFloat(_.get(price, 'hive.usd', '0')),
-    hbdUSD: parseFloat(_.get(price, 'hive_dollar.usd', '0')),
-    operationNum: history[0],
-    withdrawDeposit: this.withdrawDeposit(history[1].op[0], history[1].op[1], userName),
-    ...history[1].op[1],
-  };
+const formatHiveHistory = ({ walletOperations, tableView, userName }) => (
+  _.map(walletOperations, (history) => {
+    const omitFromOperation = [
+      'op', 'block', 'op_in_trx', 'trx_in_block', 'virtual_op', 'trx_id', 'deposited', 'from_account', 'to_account',
+    ];
+    const operation = {
+      userName,
+      type: history[1].op[0],
+      timestamp: moment(history[1].timestamp).unix(),
+      operationNum: history[0],
+      ...history[1].op[1],
+    };
+    if (operation.type === HIVE_OPERATIONS_TYPES.FILL_VESTING_WITHDRAW) {
+      Object.assign(operation,
+        { from: operation.from_account, to: operation.to_account, amount: operation.deposited });
+    }
+    if (tableView && _.includes(SAVINGS_TRANSFERS, operation.type)) omitFromOperation.push('amount');
 
-  if (tableView && _.includes(SAVINGS_TRANSFERS, operation.type)) omitFromOperation.push('amount');
-  return _.omit(operation, omitFromOperation);
-});
+    return _.omit(operation, omitFromOperation);
+  }));
 
 const multiAccountFilter = ({ record, filterAccounts, userName }) => {
   filterAccounts = _.filter(filterAccounts, (el) => el !== userName);
   const [type, operation] = record;
   if (!_.includes(ACCOUNT_FILTER_TYPES, type)) return false;
-  const memo = jsonHelper.parseJson(operation.memo);
   switch (type) {
     case HIVE_OPERATIONS_TYPES.TRANSFER:
-      return filterTypeTransfer({ operation, memo, filterAccounts });
+      return filterTypeTransfer({
+        memo: jsonHelper.parseJson(operation.memo),
+        filterAccounts,
+        operation,
+      });
     case HIVE_OPERATIONS_TYPES.TRANSFER_TO_VESTING:
       return filterFromTo(filterAccounts, [operation.from, operation.to]);
+    case HIVE_OPERATIONS_TYPES.FILL_VESTING_WITHDRAW:
+      return filterFromTo(filterAccounts, [operation.from_account, operation.to_account]);
   }
 };
 
@@ -198,13 +206,13 @@ exports.calcDepositWithdrawals = ({ operations, field }) => _
     return acc;
   }, { deposits: 0, withdrawals: 0 });
 
-exports.addCurrencyToOperations = ({ operations, dynamicProperties }) => _
-  .map(operations, (op) => {
-    op.usd = op.type === WALLET_TYPES.CLAIM_REWARD_BALANCE
-      ? getPriceFromClaimReward(op, dynamicProperties)
-      : getPriceInUSD(op);
+exports.addCurrencyToOperations = ({ walletWithHivePrice, dynamicProperties }) => _
+  .map(walletWithHivePrice, (record) => {
+    record.usd = record.type === HIVE_OPERATIONS_TYPES.CLAIM_REWARD_BALANCE
+      ? getPriceFromClaimReward(record, dynamicProperties)
+      : getPriceInUSD(record);
 
-    return op;
+    return record;
   });
 
 const getPriceInUSD = (record) => {
