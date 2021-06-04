@@ -1385,6 +1385,85 @@
         }
       }
     },
+    "/payments/exemptions" : {
+      "post": {
+        "tags": [
+          "Payables"
+        ],
+        "description": "creates a new wallet exception for a specific user",
+        "produces": [
+          "application/json"
+        ],
+        "parameters": [
+          {
+            "name" : "access-token",
+            "in" : "header",
+            "description" : "User access token",
+            "required" : true,
+            "type" : "string"
+          },
+          {
+            "name" : "waivio-auth",
+            "in" : "header",
+            "description" : "header which define either user guest",
+            "required" : true,
+            "type" : "boolean"
+          },
+          {
+            "name": "params",
+            "in": "body",
+            "description": "**userName** - authorized user\n**userWithExemptions** - name of user whos operation we want to exclude\n**operationNum** - when userWithExemptions - hive user\n**_id**- when userWithExemptions - guest user",
+            "schema": {
+              "type": "object",
+              "properties": {
+                "userName": {
+                  "type": "string"
+                },
+                "userWithExemptions": {
+                  "type": "string"
+                },
+                "operationNum" : {
+                  "type": "number"
+                },
+                "_id" : {
+                  "type": "string",
+                  "example": "60b768522e691255662e9dba"
+                }
+              }
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "successful operation",
+            "schema": {
+              "type": "object",
+              "properties": {
+                "result": {
+                  "type": "boolean"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Unauthorized",
+            "schema": {
+              "example": {
+                "message": "Token not valid!"
+              }
+            }
+          },
+          "422": {
+            "description": "ValidationError",
+            "schema": {
+              "example": {
+                "message": "Validation Error"
+              }
+            }
+          }
+        }
+      }
+    },
     "/payments/payables": {
       "post": {
         "tags": [
