@@ -8,16 +8,19 @@ const {
 const getDemoDebtHistory = require('utilities/operations/paymentHistory/getDemoDebtHistory');
 const { ADVANCED_WALLET_TYPES } = require('constants/constants');
 const { CURRENCIES } = require('constants/walletData');
+const { walletExemptionsModel } = require('models');
 const { redisGetter } = require('utilities/redis');
 const moment = require('moment');
 const _ = require('lodash');
 
 module.exports = async ({
-  accounts, startDate, endDate, limit, filterAccounts,
+  accounts, startDate, endDate, limit, filterAccounts, user,
 }) => {
   const dynamicProperties = await redisGetter.getHashAll('dynamic_global_properties');
+  const exemptions = await getExemptions({ user, accounts });
+
   accounts = await addWalletDataToAccounts({
-    accounts, startDate, endDate, limit, filterAccounts,
+    exemptions, filterAccounts, startDate, accounts, endDate, limit,
   });
 
   const usersJointArr = _
@@ -53,10 +56,12 @@ module.exports = async ({
 };
 
 const addWalletDataToAccounts = async ({
-  accounts, startDate, endDate, limit, filterAccounts,
+  accounts, startDate, endDate, limit, filterAccounts, exemptions,
 }) => Promise.all(accounts.map(async (account) => {
+  const filterRecord = _.find(exemptions, (el) => el.userWithExemptions === account.name);
   if (account.guest) {
     const { histories, hasMore } = await getDemoDebtHistory({
+      filterOps: _.get(filterRecord, 'exemptions', []),
       userName: account.name,
       skip: account.skip,
       tableView: true,
@@ -77,6 +82,7 @@ const addWalletDataToAccounts = async ({
     return account;
   }
   account.wallet = await getWalletData({
+    filterOps: _.get(filterRecord, 'exemptions', []),
     operationNum: account.operationNum,
     types: ADVANCED_WALLET_TYPES,
     userName: account.name,
@@ -127,4 +133,13 @@ const addHivePrice = async (records = []) => {
       hbdUSD: parseFloat(_.get(price, 'hive_dollar.usd', '0')),
     };
   });
+};
+
+const getExemptions = async ({ user, accounts }) => {
+  let exemptions = [];
+  if (user) {
+    ({ result: exemptions = [] } = await walletExemptionsModel
+      .find({ userName: user, userWithExemptions: { $in: _.map(accounts, 'name') } }));
+  }
+  return exemptions;
 };
