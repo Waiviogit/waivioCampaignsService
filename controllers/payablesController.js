@@ -124,8 +124,10 @@ exports.payableWarning = async (req, res) => {
 };
 
 exports.advancedReport = async (req, res) => {
-  const { params, validationError } = validators
-    .validate(req.body, validators.payables.advancedWalletSchema);
+  const { params, validationError } = validators.validate(
+    { ...req.body, ...req.headers },
+    validators.payables.advancedWalletSchema,
+  );
 
   if (validationError) return renderError(res, validationError);
 

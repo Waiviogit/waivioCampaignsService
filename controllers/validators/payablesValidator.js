@@ -66,6 +66,7 @@ exports.advancedWalletSchema = Joi.object().keys({
   startDate: Joi.date().timestamp('unix').default(moment.utc().subtract(10, 'year').toDate()).less(Joi.ref('endDate')),
   filterAccounts: Joi.array().items(Joi.string()).min(1).required(),
   limit: Joi.number().default(10),
+  user: Joi.string().default(''),
 }).options(options);
 
 exports.walletExemptionsSchema = Joi.object().keys({

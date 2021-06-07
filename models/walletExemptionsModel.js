@@ -9,3 +9,13 @@ exports.updateOne = async (condition, updateData) => {
     return { error };
   }
 };
+
+exports.find = async (condition, select = {}) => {
+  try {
+    return {
+      result: await WalletExemptions.find(condition, select).lean(),
+    };
+  } catch (error) {
+    return { error };
+  }
+};
