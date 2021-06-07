@@ -1667,6 +1667,13 @@
         ],
         "parameters": [
           {
+            "name": "user",
+            "in": "header",
+            "description": "if user authorized - send this header with user name",
+            "type": "string",
+            "required": false
+          },
+          {
             "name": "params",
             "in": "body",
             "description": "If the account is a guest account, the skip property is added, otherwise the property operationNum\nfilterAccounts - array of all requested accounts names\nNot required properties: startDate, endDate, limit",
