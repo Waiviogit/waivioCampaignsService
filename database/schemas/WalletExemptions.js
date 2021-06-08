@@ -6,10 +6,14 @@ const { Schema } = mongoose;
 const WalletExemptionsSchema = new Schema({
   userName: { type: String },
   userWithExemptions: { type: String },
-  exemptions: { type: Array, default: [] },
+  _id: { type: mongoose.ObjectId },
+  operationNum: { type: Number },
 }, { timestamps: false });
 
-WalletExemptionsSchema.index({ userName: 1, userWithExemptions: 1 }, { unique: true });
+WalletExemptionsSchema.index({ userName: 1, userWithExemptions: 1, _id: 1 }, { unique: true });
+WalletExemptionsSchema.index(
+  { userName: 1, userWithExemptions: 1, operationNum: 1 }, { unique: true },
+);
 
 const WalletExemptions = db.model('wallet_exemptions', WalletExemptionsSchema);
 

@@ -19,3 +19,13 @@ exports.find = async (condition, select = {}) => {
     return { error };
   }
 };
+
+exports.deleteOne = async (condition) => {
+  try {
+    return {
+      result: await WalletExemptions.deleteOne(condition).lean(),
+    };
+  } catch (error) {
+    return { error };
+  }
+};

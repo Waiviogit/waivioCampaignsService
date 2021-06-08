@@ -84,4 +84,5 @@ exports.walletExemptionsSchema = Joi.object().keys({
     then: Joi.string().required(),
     otherwise: Joi.forbidden(),
   }),
+  checked: Joi.boolean().required(),
 }).options(options);
