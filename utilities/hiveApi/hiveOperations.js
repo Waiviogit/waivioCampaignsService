@@ -230,7 +230,7 @@ exports.getVotingInfo = async (client, {
 exports.claimRewards = async (client, account) => {
   const accountInfo = await this.getAccountInfo(client, account.name);
   if (accountInfo.error) return;
-  const operation = [
+  const operations = [
     'claim_reward_balance',
     {
       account: account.name,
@@ -239,7 +239,7 @@ exports.claimRewards = async (client, account) => {
       reward_vests: `${accountInfo.reward_vesting_balance.split(' ')[0]} VESTS`,
     },
   ];
-  return this.sendOperations(client, { operation, key: account.key });
+  return this.sendOperations(client, { operations, key: account.key });
 };
 
 exports.makeSpecialTransfers = async (client, account) => {
