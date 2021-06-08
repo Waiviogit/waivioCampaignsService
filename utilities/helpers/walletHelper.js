@@ -9,7 +9,7 @@ const moment = require('moment');
 const _ = require('lodash');
 
 exports.getWalletData = async ({
-  userName, limit, operationNum, types, endDate, startDate, tableView, filterAccounts, filterOps,
+  userName, limit, operationNum, types, endDate, startDate, tableView, filterAccounts,
 }) => {
   let result, error;
   const batchSize = 1000;
@@ -32,7 +32,6 @@ exports.getWalletData = async ({
 
     for (const record of result) {
       if (_.includes(types, _.get(record, '[1].op[0]'))) {
-        if (_.includes(filterOps, _.get(record, '[0]'))) continue;
         const recordTimestamp = moment.utc(_.get(record, '[1].timestamp')).valueOf();
         const condition = tableView
           ? startDateTimestamp >= recordTimestamp || walletOperations.length === limit

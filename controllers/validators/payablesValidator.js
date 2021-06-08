@@ -78,7 +78,7 @@ exports.walletExemptionsSchema = Joi.object().keys({
     then: Joi.number().required(),
     otherwise: Joi.forbidden(),
   }),
-  _id: Joi.when('userWithExemptions', {
+  recordId: Joi.when('userWithExemptions', {
     is: Joi.string()
       .pattern(new RegExp('_')),
     then: Joi.string().required(),
