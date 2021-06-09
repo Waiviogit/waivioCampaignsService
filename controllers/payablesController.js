@@ -5,11 +5,13 @@ const {
     getTransfersHistory,
     getDemoDebtHistory,
     getPayableHistory,
+    walletExemptions,
     getSingleReport,
     pendingTransfer,
   },
 } = require('utilities/operations');
 const { renderSuccess, renderError, renderCustomError } = require('concerns/renderConcern');
+const authoriseUser = require('utilities/authorization/authoriseUser');
 const validators = require('controllers/validators');
 
 /*
@@ -24,7 +26,7 @@ Optional fields:
   <days> - with this field return all results $lte (today - days)  (default 0)
   <sort> - valid ['payable', 'date'] sort by valid values -1  (default payable)
  */
-const payableHistory = async (req, res) => {
+exports.payableHistory = async (req, res) => {
   const {
     params,
     validationError,
@@ -49,7 +51,7 @@ Return payments history for demo users
   <limit> - limit for data which will be found (default 0)
   <userName> - name of demo user
  */
-const demoDeptHistory = async (req, res) => {
+exports.demoDeptHistory = async (req, res) => {
   const {
     params,
     validationError,
@@ -68,7 +70,7 @@ const demoDeptHistory = async (req, res) => {
   }
 };
 
-const transfersHistory = async (req, res) => {
+exports.transfersHistory = async (req, res) => {
   const {
     params,
     validationError,
@@ -87,7 +89,7 @@ const transfersHistory = async (req, res) => {
   }
 };
 
-const report = async (req, res) => {
+exports.report = async (req, res) => {
   const {
     params,
     validationError,
@@ -99,7 +101,7 @@ const report = async (req, res) => {
   else renderSuccess(res, { ...result });
 };
 
-const setPendingTransfer = async (req, res) => {
+exports.setPendingTransfer = async (req, res) => {
   const {
     params,
     validationError,
@@ -110,7 +112,7 @@ const setPendingTransfer = async (req, res) => {
   else renderSuccess(res, { result });
 };
 
-const payableWarning = async (req, res) => {
+exports.payableWarning = async (req, res) => {
   const {
     params,
     validationError,
@@ -121,9 +123,11 @@ const payableWarning = async (req, res) => {
   renderSuccess(res, { warning });
 };
 
-const advancedReport = async (req, res) => {
-  const { params, validationError } = validators
-    .validate(req.body, validators.payables.advancedWalletSchema);
+exports.advancedReport = async (req, res) => {
+  const { params, validationError } = validators.validate(
+    { ...req.body, ...req.headers },
+    validators.payables.advancedWalletSchema,
+  );
 
   if (validationError) return renderError(res, validationError);
 
@@ -132,12 +136,17 @@ const advancedReport = async (req, res) => {
   renderSuccess(res, result);
 };
 
-module.exports = {
-  transfersHistory,
-  demoDeptHistory,
-  payableHistory,
-  report,
-  setPendingTransfer,
-  payableWarning,
-  advancedReport,
+exports.createWalletExemptions = async (req, res) => {
+  const { params, validationError } = validators
+    .validate(req.body, validators.payables.walletExemptionsSchema);
+
+  if (validationError) return renderError(res, validationError);
+
+  const { error: authError } = await authoriseUser.authorise(params.userName);
+  if (authError) return renderCustomError(res, authError);
+
+  const { result, error } = await walletExemptions.addOrDeleteExemption(params);
+
+  if (error) return renderCustomError(res, error);
+  renderSuccess(res, { result });
 };

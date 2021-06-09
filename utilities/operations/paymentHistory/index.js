@@ -5,5 +5,6 @@ module.exports = {
   getDemoDebtHistory: require('./getDemoDebtHistory'),
   getPayableHistory: require('./getPayableHistory'),
   pendingTransfer: require('./setPendingTransfer'),
+  walletExemptions: require('./walletExemptions'),
   getSingleReport: require('./getSingleReport'),
 };

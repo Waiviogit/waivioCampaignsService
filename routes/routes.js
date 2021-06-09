@@ -51,6 +51,7 @@ campaignsRoutes.route('/payments/set-pending-transfer').post(payablesController.
 campaignsRoutes.route('/payments/transfers_history').get(payablesController.transfersHistory);
 campaignsRoutes.route('/payments/demo_payables').get(payablesController.demoDeptHistory);
 campaignsRoutes.route('/payments/advanced-report').post(payablesController.advancedReport);
+campaignsRoutes.route('/payments/exemptions').post(payablesController.createWalletExemptions);
 campaignsRoutes.route('/payments/payables').post(payablesController.payableHistory);
 campaignsRoutes.route('/payments/report').post(payablesController.report);
 campaignsRoutes.route('/payments/payable-warning').get(payablesController.payableWarning);

@@ -32,10 +32,8 @@ exports.demoDeptSchema = Joi.object().keys({
   operationNum: Joi.number().default(-1),
   types: Joi.array().items(Joi.string().valid(...WALLET_TYPES_FOR_PARSE, ...GUEST_WALLET_OPERATIONS))
     .single().default([...GUEST_WALLET_OPERATIONS, ...WALLET_TYPES_FOR_PARSE]),
-  tableView: Joi.boolean().default(false),
   endDate: Joi.date().timestamp('unix').less('now').default(new Date()),
   startDate: Joi.date().timestamp('unix').default(moment.utc().subtract(10, 'year').toDate()).less(Joi.ref('endDate')),
-  filterAccounts: Joi.array().items(Joi.string()).single().default([]),
 }).options(options);
 
 exports.reportSchema = Joi.object().keys({
@@ -68,4 +66,23 @@ exports.advancedWalletSchema = Joi.object().keys({
   startDate: Joi.date().timestamp('unix').default(moment.utc().subtract(10, 'year').toDate()).less(Joi.ref('endDate')),
   filterAccounts: Joi.array().items(Joi.string()).min(1).required(),
   limit: Joi.number().default(10),
+  user: Joi.string().default(''),
+}).options(options);
+
+exports.walletExemptionsSchema = Joi.object().keys({
+  userName: Joi.string().required(),
+  userWithExemptions: Joi.string().required(),
+  operationNum: Joi.when('userWithExemptions', {
+    is: Joi.string()
+      .pattern(new RegExp('^((?!_).)*$')),
+    then: Joi.number().required(),
+    otherwise: Joi.forbidden(),
+  }),
+  recordId: Joi.when('userWithExemptions', {
+    is: Joi.string()
+      .pattern(new RegExp('_')),
+    then: Joi.string().required(),
+    otherwise: Joi.forbidden(),
+  }),
+  checked: Joi.boolean().required(),
 }).options(options);

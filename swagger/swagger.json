@@ -188,7 +188,7 @@
           {
             "in": "body",
             "name": "params",
-            "description": "**requiredObject** - get reserved campaigns of requiredObject,\n**sort** - value to order result campaigns: *reward*, *proximity* (if you want to sort by proximity, add this flag with area but without radius!),*date*(default *date*),\n**area** -latitude first, longitude last. Example [90,120]. Filter by area\n**radius** -(if you want to find campaigns by search area, add radius, and area) Radius of area geo location, use only with **area** coordinates filter,\n**coordinates** - latitude first, longitude last. Example [90,120]. Current user coordinates\n**skip** - skip first records for infinity scroll\n**limit** - limit count records\n *primaryObject* - to load primary campaign at object",
+            "description": "**requiredObject** - get reserved campaigns of requiredObject,\n**sort** - value to order result campaigns: *reward*, *payout*, *proximity* (if you want to sort by proximity, add this flag with area but without radius!), *date*(default *date*), *default*(at first sort by proximity, after that sort by payout),\n**area** -latitude first, longitude last. Example [90,120]. Filter by area\n**radius** -(if you want to find campaigns by search area, add radius, and area) Radius of area geo location, use only with **area** coordinates filter,\n**coordinates** - latitude first, longitude last. Example [90,120]. Current user coordinates\n**skip** - skip first records for infinity scroll\n**limit** - limit count records\n *primaryObject* - to load primary campaign at object",
             "required": false,
             "schema": {
               "example": {
@@ -844,7 +844,7 @@
           {
             "in": "body",
             "name": "params",
-            "description": "**sort** - value to order result campaigns: *reward*, *proximity* (if you want to sort by proximity, add this flag with area but without radius!),\n**area** -latitude first, longitude last. Example [90,120].\n**skip** - skip first records for infinity scroll\n**limit** - limit count records",
+            "description": "**sort** - value to order result campaigns: *reward*, *payout*, *proximity* (if you want to sort by proximity, add this flag with area but without radius!), *default*(at first sort by proximity, after that sort by payout),\n**area** -latitude first, longitude last. Example [90,120].\n**skip** - skip first records for infinity scroll\n**limit** - limit count records",
             "required": false,
             "schema": {
               "example": {
@@ -1385,6 +1385,88 @@
         }
       }
     },
+    "/payments/exemptions" : {
+      "post": {
+        "tags": [
+          "Payables"
+        ],
+        "description": "creates a new wallet exception for a specific user",
+        "produces": [
+          "application/json"
+        ],
+        "parameters": [
+          {
+            "name" : "access-token",
+            "in" : "header",
+            "description" : "User access token",
+            "required" : true,
+            "type" : "string"
+          },
+          {
+            "name" : "waivio-auth",
+            "in" : "header",
+            "description" : "header which define either user guest",
+            "required" : true,
+            "type" : "boolean"
+          },
+          {
+            "name": "params",
+            "in": "body",
+            "description": "**userName** - authorized user\n**userWithExemptions** - name of user whos operation we want to exclude\n**operationNum** - when userWithExemptions - hive user\n**recordId**- when userWithExemptions - guest user\n**checked** - determines whether to add or remove an entry",
+            "schema": {
+              "type": "object",
+              "properties": {
+                "userName": {
+                  "type": "string"
+                },
+                "userWithExemptions": {
+                  "type": "string"
+                },
+                "operationNum" : {
+                  "type": "number"
+                },
+                "recordId" : {
+                  "type": "string",
+                  "example": "60b768522e691255662e9dba"
+                },
+                "checked" : {
+                  "type": "boolean"
+                }
+              }
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "successful operation",
+            "schema": {
+              "type": "object",
+              "properties": {
+                "result": {
+                  "type": "boolean"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Unauthorized",
+            "schema": {
+              "example": {
+                "message": "Token not valid!"
+              }
+            }
+          },
+          "422": {
+            "description": "ValidationError",
+            "schema": {
+              "example": {
+                "message": "Validation Error"
+              }
+            }
+          }
+        }
+      }
+    },
     "/payments/payables": {
       "post": {
         "tags": [
@@ -1587,6 +1669,13 @@
           "application/json"
         ],
         "parameters": [
+          {
+            "name": "user",
+            "in": "header",
+            "description": "if user authorized - send this header with user name",
+            "type": "string",
+            "required": false
+          },
           {
             "name": "params",
             "in": "body",
@@ -8233,6 +8322,9 @@
             "type": "boolean"
           },
           "recounted": {
+            "type": "boolean"
+          },
+          "checked": {
             "type": "boolean"
           }
         }
