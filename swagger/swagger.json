@@ -1412,7 +1412,7 @@
           {
             "name": "params",
             "in": "body",
-            "description": "**userName** - authorized user\n**userWithExemptions** - name of user whos operation we want to exclude\n**operationNum** - when userWithExemptions - hive user\n**_id**- when userWithExemptions - guest user",
+            "description": "**userName** - authorized user\n**userWithExemptions** - name of user whos operation we want to exclude\n**operationNum** - when userWithExemptions - hive user\n**recordId**- when userWithExemptions - guest user\n**checked** - determines whether to add or remove an entry",
             "schema": {
               "type": "object",
               "properties": {
@@ -1425,9 +1425,12 @@
                 "operationNum" : {
                   "type": "number"
                 },
-                "_id" : {
+                "recordId" : {
                   "type": "string",
                   "example": "60b768522e691255662e9dba"
+                },
+                "checked" : {
+                  "type": "boolean"
                 }
               }
             }
@@ -8319,6 +8322,9 @@
             "type": "boolean"
           },
           "recounted": {
+            "type": "boolean"
+          },
+          "checked": {
             "type": "boolean"
           }
         }

@@ -145,7 +145,7 @@ exports.createWalletExemptions = async (req, res) => {
   const { error: authError } = await authoriseUser.authorise(params.userName);
   if (authError) return renderCustomError(res, authError);
 
-  const { result, error } = await walletExemptions.createExemption(params);
+  const { result, error } = await walletExemptions.addOrDeleteExemption(params);
 
   if (error) return renderCustomError(res, error);
   renderSuccess(res, { result });
