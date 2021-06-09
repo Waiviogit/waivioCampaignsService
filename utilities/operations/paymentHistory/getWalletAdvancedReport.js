@@ -17,7 +17,6 @@ module.exports = async ({
   accounts, startDate, endDate, limit, filterAccounts, user,
 }) => {
   const dynamicProperties = await redisGetter.getHashAll('dynamic_global_properties');
-  const exemptions = await getExemptions({ user, accounts });
 
   accounts = await addWalletDataToAccounts({
     filterAccounts, startDate, accounts, endDate, limit,
@@ -30,6 +29,7 @@ module.exports = async ({
     .value();
 
   const limitedWallet = _.take(usersJointArr, limit);
+  await getExemptions({ user, wallet: limitedWallet });
 
   const walletWithHivePrice = await addHivePrice(limitedWallet);
   const resultWallet = addCurrencyToOperations({ walletWithHivePrice, dynamicProperties });
@@ -132,11 +132,32 @@ const addHivePrice = async (records = []) => {
   });
 };
 
-const getExemptions = async ({ user, accounts }) => {
+/**
+ * Method mutate wallet and add checked when record exempted
+ * @param user
+ * @param wallet
+ * @returns {Promise<void>}
+ */
+const getExemptions = async ({ user, wallet }) => {
   let exemptions = [];
   if (user) {
-    ({ result: exemptions = [] } = await walletExemptionsModel
-      .find({ userName: user, userWithExemptions: { $in: _.map(accounts, 'name') } }));
+    const condition = _.reduce(wallet, (acc, record) => {
+      const filter = { userName: user, userWithExemptions: record.userName };
+      const idFilter = record._id
+        ? { recordId: record._id }
+        : { operationNum: record.operationNum };
+
+      acc.push({ ...filter, ...idFilter });
+      return acc;
+    }, []);
+    ({ result: exemptions = [] } = await walletExemptionsModel.find({ $or: condition }));
   }
-  return exemptions;
+  for (const exemption of exemptions) {
+    const record = _.find(wallet, (rec) => (
+      _.has(exemption, 'recordId')
+        ? _.isEqual(exemption.recordId, rec._id)
+        : _.isEqual(exemption.operationNum, rec.operationNum)
+    ));
+    if (record) record.checked = true;
+  }
 };
