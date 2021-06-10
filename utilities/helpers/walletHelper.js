@@ -195,6 +195,7 @@ const filterFromTo = (filterAccounts, fromToArr) => (
 
 exports.calcDepositWithdrawals = ({ operations, field }) => _
   .reduce(operations, (acc, el) => {
+    if (_.get(el, 'checked')) return acc;
     switch (_.get(el, 'withdrawDeposit')) {
       case 'w':
         acc.withdrawals = add(acc.withdrawals, el[field]);
