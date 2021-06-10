@@ -36,8 +36,8 @@ module.exports = async ({
 
   const resAccounts = _.reduce(accounts,
     (acc, el) => (!el.guest
-      ? accumulateHiveAcc(resultWallet, el, acc)
-      : accumulateGuestAcc(resultWallet, el, acc)), []);
+      ? accumulateHiveAcc(limitedWallet, el, acc)
+      : accumulateGuestAcc(limitedWallet, el, acc)), []);
 
   const depositWithdrawals = calcDepositWithdrawals({
     operations: resultWallet,
