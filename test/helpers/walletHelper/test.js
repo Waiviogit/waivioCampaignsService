@@ -10,12 +10,7 @@ describe('On walletHelper', async () => {
     beforeEach(async () => {
       await dropDatabase();
       sinon.spy(currencyRequest, 'getHiveCurrency');
-      mock = [
-        _.random(0, 10),
-        { timestamp: moment.utc(date).format('yyyy-MM-DDTHH:mm:ss') },
-      ];
       currency = await CurrenciesStatisticsFactory.Create({ createdAt: moment.utc(date).format(), type: 'dailyData' });
-      result = await walletHelper.getHiveCurrencyHistory([mock]);
     });
 
     afterEach(() => {
@@ -23,14 +18,14 @@ describe('On walletHelper', async () => {
     });
 
     it('should find exact record on date', async () => {
-      result = await walletHelper.getHiveCurrencyHistory([mock]);
+      mock = [{ timestamp: moment(date).unix() }];
+      result = await walletHelper.getHiveCurrencyHistory(mock);
       expect(result[0]).to.be.deep.eq(currency);
     });
 
     it('should call currencyRequest if current date', async () => {
-      mock[1].timestamp = moment.utc().format('yyyy-MM-DDTHH:mm:ss');
-      result = await walletHelper.getHiveCurrencyHistory([mock]);
-
+      mock = [{ timestamp: moment().unix() }];
+      result = await walletHelper.getHiveCurrencyHistory(mock);
       expect(currencyRequest.getHiveCurrency.calledOnce).to.be.true;
     });
   });
