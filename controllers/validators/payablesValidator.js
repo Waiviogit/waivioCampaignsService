@@ -13,7 +13,7 @@ exports.payablesSchema = Joi.object().keys({
   days: Joi.number().default(0),
   payable: Joi.number(),
   sponsor: Joi.string(),
-  endDate: Joi.date().timestamp('unix').less('now').default(new Date()),
+  endDate: Joi.date().timestamp('unix').less('now').default(() => new Date()),
   startDate: Joi.date().timestamp('unix').less(Joi.ref('endDate')).default(new Date('1-1-1970')),
   userName: Joi.string(),
   type: Joi.string().valid(...Object.values(PAYMENT_HISTORIES_TYPES)),
@@ -32,7 +32,7 @@ exports.demoDeptSchema = Joi.object().keys({
   operationNum: Joi.number().default(-1),
   types: Joi.array().items(Joi.string().valid(...WALLET_TYPES_FOR_PARSE, ...GUEST_WALLET_OPERATIONS))
     .single().default([...GUEST_WALLET_OPERATIONS, ...WALLET_TYPES_FOR_PARSE]),
-  endDate: Joi.date().timestamp('unix').less('now').default(new Date()),
+  endDate: Joi.date().timestamp('unix').less('now').default(() => new Date()),
   startDate: Joi.date().timestamp('unix').default(moment.utc().subtract(10, 'year').toDate()).less(Joi.ref('endDate')),
 }).options(options);
 
@@ -62,7 +62,7 @@ exports.advancedWalletSchema = Joi.object().keys({
     operationNum: Joi.when('guest', { is: false, then: Joi.number().default(-1) }),
   })).single().min(1)
     .required(),
-  endDate: Joi.date().timestamp('unix').less('now').default(new Date()),
+  endDate: Joi.date().timestamp('unix').less('now').default(() => new Date()),
   startDate: Joi.date().timestamp('unix').default(moment.utc().subtract(10, 'year').toDate()).less(Joi.ref('endDate')),
   filterAccounts: Joi.array().items(Joi.string()).min(1).required(),
   limit: Joi.number().default(10),
