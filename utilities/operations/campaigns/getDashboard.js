@@ -1,10 +1,9 @@
-const _ = require('lodash');
-const moment = require('moment');
-const { wobjectModel } = require('models');
-const { campaignHelper, wobjectHelper } = require('utilities/helpers');
-const { currencyRequest } = require('utilities/requests');
+const paymentHistory = require('utilities/operations/paymentHistory');
 const { hiveClient, hiveOperations } = require('utilities/hiveApi');
-const paymentHistory = require('../paymentHistory');
+const { currencyRequest } = require('utilities/requests');
+const { campaignHelper } = require('utilities/helpers');
+const moment = require('moment');
+const _ = require('lodash');
 
 module.exports = async (data) => {
   const limitDate = moment.utc().startOf('month').toDate();
@@ -27,26 +26,19 @@ module.exports = async (data) => {
           status: 1,
           type: 1,
           users: 1,
-          frequency_assign: 1,
-          budget: 1,
-          reward: 1,
-          reserved: 1,
-          completed: 1,
+          budget: 1, // need decimal128
+          reward: 1, // need decimal128
+          reserved: 1, // ? need decimal128
+          completed: 1, // ? need decimal128
           completedTotal: 1,
-          match_bots: 1,
           agreementObjects: 1,
-          usersLegalNotice: 1,
+          requiredObject: { author_permlink: '$requiredObject' },
           requirements: 1,
           userRequirements: 1,
-          reservation_timetable: 1,
-          count_reservation_days: 1,
-          guide: 1,
-          requiredObject: 1,
-          objects: 1,
-          requirement_filters: 1,
           expired_at: 1,
           createdAt: 1,
-          commissionAgreement: 1,
+          guide: 1,
+          commissionAgreement: 1, // ? need decimal128
           remaining: { $cond: [{ $eq: ['$status', 'active'] }, { $subtract: [{ $divide: ['$budget', '$reward'] }, { $add: ['$completed', '$reserved'] }] }, 0] },
         },
       },
@@ -54,10 +46,10 @@ module.exports = async (data) => {
   });
 
   if (error) return { error };
-  // eslint-disable-next-line no-return-assign
-  const { payable } = await paymentHistory.getPayableHistory(
-    { skip: 0, limit: 1, sponsor: data.guideName },
-  );
+
+  const { payable } = await paymentHistory.getPayableHistory({
+    skip: 0, limit: 1, sponsor: data.guideName,
+  });
   const user = await hiveClient.execute(
     hiveOperations.getAccountInfo,
     data.guideName,
@@ -68,7 +60,7 @@ module.exports = async (data) => {
     sum_reserved: _.sumBy(dashboard, (campaign) => {
       if (campaign.reserved) {
         return (campaign.reserved * campaign.reward)
-            + (campaign.reserved * campaign.reward) * campaign.commissionAgreement;
+          + (campaign.reserved * campaign.reward) * campaign.commissionAgreement;
       }
       return 0;
     }),
@@ -78,29 +70,32 @@ module.exports = async (data) => {
   // but for now we take into account the current rate
   if (budgetTotal.sum_reserved) {
     const { usdCurrency } = await currencyRequest.getHiveCurrency();
-    budgetTotal.sum_reserved = usdCurrency ? budgetTotal.sum_reserved / usdCurrency : budgetTotal.sum_reserved;
+    budgetTotal.sum_reserved = usdCurrency
+      ? budgetTotal.sum_reserved / usdCurrency
+      : budgetTotal.sum_reserved;
   }
   budgetTotal.remaining = _.round(
     budgetTotal.account_amount - budgetTotal.sum_payable - budgetTotal.sum_reserved, 4,
   );
+  const campaigns = calcPayedRemaining(dashboard);
 
-  _.map(dashboard, (campaign) => {
-    // I use rounding here because JS returns very strange numbers in some division cases
-    campaign.remaining = _.toInteger(_.ceil(campaign.remaining, 7));
-    campaign.payed = _.round(_.sumBy(campaign.users, (usr) => {
-      if (usr.status === 'completed') {
-        return campaign.reward / usr.hiveCurrency + usr.rewardRaisedBy;
-      }
-      return 0;
-    }), 3);
-  });
-  const { campaigns, error: addObjectsError } = await addObjectsToCampaigns(dashboard);
-  if (error) return { error: addObjectsError };
   return {
     campaigns,
     budget_total: budgetTotal,
   };
 };
+
+const calcPayedRemaining = (dashboard) => _.map(dashboard, (campaign) => {
+  // I use rounding here because JS returns very strange numbers in some division cases
+  campaign.remaining = _.toInteger(_.ceil(campaign.remaining, 7));
+  campaign.payed = _.round(_.sumBy(campaign.users, (usr) => {
+    if (usr.status === 'completed') {
+      return campaign.reward / usr.hiveCurrency + usr.rewardRaisedBy;
+    }
+    return 0;
+  }), 3);
+  return campaign;
+});
 
 const guideLookup = () => [{
   $lookup: {
@@ -120,37 +115,4 @@ const guideLookup = () => [{
 {
   $unwind: { path: '$guide' },
 },
-];
-
-const addObjectsToCampaigns = async (campaigns) => {
-  let objects = [];
-  _.forEach(campaigns,
-    // eslint-disable-next-line no-return-assign,max-len
-    (campaign) => objects = _.uniq(_.concat(objects, campaign.objects, campaign.requiredObject, campaign.agreementObjects)));
-  const { result: wobjects, error } = await wobjectModel.aggregate(objectsPipeline(objects));
-  if (error) return { error };
-  for (const wobject of wobjects) {
-    const { objectName } = await wobjectHelper.getWobjectName(wobject.author_permlink);
-    wobject.name = objectName;
-  }
-  campaigns = _.map(campaigns, (campaign) => {
-    campaign.agreementObjects = _.filter(wobjects,
-      (wobject) => _.includes(campaign.agreementObjects, wobject.author_permlink));
-    campaign.objects = _.filter(wobjects,
-      (wobject) => _.includes(campaign.objects, wobject.author_permlink));
-    campaign.requiredObject = _.find(wobjects,
-      (wobject) => campaign.requiredObject === wobject.author_permlink);
-    return campaign;
-  });
-  return { campaigns };
-};
-
-const objectsPipeline = (objects) => [
-  { $match: { author_permlink: { $in: objects } } },
-  { $addFields: { fields: { $filter: { input: '$fields', as: 'field', cond: { $eq: ['$$field.name', 'name'] } } } } },
-  {
-    $project: {
-      _id: 0, author_permlink: 1, fields: 1, object_type: 1,
-    },
-  },
 ];

@@ -2057,14 +2057,6 @@ describe('Campaigns', async () => {
       res.should.have.status(200);
       res.body.dashboard.campaigns.length.should.equal(0);
     });
-    it('should exist property name in objects', async () => {
-      const { body: { dashboard: { campaigns: [campaign] } } } = await chai.request(app).get('/campaigns-api/campaigns/dashboard/guide1');
-      expect(campaign.objects[0].name).to.exist;
-    });
-    it('should exist property name in requiredObject', async () => {
-      const { body: { dashboard: { campaigns: [campaign] } } } = await chai.request(app).get('/campaigns-api/campaigns/dashboard/guide1');
-      expect(campaign.requiredObject.name).to.exist;
-    });
   });
   describe('validate activation /', async () => {
     let campaign1;
