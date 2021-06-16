@@ -17,6 +17,7 @@ module.exports = async (data) => {
           completedTotal: { $size: { $filter: { input: '$users', as: 'user', cond: { $eq: ['$$user.status', 'completed'] } } } },
         },
       },
+      ...guideLookup(),
       { $sort: { createdAt: -1 } },
       {
         $project: {
@@ -31,10 +32,12 @@ module.exports = async (data) => {
           completed: 1, // ? need decimal128
           completedTotal: 1,
           agreementObjects: 1,
-          requiredObject: 1,
-          objects: 1,
+          requiredObject: { author_permlink: '$requiredObject' },
+          requirements: 1,
+          userRequirements: 1,
           expired_at: 1,
           createdAt: 1,
+          guide: 1,
           commissionAgreement: 1, // ? need decimal128
           remaining: { $cond: [{ $eq: ['$status', 'active'] }, { $subtract: [{ $divide: ['$budget', '$reward'] }, { $add: ['$completed', '$reserved'] }] }, 0] },
         },
@@ -93,3 +96,23 @@ const calcPayedRemaining = (dashboard) => _.map(dashboard, (campaign) => {
   }), 3);
   return campaign;
 });
+
+const guideLookup = () => [{
+  $lookup: {
+    from: 'users',
+    let: { name: '$guideName' },
+    pipeline: [
+      { $match: { $expr: { $eq: ['$name', '$$name'] } } },
+      {
+        $project: {
+          name: 1, alias: 1, wobjects_weight: 1, _id: 0,
+        },
+      },
+    ],
+    as: 'guide',
+  },
+},
+{
+  $unwind: { path: '$guide' },
+},
+];
