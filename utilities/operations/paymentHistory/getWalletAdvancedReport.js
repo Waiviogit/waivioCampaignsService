@@ -63,14 +63,15 @@ const addWalletDataToAccounts = async ({
       userName: account.name,
       skip: account.skip,
       tableView: true,
-      filterAccounts,
       startDate,
       endDate,
       limit,
     });
 
     _.forEach(histories, (el) => {
-      el.withdrawDeposit = withdrawDeposit(el.type);
+      el.withdrawDeposit = withdrawDeposit({
+        type: el.type, record: el, userName: account.name, filterAccounts,
+      });
       el.timestamp = moment(el.createdAt).unix();
       el.guest = true;
     });
@@ -85,12 +86,13 @@ const addWalletDataToAccounts = async ({
     userName: account.name,
     limit: limit + 1,
     tableView: true,
-    filterAccounts,
     startDate,
     endDate,
   });
   _.forEach(account.wallet, (el) => {
-    el.withdrawDeposit = withdrawDeposit(el.type, el, account.name);
+    el.withdrawDeposit = withdrawDeposit({
+      type: el.type, record: el, userName: account.name, filterAccounts,
+    });
   });
   account.hasMore = account.wallet.length > limit;
   return account;
