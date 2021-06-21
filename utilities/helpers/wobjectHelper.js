@@ -337,16 +337,18 @@ const getWobjects = async ({
   const host = session.get('host');
   const { result: app } = await appModel.findOne(host);
 
-  let { result: wobjects } = await wobjectModel.find(
-    { author_permlink: { $in: _.uniq(objects) } },
-  );
+  let { result: wobjects } = await wobjectModel.find({
+    author_permlink: { $in: _.uniq(objects) },
+    'status.title': { $nin: ['unavailable', 'relisted'] },
+  });
   if (needProcess) {
     wobjects = await processWobjects({
       wobjects, locale, fields: CAMPAIGN_FIELDS, app,
     });
-    let { result: parents } = await wobjectModel.find(
-      { author_permlink: { $in: _.uniq(_.compact(_.map(wobjects, 'parent'))) } },
-    );
+    let { result: parents } = await wobjectModel.find({
+      author_permlink: { $in: _.uniq(_.compact(_.map(wobjects, 'parent'))) },
+      'status.title': { $nin: ['unavailable', 'relisted'] },
+    });
     parents = await processWobjects({
       wobjects: parents, locale, fields: REQUIREDFIELDS_PARENT, app,
     });
