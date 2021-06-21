@@ -109,6 +109,7 @@ const fillObjects = (
     }
   }
   const object = _.find(wobjects, (wobj) => wobj.author_permlink === obj);
+  if (!object) return null;
   if (_.get(campaign.users, 'length')) {
     countUsers = _.filter(campaign.users,
       (user) => user.status === 'assigned' && user.object_permlink === obj).length;
