@@ -44,7 +44,7 @@ exports.getWalletData = async ({
         walletOperations.push(record);
       }
     }
-    if (lastId === 1) breakFlag = true;
+    if (lastId === 1 || lastId === 0) breakFlag = true;
     if (breakFlag) break;
   } while (walletOperations.length <= limit || batchSize === result.length - 1);
 
@@ -146,7 +146,7 @@ const getPowerDepositWithdraws = (op, userName) => {
 const multiAccountFilter = ({ record, filterAccounts, userName }) => {
   filterAccounts = _.filter(filterAccounts, (el) => el !== userName);
 
-  if (!_.includes(ACCOUNT_FILTER_TYPES, record.type)) return false;
+  if (!_.includes(ACCOUNT_FILTER_TYPES, record.type) || _.isEmpty(filterAccounts)) return false;
   switch (record.type) {
     case HIVE_OPERATIONS_TYPES.TRANSFER:
       return filterTypeTransfer({
@@ -167,15 +167,15 @@ const multiAccountFilter = ({ record, filterAccounts, userName }) => {
   }
 };
 
-const filterTypeTransfer = ({ operation, memo, filterAccounts }) => {
-  if (operation.to === process.env.WALLET_ACC_NAME) {
+const filterTypeTransfer = ({ record, memo, filterAccounts }) => {
+  if (record.to === process.env.WALLET_ACC_NAME) {
     return memo.id === PAYMENT_HISTORIES_TYPES.USER_TO_GUEST_TRANSFER
       && _.includes(filterAccounts, memo.to);
   }
-  if (operation.from === process.env.WALLET_ACC_NAME) {
+  if (record.from === process.env.WALLET_ACC_NAME) {
     return memo.id === 'waivio_guest_transfer' && _.includes(filterAccounts, memo.from);
   }
-  return filterFromTo(filterAccounts, [operation.to, operation.from]);
+  return filterFromTo(filterAccounts, [record.to, record.from]);
 };
 
 const filterFromTo = (filterAccounts, fromToArr) => (
