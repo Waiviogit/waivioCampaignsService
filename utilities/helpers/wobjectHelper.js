@@ -325,7 +325,7 @@ const processWobjects = async ({
 
 /** Get wobject data for campaigns */
 const getWobjects = async ({
-  campaigns, locale, forSecondary = true, needProcess = true,
+  campaigns, locale, forSecondary = true, needProcess = true, additionalCond = {},
 }) => {
   const objects = _.flattenDeep(
     _.concat(
@@ -339,7 +339,7 @@ const getWobjects = async ({
 
   let { result: wobjects } = await wobjectModel.find({
     author_permlink: { $in: _.uniq(objects) },
-    'status.title': { $nin: ['unavailable', 'relisted'] },
+    ...additionalCond,
   });
   if (needProcess) {
     wobjects = await processWobjects({
@@ -347,7 +347,7 @@ const getWobjects = async ({
     });
     let { result: parents } = await wobjectModel.find({
       author_permlink: { $in: _.uniq(_.compact(_.map(wobjects, 'parent'))) },
-      'status.title': { $nin: ['unavailable', 'relisted'] },
+      ...additionalCond,
     });
     parents = await processWobjects({
       wobjects: parents, locale, fields: REQUIREDFIELDS_PARENT, app,
