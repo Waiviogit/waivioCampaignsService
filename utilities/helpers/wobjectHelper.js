@@ -325,7 +325,7 @@ const processWobjects = async ({
 
 /** Get wobject data for campaigns */
 const getWobjects = async ({
-  campaigns, locale, forSecondary = true, needProcess = true, additionalCond = {},
+  campaigns, locale, forSecondary = true, needProcess = true,
 }) => {
   const objects = _.flattenDeep(
     _.concat(
@@ -339,7 +339,6 @@ const getWobjects = async ({
 
   let { result: wobjects } = await wobjectModel.find({
     author_permlink: { $in: _.uniq(objects) },
-    ...additionalCond,
   });
   if (needProcess) {
     wobjects = await processWobjects({
@@ -347,7 +346,6 @@ const getWobjects = async ({
     });
     let { result: parents } = await wobjectModel.find({
       author_permlink: { $in: _.uniq(_.compact(_.map(wobjects, 'parent'))) },
-      ...additionalCond,
     });
     parents = await processWobjects({
       wobjects: parents, locale, fields: REQUIREDFIELDS_PARENT, app,
