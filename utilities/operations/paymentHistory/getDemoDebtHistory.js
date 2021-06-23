@@ -4,7 +4,7 @@ const { paymentHistoryModel } = require('models');
 const _ = require('lodash');
 
 module.exports = async ({
-  userName, skip, limit, tableView, endDate, startDate, filterAccounts,
+  userName, skip, limit, tableView, endDate, startDate,
 }, accessToken) => {
   let payable = 0;
   const pipeline = [
@@ -16,9 +16,6 @@ module.exports = async ({
     pipeline[0].$match.$and = [
       { createdAt: { $gte: startDate } },
       { createdAt: { $lte: endDate } }];
-  }
-  if (tableView && !_.isEmpty(filterAccounts)) {
-    pipeline[0].$match.sponsor = { $nin: filterAccounts };
   }
 
   const { result: histories, error } = await paymentHistoryModel.aggregate(pipeline);

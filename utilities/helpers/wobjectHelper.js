@@ -325,7 +325,7 @@ const processWobjects = async ({
 
 /** Get wobject data for campaigns */
 const getWobjects = async ({
-  campaigns, locale, forSecondary = true, needProcess = true,
+  campaigns, locale, forSecondary = true, needProcess = true, additionalCond = {},
 }) => {
   const objects = _.flattenDeep(
     _.concat(
@@ -337,16 +337,18 @@ const getWobjects = async ({
   const host = session.get('host');
   const { result: app } = await appModel.findOne(host);
 
-  let { result: wobjects } = await wobjectModel.find(
-    { author_permlink: { $in: _.uniq(objects) } },
-  );
+  let { result: wobjects } = await wobjectModel.find({
+    author_permlink: { $in: _.uniq(objects) },
+    ...additionalCond,
+  });
   if (needProcess) {
     wobjects = await processWobjects({
       wobjects, locale, fields: CAMPAIGN_FIELDS, app,
     });
-    let { result: parents } = await wobjectModel.find(
-      { author_permlink: { $in: _.uniq(_.compact(_.map(wobjects, 'parent'))) } },
-    );
+    let { result: parents } = await wobjectModel.find({
+      author_permlink: { $in: _.uniq(_.compact(_.map(wobjects, 'parent'))) },
+      ...additionalCond,
+    });
     parents = await processWobjects({
       wobjects: parents, locale, fields: REQUIREDFIELDS_PARENT, app,
     });

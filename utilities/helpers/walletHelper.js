@@ -9,7 +9,7 @@ const moment = require('moment');
 const _ = require('lodash');
 
 exports.getWalletData = async ({
-  userName, limit, operationNum, types, endDate, startDate, tableView, filterAccounts,
+  userName, limit, operationNum, types, endDate, startDate, tableView,
 }) => {
   let result, error;
   const batchSize = 1000;
@@ -41,11 +41,10 @@ exports.getWalletData = async ({
           break;
         }
         if (tableView && endDateTimestamp < recordTimestamp) continue;
-        if (tableView && multiAccountFilter({ record: record[1].op, filterAccounts, userName })) continue;
         walletOperations.push(record);
       }
     }
-    if (lastId === 1) breakFlag = true;
+    if (lastId === 1 || lastId === 0) breakFlag = true;
     if (breakFlag) break;
   } while (walletOperations.length <= limit || batchSize === result.length - 1);
 
@@ -119,11 +118,15 @@ exports.getTransfersHistory = async (hiveHistory) => {
   return _.orderBy(hiveHistory, ['timestamp', 'type'], ['desc']);
 };
 
-exports.withdrawDeposit = (type, op, userName) => {
+exports.withdrawDeposit = ({
+  type, record, filterAccounts, userName,
+}) => {
+  const isMutual = multiAccountFilter({ record, filterAccounts, userName });
+  if (isMutual) return '';
   const result = {
-    [HIVE_OPERATIONS_TYPES.TRANSFER]: _.get(op, 'to') === userName ? 'd' : 'w',
-    [HIVE_OPERATIONS_TYPES.TRANSFER_TO_VESTING]: getPowerDepositWithdraws(op, userName),
-    [HIVE_OPERATIONS_TYPES.FILL_VESTING_WITHDRAW]: getPowerDepositWithdraws(op, userName),
+    [HIVE_OPERATIONS_TYPES.TRANSFER]: _.get(record, 'to') === userName ? 'd' : 'w',
+    [HIVE_OPERATIONS_TYPES.TRANSFER_TO_VESTING]: getPowerDepositWithdraws(record, userName),
+    [HIVE_OPERATIONS_TYPES.FILL_VESTING_WITHDRAW]: getPowerDepositWithdraws(record, userName),
     [HIVE_OPERATIONS_TYPES.CLAIM_REWARD_BALANCE]: 'd',
     [HIVE_OPERATIONS_TYPES.PROPOSAL_PAY]: 'w',
     [PAYMENT_HISTORIES_TYPES.DEMO_USER_TRANSFER]: 'w',
@@ -139,6 +142,44 @@ const getPowerDepositWithdraws = (op, userName) => {
   if (_.get(op, 'from') !== userName && _.get(op, 'to') === userName) return 'd';
   return '';
 };
+
+const multiAccountFilter = ({ record, filterAccounts, userName }) => {
+  filterAccounts = _.filter(filterAccounts, (el) => el !== userName);
+
+  if (!_.includes(ACCOUNT_FILTER_TYPES, record.type) || _.isEmpty(filterAccounts)) return false;
+  switch (record.type) {
+    case HIVE_OPERATIONS_TYPES.TRANSFER:
+      return filterTypeTransfer({
+        memo: jsonHelper.parseJson(record.memo),
+        filterAccounts,
+        record,
+      });
+    case HIVE_OPERATIONS_TYPES.TRANSFER_TO_VESTING:
+      return filterFromTo(filterAccounts, [record.from, record.to]);
+    case HIVE_OPERATIONS_TYPES.FILL_VESTING_WITHDRAW:
+      return filterFromTo(filterAccounts, [record.from, record.to]);
+    case PAYMENT_HISTORIES_TYPES.USER_TO_GUEST_TRANSFER:
+    case PAYMENT_HISTORIES_TYPES.DEMO_USER_TRANSFER:
+    case PAYMENT_HISTORIES_TYPES.DEMO_POST:
+    case PAYMENT_HISTORIES_TYPES.DEMO_DEBT:
+      return _.includes(filterAccounts, _.get(record, 'sponsor'));
+    default: return false;
+  }
+};
+
+const filterTypeTransfer = ({ record, memo, filterAccounts }) => {
+  if (record.to === process.env.WALLET_ACC_NAME) {
+    return memo.id === PAYMENT_HISTORIES_TYPES.USER_TO_GUEST_TRANSFER
+      && _.includes(filterAccounts, memo.to);
+  }
+  if (record.from === process.env.WALLET_ACC_NAME) {
+    return memo.id === 'waivio_guest_transfer' && _.includes(filterAccounts, memo.from);
+  }
+  return filterFromTo(filterAccounts, [record.to, record.from]);
+};
+
+const filterFromTo = (filterAccounts, fromToArr) => (
+  _.some(filterAccounts, (el) => _.includes(fromToArr, el)));
 
 const formatHiveHistory = ({ walletOperations, tableView, userName }) => (
   _.map(walletOperations, (history) => {
@@ -160,38 +201,6 @@ const formatHiveHistory = ({ walletOperations, tableView, userName }) => (
 
     return _.omit(operation, omitFromOperation);
   }));
-
-const multiAccountFilter = ({ record, filterAccounts, userName }) => {
-  filterAccounts = _.filter(filterAccounts, (el) => el !== userName);
-  const [type, operation] = record;
-  if (!_.includes(ACCOUNT_FILTER_TYPES, type)) return false;
-  switch (type) {
-    case HIVE_OPERATIONS_TYPES.TRANSFER:
-      return filterTypeTransfer({
-        memo: jsonHelper.parseJson(operation.memo),
-        filterAccounts,
-        operation,
-      });
-    case HIVE_OPERATIONS_TYPES.TRANSFER_TO_VESTING:
-      return filterFromTo(filterAccounts, [operation.from, operation.to]);
-    case HIVE_OPERATIONS_TYPES.FILL_VESTING_WITHDRAW:
-      return filterFromTo(filterAccounts, [operation.from_account, operation.to_account]);
-  }
-};
-
-const filterTypeTransfer = ({ operation, memo, filterAccounts }) => {
-  if (operation.to === process.env.WALLET_ACC_NAME) {
-    return memo.id === PAYMENT_HISTORIES_TYPES.USER_TO_GUEST_TRANSFER
-      && _.includes(filterAccounts, memo.to);
-  }
-  if (operation.from === process.env.WALLET_ACC_NAME) {
-    return memo.id === 'waivio_guest_transfer' && _.includes(filterAccounts, memo.from);
-  }
-  return filterFromTo(filterAccounts, [operation.to, operation.from]);
-};
-
-const filterFromTo = (filterAccounts, fromToArr) => (
-  _.some(filterAccounts, (el) => _.includes(fromToArr, el)));
 
 exports.calcDepositWithdrawals = ({ operations, field }) => _
   .reduce(operations, (acc, el) => {

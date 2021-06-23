@@ -109,6 +109,7 @@ const fillObjects = (
     }
   }
   const object = _.find(wobjects, (wobj) => wobj.author_permlink === obj);
+  if (!object) return null;
   if (_.get(campaign.users, 'length')) {
     countUsers = _.filter(campaign.users,
       (user) => user.status === 'assigned' && user.object_permlink === obj).length;
@@ -204,7 +205,11 @@ exports.getPrimaryCampaigns = async ({
 }) => {
   let campaigns = [], currentUser, sponsors = [];
   const { wobjects } = await wobjectHelper.getWobjects({
-    campaigns: allCampaigns, locale, appName, forSecondary: false,
+    additionalCond: { 'status.title': { $nin: ['unavailable', 'relisted'] } },
+    campaigns: allCampaigns,
+    forSecondary: false,
+    appName,
+    locale,
   });
 
   if (_.includes(CAMPAIGN_PAYMENT_SORTS, sort)) {
@@ -270,7 +275,11 @@ exports.getSecondaryCampaigns = async ({
 }) => {
   let campaigns = [], currentUser, wobjectsFollow = [];
   const { wobjects } = await wobjectHelper.getWobjects({
-    campaigns: allCampaigns, locale, appName, needProcess,
+    additionalCond: { 'status.title': { $nin: ['unavailable', 'relisted'] } },
+    campaigns: allCampaigns,
+    needProcess,
+    appName,
+    locale,
   });
   const { users } = await userModel.findByNames(_.concat(_.map(allCampaigns, 'guideName'), userName));
   if (userName) {
