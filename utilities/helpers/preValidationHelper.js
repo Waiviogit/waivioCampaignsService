@@ -1,7 +1,7 @@
-const _ = require('lodash');
-const { campaignModel, userModel } = require('models');
-const campaignHelper = require('utilities/helpers/campaignsHelper');
 const { activeCampaignStatuses, CAMPAIGN_STATUSES_FOR_ON_HOLD } = require('constants/constants');
+const { campaignModel, userModel, wobjectModel } = require('models');
+const campaignHelper = require('utilities/helpers/campaignsHelper');
+const _ = require('lodash');
 
 /**
  * Validate campaign before activation
@@ -21,8 +21,12 @@ const validateActivation = async ({ campaign_id, guide_name, permlink }) => {
     if (!_.isEmpty(existCampaign)) return { is_valid: false, message: 'Permlink not unique' };
 
     if (campaign.expired_at < limitDate) return { is_valid: false, message: 'Expiration time is invalid' };
-    // ##TODO disable check balance before activation
-    // const balance = await isEnoughBalance( campaign.guideName, campaign.budget );
+
+    const { result: requiredObj } = await wobjectModel.findOne({
+      author_permlink: campaign.requiredObject,
+      'status.title': { $in: ['unavailable', 'relisted'] },
+    });
+    if (requiredObj) return { is_valid: false, message: 'Required object is relisted or unavailable' };
 
     return { is_valid: true, campaign, balance: 0 };
   }
