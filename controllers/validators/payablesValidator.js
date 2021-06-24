@@ -1,7 +1,7 @@
 const moment = require('moment');
 const Joi = require('@hapi/joi');
 const {
-  WALLET_TYPES_FOR_PARSE,
+  WALLET_TYPES_FOR_PARSE, SUPPORTED_CURRENCIES,
   PAYMENT_HISTORIES_TYPES, GUEST_WALLET_OPERATIONS,
 } = require('constants/constants');
 
@@ -67,6 +67,8 @@ exports.advancedWalletSchema = Joi.object().keys({
   filterAccounts: Joi.array().items(Joi.string()).min(1).required(),
   limit: Joi.number().default(10),
   user: Joi.string().default(''),
+  currency: Joi.string()
+    .valid(...Object.values(SUPPORTED_CURRENCIES)).default(SUPPORTED_CURRENCIES.USD),
 }).options(options);
 
 exports.walletExemptionsSchema = Joi.object().keys({

@@ -1,6 +1,6 @@
+const { PAYMENT_HISTORIES_TYPES, HIVE_OPERATIONS_TYPES, SUPPORTED_CURRENCIES } = require('constants/constants');
 const { SAVINGS_TRANSFERS, CURRENCIES, ACCOUNT_FILTER_TYPES } = require('constants/walletData');
-const { PAYMENT_HISTORIES_TYPES, HIVE_OPERATIONS_TYPES } = require('constants/constants');
-const { internalExchangeModel, currenciesStatiscticModel } = require('models');
+const { internalExchangeModel, currenciesStatiscticModel, currenciesRateModel } = require('models');
 const { hiveRequests, currencyRequest } = require('utilities/requests');
 const jsonHelper = require('utilities/helpers/jsonHelper');
 const { add } = require('utilities/helpers/calcHelper');
@@ -82,6 +82,32 @@ exports.getHiveCurrencyHistory = async (walletOperations, path = 'timestamp') =>
   }
 
   return result;
+};
+
+exports.getCurrencyRates = async ({ wallet, currency }) => {
+  if (currency === SUPPORTED_CURRENCIES.USD) return { rates: [] };
+  let includeToday = false;
+  const dates = _.uniq(_.map(wallet, (record) => {
+    if (moment.unix(record).isSame(Date.now(), 'day')) includeToday = true;
+    return moment.unix(record.timestamp).format('YYYY-MM-DD');
+  }));
+
+  const { result = [] } = await currenciesRateModel.find(
+    { dateString: { $in: dates }, base: SUPPORTED_CURRENCIES.USD },
+    { [`rates.${currency}`]: 1, dateString: 1 },
+  );
+  if (includeToday) {
+    const { latest } = await currenciesRateModel.findOne({
+      condition: { base: SUPPORTED_CURRENCIES.USD },
+      select: { [`rates.${currency}`]: 1 },
+      sort: { dateString: -1 },
+    });
+    if (latest) {
+      latest.dateString = moment().format('YYYY-MM-DD');
+      result.push(latest);
+    }
+  }
+  return { rates: result };
 };
 
 exports.getTransfersHistory = async (hiveHistory) => {
@@ -216,14 +242,29 @@ exports.calcDepositWithdrawals = ({ operations, field }) => _
     return acc;
   }, { deposits: 0, withdrawals: 0 });
 
-exports.addCurrencyToOperations = ({ walletWithHivePrice, dynamicProperties }) => _
-  .map(walletWithHivePrice, (record) => {
-    record.usd = record.type === HIVE_OPERATIONS_TYPES.CLAIM_REWARD_BALANCE
-      ? getPriceFromClaimReward(record, dynamicProperties)
-      : getPriceInUSD(record);
+exports.addCurrencyToOperations = async ({
+  walletWithHivePrice, dynamicProperties, currency, rates,
+}) => _.map(walletWithHivePrice, (record) => {
+  const USD = record.type === HIVE_OPERATIONS_TYPES.CLAIM_REWARD_BALANCE
+    ? getPriceFromClaimReward(record, dynamicProperties)
+    : getPriceInUSD(record);
 
-    return record;
+  record[currency] = calcWalletRecordRate({
+    USD, rates, timestamp: record.timestamp, currency,
   });
+
+  return record;
+});
+
+const calcWalletRecordRate = ({
+  USD, timestamp, rates, currency,
+}) => {
+  if (currency === SUPPORTED_CURRENCIES.USD) return USD;
+  const dayRateRecord = _.find(rates, (el) => moment.unix(timestamp).isSame(moment(el.dateString), 'day'));
+  const rate = _.get(dayRateRecord, `rates.${currency}`, 0);
+
+  return new BigNumber(USD).times(rate).toNumber();
+};
 
 const getPriceInUSD = (record) => {
   if (!record.amount) return 0;
