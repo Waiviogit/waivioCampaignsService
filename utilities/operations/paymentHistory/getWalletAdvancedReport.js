@@ -2,19 +2,19 @@ const {
   addCurrencyToOperations,
   calcDepositWithdrawals,
   getHiveCurrencyHistory,
+  getCurrencyRates,
   withdrawDeposit,
   getWalletData,
 } = require('utilities/helpers/walletHelper');
 const getDemoDebtHistory = require('utilities/operations/paymentHistory/getDemoDebtHistory');
 const { ADVANCED_WALLET_TYPES } = require('constants/constants');
-const { CURRENCIES } = require('constants/walletData');
 const { walletExemptionsModel } = require('models');
 const { redisGetter } = require('utilities/redis');
 const moment = require('moment');
 const _ = require('lodash');
 
 module.exports = async ({
-  accounts, startDate, endDate, limit, filterAccounts, user,
+  accounts, startDate, endDate, limit, filterAccounts, user, currency,
 }) => {
   const dynamicProperties = await redisGetter.getHashAll('dynamic_global_properties');
 
@@ -29,20 +29,21 @@ module.exports = async ({
     .value();
 
   const limitedWallet = _.take(usersJointArr, limit);
+  const { rates } = await getCurrencyRates({ wallet: limitedWallet, currency });
+
   await getExemptions({ user, wallet: limitedWallet });
 
   const walletWithHivePrice = await addHivePrice(limitedWallet);
-  const resultWallet = addCurrencyToOperations({ walletWithHivePrice, dynamicProperties });
+  const resultWallet = await addCurrencyToOperations({
+    walletWithHivePrice, dynamicProperties, rates, currency,
+  });
 
   const resAccounts = _.reduce(accounts,
     (acc, el) => (!el.guest
       ? accumulateHiveAcc(limitedWallet, el, acc)
       : accumulateGuestAcc(limitedWallet, el, acc)), []);
 
-  const depositWithdrawals = calcDepositWithdrawals({
-    operations: resultWallet,
-    field: CURRENCIES.USD,
-  });
+  const depositWithdrawals = calcDepositWithdrawals({ operations: resultWallet, field: currency });
 
   const hasMore = usersJointArr.length > resultWallet.length
     || _.some(accounts, (acc) => !!acc.hasMore);

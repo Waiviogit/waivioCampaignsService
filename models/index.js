@@ -15,4 +15,5 @@ module.exports = {
   currenciesStatiscticModel: require('./currenciesStatisticModel'),
   wobjectSubscriptions: require('./wobjectSubscriptionModel'),
   walletExemptionsModel: require('./walletExemptionsModel'),
+  currenciesRateModel: require('./currenciesRateModel'),
 };
