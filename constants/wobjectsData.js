@@ -166,3 +166,15 @@ exports.ARRAY_FIELDS = [
   this.FIELDS_NAMES.FORM,
   this.FIELDS_NAMES.NEWS_FILTER,
 ];
+
+exports.STATUSES = {
+  RELISTED: 'relisted',
+  UNAVAILABLE: 'unavailable',
+  NSFW: 'nsfw',
+  FLAGGED: 'flagged',
+};
+
+exports.REMOVE_OBJ_STATUSES = [
+  this.STATES.RELISTED,
+  this.STATES.UNAVAILABLE,
+];
