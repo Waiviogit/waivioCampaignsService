@@ -88,7 +88,7 @@ exports.getCurrencyRates = async ({ wallet, currency }) => {
   if (currency === SUPPORTED_CURRENCIES.USD) return { rates: [] };
   let includeToday = false;
   const dates = _.uniq(_.map(wallet, (record) => {
-    if (moment.unix(record).isSame(Date.now(), 'day')) includeToday = true;
+    if (moment.unix(record.timestamp).isSame(Date.now(), 'day')) includeToday = true;
     return moment.unix(record.timestamp).format('YYYY-MM-DD');
   }));
 
@@ -97,7 +97,7 @@ exports.getCurrencyRates = async ({ wallet, currency }) => {
     { [`rates.${currency}`]: 1, dateString: 1 },
   );
   if (includeToday) {
-    const { latest } = await currenciesRateModel.findOne({
+    const { result: latest } = await currenciesRateModel.findOne({
       condition: { base: SUPPORTED_CURRENCIES.USD },
       select: { [`rates.${currency}`]: 1 },
       sort: { dateString: -1 },
