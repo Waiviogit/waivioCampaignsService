@@ -7,5 +7,6 @@ module.exports = {
   models: {
     ReservationCurrencies: require('./schemas/ReservationCurrenciesSchema'),
     CurrenciesStatistic: require('./schemas/CurrenciesStatisticSchema'),
+    CurrenciesRate: require('./schemas/CurrenciesRateSchema'),
   },
 };

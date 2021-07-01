@@ -1,5 +1,15 @@
+exports.allowedIds = ['hive', 'hive_dollar'];
+exports.allowedCurrencies = ['usd', 'btc'];
 
-const allowedIds = ['hive', 'hive_dollar'];
-const allowedCurrencies = ['usd', 'btc'];
+exports.SUPPORTED_CURRENCIES = {
+  USD: 'USD',
+  CAD: 'CAD',
+};
 
-module.exports = { allowedIds, allowedCurrencies };
+exports.BASE_CURRENCIES = [
+  this.SUPPORTED_CURRENCIES.USD,
+];
+
+exports.RATE_CURRENCIES = [
+  this.SUPPORTED_CURRENCIES.CAD,
+];

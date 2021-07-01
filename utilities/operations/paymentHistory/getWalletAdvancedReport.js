@@ -2,19 +2,20 @@ const {
   addCurrencyToOperations,
   calcDepositWithdrawals,
   getHiveCurrencyHistory,
+  getCurrencyRates,
   withdrawDeposit,
   getWalletData,
 } = require('utilities/helpers/walletHelper');
 const getDemoDebtHistory = require('utilities/operations/paymentHistory/getDemoDebtHistory');
 const { ADVANCED_WALLET_TYPES } = require('constants/constants');
-const { CURRENCIES } = require('constants/walletData');
 const { walletExemptionsModel } = require('models');
 const { redisGetter } = require('utilities/redis');
+const BigNumber = require('bignumber.js');
 const moment = require('moment');
 const _ = require('lodash');
 
 module.exports = async ({
-  accounts, startDate, endDate, limit, filterAccounts, user,
+  accounts, startDate, endDate, limit, filterAccounts, user, currency,
 }) => {
   const dynamicProperties = await redisGetter.getHashAll('dynamic_global_properties');
 
@@ -29,20 +30,21 @@ module.exports = async ({
     .value();
 
   const limitedWallet = _.take(usersJointArr, limit);
+  const { rates } = await getCurrencyRates({ wallet: limitedWallet, currency });
+
   await getExemptions({ user, wallet: limitedWallet });
 
-  const walletWithHivePrice = await addHivePrice(limitedWallet);
-  const resultWallet = addCurrencyToOperations({ walletWithHivePrice, dynamicProperties });
+  const walletWithHivePrice = await addHivePrice({ wallet: limitedWallet, rates, currency });
+  const resultWallet = await addCurrencyToOperations({
+    walletWithHivePrice, dynamicProperties, rates, currency,
+  });
 
   const resAccounts = _.reduce(accounts,
     (acc, el) => (!el.guest
       ? accumulateHiveAcc(limitedWallet, el, acc)
       : accumulateGuestAcc(limitedWallet, el, acc)), []);
 
-  const depositWithdrawals = calcDepositWithdrawals({
-    operations: resultWallet,
-    field: CURRENCIES.USD,
-  });
+  const depositWithdrawals = calcDepositWithdrawals({ operations: resultWallet, field: currency });
 
   const hasMore = usersJointArr.length > resultWallet.length
     || _.some(accounts, (acc) => !!acc.hasMore);
@@ -121,16 +123,19 @@ const accumulateGuestAcc = (resultArray, account, acc) => {
   return acc;
 };
 
-const addHivePrice = async (records = []) => {
-  if (_.isEmpty(records)) return records;
-  const hivePriceArr = await getHiveCurrencyHistory(records, 'timestamp');
-  return _.map(records, (record) => {
+const addHivePrice = async ({ wallet, rates, currency }) => {
+  if (_.isEmpty(wallet)) return wallet;
+  const hivePriceArr = await getHiveCurrencyHistory(wallet, 'timestamp');
+  return _.map(wallet, (record) => {
     const price = _.find(hivePriceArr, (el) => moment(el.createdAt).isSame(moment.unix(record.timestamp), 'day'));
-    return {
-      ...record,
-      hiveUSD: parseFloat(_.get(price, 'hive.usd', '0')),
-      hbdUSD: parseFloat(_.get(price, 'hive_dollar.usd', '0')),
-    };
+    record.hiveUSD = parseFloat(_.get(price, 'hive.usd', '0'));
+    record.hbdUSD = parseFloat(_.get(price, 'hive_dollar.usd', '0'));
+    if (!_.isEmpty(rates)) {
+      const rate = _.find(rates, (el) => moment(el.dateString).isSame(moment.unix(record.timestamp), 'day'));
+      record[`hive${currency}`] = new BigNumber(record.hiveUSD).times(_.get(rate, `rates.${currency}`)).toNumber();
+      record[`hbd${currency}`] = new BigNumber(record.hbdUSD).times(_.get(rate, `rates.${currency}`)).toNumber();
+    }
+    return record;
   });
 };
 

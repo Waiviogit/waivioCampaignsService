@@ -204,6 +204,11 @@ const CAMPAIGN_FIELDS_FOR_CARDS = [
   'name',
 ];
 
+const SUPPORTED_CURRENCIES = {
+  USD: 'USD',
+  CAD: 'CAD',
+};
+
 module.exports = {
   SORT_TYPES,
   REFERRAL_TYPES,
@@ -241,4 +246,5 @@ module.exports = {
   ADVANCED_WALLET_TYPES,
   NOT_PAYED_DEBT_TYPES,
   HIVE_OPERATIONS_TYPES,
+  SUPPORTED_CURRENCIES,
 };

@@ -1,16 +1,16 @@
-const _ = require('lodash');
-const moment = require('moment');
-const {
-  campaignModel, userModel, paymentHistoryModel, Subscriptions, wobjectSubscriptions, appModel,
-} = require('models');
 const {
   maxMapRadius, minCountMapCampaigns, PAYMENT_HISTORIES_TYPES, CAMPAIGN_STATUSES,
   RESERVATION_STATUSES, CAMPAIGN_FIELDS_FOR_CARDS, CAMPAIGN_SORTS, CAMPAIGN_PAYMENT_SORTS,
 } = require('constants/constants');
-const { CAMPAIGN_FIELDS } = require('constants/wobjectsData');
+const {
+  campaignModel, userModel, paymentHistoryModel, Subscriptions, wobjectSubscriptions, appModel,
+} = require('models');
+const { CAMPAIGN_FIELDS, REMOVE_OBJ_STATUSES, STATUSES } = require('constants/wobjectsData');
+const blackListHelper = require('utilities/helpers/blackListHelper');
+const wobjectHelper = require('utilities/helpers/wobjectHelper');
 const { getNamespace } = require('cls-hooked');
-const blackListHelper = require('./blackListHelper');
-const wobjectHelper = require('./wobjectHelper');
+const moment = require('moment');
+const _ = require('lodash');
 
 const sortPrimaryCampaigns = (campaigns, sort) => {
   switch (sort) {
@@ -109,7 +109,7 @@ const fillObjects = (
     }
   }
   const object = _.find(wobjects, (wobj) => wobj.author_permlink === obj);
-  if (!object) return null;
+  if (!object || _.includes(REMOVE_OBJ_STATUSES, _.get(object, 'status.title'))) return null;
   if (_.get(campaign.users, 'length')) {
     countUsers = _.filter(campaign.users,
       (user) => user.status === 'assigned' && user.object_permlink === obj).length;
@@ -205,11 +205,7 @@ exports.getPrimaryCampaigns = async ({
 }) => {
   let campaigns = [], currentUser, sponsors = [];
   const { wobjects } = await wobjectHelper.getWobjects({
-    additionalCond: { 'status.title': { $nin: ['unavailable', 'relisted'] } },
-    campaigns: allCampaigns,
-    forSecondary: false,
-    appName,
-    locale,
+    campaigns: allCampaigns, forSecondary: false, appName, locale,
   });
 
   if (_.includes(CAMPAIGN_PAYMENT_SORTS, sort)) {
@@ -227,7 +223,7 @@ exports.getPrimaryCampaigns = async ({
       ({ user: currentUser } = await userModel.findOne(userName));
     }
 
-    if (!reserved && (objStatus === 'unavailable'
+    if (!reserved && (_.includes(REMOVE_OBJ_STATUSES, objStatus)
         || (!_.get(currentUser, 'user_metadata.settings.showNSFWPosts', true) && objStatus === 'nsfw'))) return;
 
     if (simplified && requiredObject) {
@@ -275,11 +271,7 @@ exports.getSecondaryCampaigns = async ({
 }) => {
   let campaigns = [], currentUser, wobjectsFollow = [];
   const { wobjects } = await wobjectHelper.getWobjects({
-    additionalCond: { 'status.title': { $nin: ['unavailable', 'relisted'] } },
-    campaigns: allCampaigns,
-    needProcess,
-    appName,
-    locale,
+    campaigns: allCampaigns, needProcess, appName, locale,
   });
   const { users } = await userModel.findByNames(_.concat(_.map(allCampaigns, 'guideName'), userName));
   if (userName) {
@@ -307,8 +299,8 @@ exports.getSecondaryCampaigns = async ({
     if (sort === CAMPAIGN_SORTS.PAYOUT) campaign.payout = amountPayments(campaign);
     const objStatus = _.get(campaign, 'required_object.status.title', null);
 
-    if (!reserved && (objStatus === 'unavailable'
-      || (!_.get(currentUser, 'user_metadata.settings.showNSFWPosts', true) && objStatus === 'nsfw'))) return;
+    if (!reserved && (_.includes(REMOVE_OBJ_STATUSES, objStatus)
+      || (!_.get(currentUser, 'user_metadata.settings.showNSFWPosts', true) && objStatus === STATUSES.NSFW))) return;
     campaign.requirement_filters = await getRequirementFilters(
       campaign, _.find(users, (usr) => usr.name === userName),
     );
