@@ -7,13 +7,6 @@ exports.WALLET_TYPES = {
   CLAIM_REWARD_BALANCE: 'claim_reward_balance',
 };
 
-exports.CURRENCIES = {
-  HIVE: 'HIVE',
-  HBD: 'HBD',
-  HP: 'HP',
-  USD: 'usd',
-};
-
 exports.ACCOUNT_FILTER_TYPES = [
   HIVE_OPERATIONS_TYPES.TRANSFER,
   HIVE_OPERATIONS_TYPES.TRANSFER_TO_VESTING,
