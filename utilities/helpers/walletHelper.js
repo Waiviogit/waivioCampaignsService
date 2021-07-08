@@ -1,6 +1,6 @@
 const {
   PAYMENT_HISTORIES_TYPES, HIVE_OPERATIONS_TYPES, SUPPORTED_CURRENCIES,
-  SUPPORTED_CRYPTO_CURRENCIES,
+  SUPPORTED_CRYPTO_CURRENCIES, DONT_GET_RATES,
 } = require('constants/constants');
 const { SAVINGS_TRANSFERS, ACCOUNT_FILTER_TYPES } = require('constants/walletData');
 const { internalExchangeModel, currenciesStatiscticModel, currenciesRateModel } = require('models');
@@ -87,12 +87,14 @@ exports.getHiveCurrencyHistory = async (walletOperations, path = 'timestamp') =>
   return result;
 };
 
-exports.getCurrencyRates = async ({ wallet, currency }) => {
-  if (currency === SUPPORTED_CURRENCIES.USD) return { rates: [] };
+exports.getCurrencyRates = async ({
+  wallet, currency, pathTimestamp, momentCallback,
+}) => {
+  if (_.includes(DONT_GET_RATES, currency)) return { rates: [] };
   let includeToday = false;
   const dates = _.uniq(_.map(wallet, (record) => {
-    if (moment.unix(record.timestamp).isSame(Date.now(), 'day')) includeToday = true;
-    return moment.unix(record.timestamp).format('YYYY-MM-DD');
+    if (momentCallback(_.get(record, `${pathTimestamp}`)).isSame(Date.now(), 'day')) includeToday = true;
+    return momentCallback(_.get(record, `${pathTimestamp}`)).format('YYYY-MM-DD');
   }));
 
   const { result = [] } = await currenciesRateModel.find(

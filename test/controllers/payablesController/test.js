@@ -2,6 +2,7 @@ const {
   chai, chaiHttp, app, dropDatabase, moment, _, sinon, faker, expect, PaymentHistory,
 } = require('test/testHelper');
 const { PaymentHistoryFactory, WobjectFactory } = require('test/factories');
+const { SUPPORTED_CURRENCIES } = require('constants/constants');
 
 chai.use(chaiHttp);
 chai.should();
@@ -628,7 +629,7 @@ describe('Payables', async () => {
           beforeEach(async () => {
             result = await chai.request(app)
               .post('/campaigns-api/payments/payables')
-              .send(Object.assign(requestBody, { currency: 'usd' }));
+              .send(Object.assign(requestBody, { currency: SUPPORTED_CURRENCIES.USD }));
           });
           it('should return correct amount of histories', async () => {
             expect(result.body.amount).to.be.eq((reward * countRewardPayments) / 2);
