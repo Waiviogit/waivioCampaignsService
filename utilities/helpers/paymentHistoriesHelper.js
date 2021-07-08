@@ -184,7 +184,7 @@ const getCurrencyAmount = ({ history, currency, rates }) => {
     [SUPPORTED_CURRENCIES.USD]: () => _.get(history, 'details.payableInDollars'),
     getAmount: () => getAmountFromRate({ rates, history, currency }),
   };
-  return currencyAmount[currency]() || currencyAmount.getAmount();
+  return (currencyAmount[currency] || currencyAmount.getAmount)();
 };
 
 const getAmountFromRate = ({ rates, history, currency }) => {
