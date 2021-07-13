@@ -5,6 +5,8 @@ const mathBotHelper = require('utilities/helpers/matchBotHelper');
 const { BOT_UPVOTE_STATUSES } = require('constants/constants');
 const { RECALCULATION_DEBT } = require('constants/ttlData');
 const { hiveClient, hiveOperations } = require('utilities/hiveApi');
+const { getRewardUSD } = require('utilities/helpers/paymentsHelper');
+const { divide, multiply } = require('utilities/helpers/calcHelper');
 
 /** Listen for expire posts for match bot recount */
 module.exports = async ({ author, permlink, voter }) => {
@@ -77,16 +79,20 @@ const createBotUpvoteRecord = async ({
     await botUpvoteModel.update({ author, permlink }, { $inc: { totalVotesWeight: voteWeight } });
   }
 
+  const usdReward = getRewardUSD({
+    reward: campaign.rewardInCurrency, currency: campaign.currency,
+  });
+
   const { result: bot } = await botUpvoteModel.create({
     author,
     permlink,
     status: BOT_UPVOTE_STATUSES.UPVOTED,
     votePercent: weight,
     botName: voter,
-    amountToVote: (campaign.reward / user.hiveCurrency) * 2,
+    amountToVote: multiply(divide(usdReward, user.hiveCurrency), 2),
     sponsor: campaign.guideName,
     requiredObject: campaign.requiredObject,
-    reward: _.round((campaign.reward * 2) / user.hiveCurrency, 3),
+    reward: divide(multiply(usdReward, 2), user.hiveCurrency, 3),
     currentVote: voteWeight,
     reservationPermlink: user.permlink,
     totalVotesWeight: _.get(anotherUpvote, 'totalVotesWeight') ? anotherUpvote.totalVotesWeight + voteWeight : voteWeight,

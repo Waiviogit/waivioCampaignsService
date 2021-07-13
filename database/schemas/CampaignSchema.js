@@ -106,6 +106,9 @@ const campaignSchema = new Schema({
     enum: Object.values(SUPPORTED_CURRENCIES),
     default: SUPPORTED_CURRENCIES.USD,
   },
+  rewardInCurrency: {
+    type: Float, required: true, min: 0.001, max: 50000,
+  },
 },
 {
   timestamps: true,

@@ -103,30 +103,32 @@ const createReview = async ({
   }
 };
 
-const getRewardInHive = async (campaign) => {
+const getRewardInHive = async ({
+  rewardInCurrency, hiveCurrency, currency, rewardRaisedBy = 0,
+}) => {
   const hiveReward = {
     [SUPPORTED_CURRENCIES.USD]: () => add(
-      divide(campaign.reward, campaign.hiveCurrency, 3),
-      campaign.rewardRaisedBy,
+      divide(rewardInCurrency, hiveCurrency, 3),
+      rewardRaisedBy,
     ),
-    getRewardFromCurrencies: () => doubleCastReward(campaign),
+    getRewardFromCurrencies: () => doubleCastReward({
+      currency, rewardInCurrency, hiveCurrency, rewardRaisedBy,
+    }),
   };
-  return (hiveReward[campaign.currency] || hiveReward.getRewardFromCurrencies)();
+  return (hiveReward[currency] || hiveReward.getRewardFromCurrencies)();
 };
 
-const doubleCastReward = async (campaign) => {
+const doubleCastReward = async ({
+  currency, rewardInCurrency, hiveCurrency, rewardRaisedBy = 0,
+}) => {
   const { result: latest } = await currenciesRateModel.findOne({
     condition: { base: SUPPORTED_CURRENCIES.USD },
-    select: { [`rates.${campaign.currency}`]: 1 },
+    select: { [`rates.${currency}`]: 1 },
     sort: { dateString: -1 },
   });
   return add(
-    divide(
-      multiply(campaign.reward, _.get(latest, `rates.${campaign.currency}`)),
-      campaign.hiveCurrency,
-      3,
-    ),
-    campaign.rewardRaisedBy,
+    divide(multiply(rewardInCurrency, _.get(latest, `rates.${currency}`)), hiveCurrency, 3),
+    rewardRaisedBy,
   );
 };
 
@@ -134,8 +136,8 @@ const updateCampaignStatus = async (campaignId) => {
   const { result: campaign } = await CampaignModel.findOne({ _id: campaignId });
   if (!campaign) return;
   const thisMonthCompletedUsers = _.filter(campaign.users, (payment) => payment.updatedAt > moment.utc().startOf('month') && payment.status === 'completed');
-  if (campaign.budget <= campaign.reward * thisMonthCompletedUsers.length
-      || campaign.budget - (campaign.reward * thisMonthCompletedUsers.length) < campaign.reward) {
+  if (campaign.budget <= campaign.rewardInCurrency * thisMonthCompletedUsers.length
+      || campaign.budget - (campaign.rewardInCurrency * thisMonthCompletedUsers.length) < campaign.rewardInCurrency) {
     await CampaignModel.updateOne({ _id: campaignId }, { status: CAMPAIGN_STATUSES.REACHED_LIMIT });
     await wobjectModel.updateCampaignsCount({
       wobjPermlinks: [campaign.requiredObject, ...campaign.objects],
@@ -314,7 +316,7 @@ const executeMatchBots = async ({
       if (!result) await redisSetter.saveTTL(`expire:${RECALCULATION_DEBT}|${owner || campaign.userName}|${permlink}`, 605000);
       const sponsorsPermissions = _.find(
         bot.sponsors,
-        (sponsor) => sponsor.sponsor_name === campaign.guideName
+        (sponsor) => sponsor.sponsor_name === campaign.guideName,
       );
       const reward = multiply(rewardInHive, 2, 3);
       await BotUpvote.create({
@@ -403,10 +405,21 @@ const getCommissions = async (appHost, referralHost) => {
   return { commissions };
 };
 
+const getRewardUSD = async ({ reward, currency }) => {
+  if (currency === SUPPORTED_CURRENCIES.USD) return reward;
+  const { result } = await currenciesRateModel.findOne({
+    condition: { base: SUPPORTED_CURRENCIES.USD },
+    select: { [`rates.${currency}`]: 1 },
+    sort: { dateString: -1 },
+  });
+  return multiply(reward, _.get(result, `rates.${currency}`));
+};
+
 module.exports = {
   findReviewCampaigns,
   addCampaignPayment,
   updatePayment,
+  getRewardUSD,
   createReview,
   transfer,
 };
