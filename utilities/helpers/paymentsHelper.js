@@ -38,7 +38,7 @@ const createReview = async ({
   objects, permlink, title, app, images, host,
 }) => {
   for (const campaign of campaigns) {
-    const rewardInHive = getRewardInHive(campaign);
+    const rewardInHive = await getRewardInHive(campaign);
     const { payables } = await distributeReward({
       server_acc: campaign.campaign_server,
       beneficiaries,
@@ -184,6 +184,8 @@ const findReviewCampaigns = async ({ userName, objects }) => Campaign.aggregate(
       requirements: '$requirements',
       reservedAt: '$users.createdAt',
       permlink: '$activation_permlink',
+      currency: '$currency',
+      rewardInCurrency: '$rewardInCurrency',
       _id: 0,
       type: 1,
     },

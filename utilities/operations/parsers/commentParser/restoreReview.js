@@ -16,6 +16,8 @@ const prepareCampaignData = (userData, campaign) => ({
   userReservationPermlink: userData.permlink,
   requiredObject: campaign.requiredObject,
   campaignId: campaign._id,
+  currency: campaign.currency,
+  rewardInCurrency: campaign.rewardInCurrency,
 });
 
 module.exports = async ({

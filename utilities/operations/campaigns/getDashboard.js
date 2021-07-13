@@ -41,7 +41,7 @@ module.exports = async (data) => {
           currency: 1,
           rewardInCurrency: 1,
           commissionAgreement: 1, // ? need decimal128
-          remaining: { $cond: [{ $eq: ['$status', 'active'] }, { $subtract: [{ $divide: ['$budget', 'rewardInCurrency'] }, { $add: ['$completed', '$reserved'] }] }, 0] },
+          remaining: { $cond: [{ $eq: ['$status', 'active'] }, { $subtract: [{ $divide: ['$budget', '$rewardInCurrency'] }, { $add: ['$completed', '$reserved'] }] }, 0] },
         },
       },
     ],

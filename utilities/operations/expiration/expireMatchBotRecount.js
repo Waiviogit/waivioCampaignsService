@@ -79,7 +79,7 @@ const createBotUpvoteRecord = async ({
     await botUpvoteModel.update({ author, permlink }, { $inc: { totalVotesWeight: voteWeight } });
   }
 
-  const usdReward = getRewardUSD({
+  const usdReward = await getRewardUSD({
     reward: campaign.rewardInCurrency, currency: campaign.currency,
   });
 

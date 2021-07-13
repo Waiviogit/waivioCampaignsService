@@ -2503,6 +2503,7 @@ describe('eligible: if have not received a reward from campaign in the last freq
       users,
       customTimestamps : true,
     });
+    console.log('yo')
   });
   it('expect campaigns length to be 1', async () => {
     const { body: { campaigns } } = await chai.request(app)
