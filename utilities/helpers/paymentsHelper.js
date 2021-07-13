@@ -6,12 +6,18 @@ const BotUpvote = require('models/botUpvoteModel');
 const appModel = require('models/appModel');
 const CampaignModel = require('models/campaignModel');
 const wobjectModel = require('models/wobjectModel');
+const currenciesRateModel = require('models/currenciesRateModel');
 const { redisSetter, redisGetter } = require('utilities/redis');
 const currencyRequest = require('utilities/requests/currencyRequest');
 const { RECALCULATION_DEBT, SUSPENDED_WARNING, PAYMENT_DEBT } = require('constants/ttlData');
-const { REFERRAL_TYPES, GUEST_BNF_ACC, CAMPAIGN_STATUSES } = require('constants/constants');
+const {
+  REFERRAL_TYPES, GUEST_BNF_ACC, CAMPAIGN_STATUSES, SUPPORTED_CURRENCIES,
+} = require('constants/constants');
 const { detectFraudInReview } = require('utilities/helpers/detectFraudHelper');
 const { checkOnHoldStatus } = require('utilities/helpers/campaignsHelper');
+const {
+  divide, multiply, add, sumBy, subtract,
+} = require('utilities/helpers/calcHelper');
 
 /**
  * Initially, all records about the sponsor's debts are generated,
@@ -32,10 +38,11 @@ const createReview = async ({
   objects, permlink, title, app, images, host,
 }) => {
   for (const campaign of campaigns) {
+    const rewardInHive = getRewardInHive(campaign);
     const { payables } = await distributeReward({
       server_acc: campaign.campaign_server,
       beneficiaries,
-      reward: _.round((campaign.reward / campaign.hiveCurrency) + campaign.rewardRaisedBy, 3),
+      reward: rewardInHive,
       reviwer: campaign.userName,
       commission: campaign.commissionAgreement,
       isGuest: !!owner,
@@ -45,7 +52,7 @@ const createReview = async ({
     if (_.isEmpty(objectPermlink)) return;
     if (!_.isEmpty(campaign.match_bots)) {
       await executeMatchBots({
-        campaign, permlink, currency: campaign.hiveCurrency, owner,
+        campaign, permlink, owner, rewardInHive,
       });
     }
     if (title) {
@@ -94,6 +101,33 @@ const createReview = async ({
     }
     await redisSetter.saveTTL(`expire:${SUSPENDED_WARNING}|${campaign.userReservationPermlink}|5`, 2160000, campaign.campaignId.toString());
   }
+};
+
+const getRewardInHive = async (campaign) => {
+  const hiveReward = {
+    [SUPPORTED_CURRENCIES.USD]: () => add(
+      divide(campaign.reward, campaign.hiveCurrency, 3),
+      campaign.rewardRaisedBy,
+    ),
+    getRewardFromCurrencies: () => doubleCastReward(campaign),
+  };
+  return (hiveReward[campaign.currency] || hiveReward.getRewardFromCurrencies)();
+};
+
+const doubleCastReward = async (campaign) => {
+  const { result: latest } = await currenciesRateModel.findOne({
+    condition: { base: SUPPORTED_CURRENCIES.USD },
+    select: { [`rates.${campaign.currency}`]: 1 },
+    sort: { dateString: -1 },
+  });
+  return add(
+    divide(
+      multiply(campaign.reward, _.get(latest, `rates.${campaign.currency}`)),
+      campaign.hiveCurrency,
+      3,
+    ),
+    campaign.rewardRaisedBy,
+  );
 };
 
 const updateCampaignStatus = async (campaignId) => {
@@ -235,10 +269,14 @@ const distributeReward = async ({
       beneficiaries = _.filter(beneficiaries, (el) => el.account !== GUEST_BNF_ACC);
     }
   }
-  const bnftsData = _.map(beneficiaries,
-    (bnf) => ({ account: bnf.account, amount: _.round((bnf.weight / 10000) * reward, 4), weight: bnf.weight }));
+  const beneficiariesData = _.map(beneficiaries,
+    (bnf) => ({
+      account: bnf.account,
+      amount: multiply(divide(bnf.weight, 10000), reward, 4),
+      weight: bnf.weight,
+    }));
 
-  const reviewReward = reward - _.sumBy(bnftsData, 'amount');
+  const reviewReward = subtract(reward, sumBy(beneficiariesData, (el) => el.amount));
   payables.push({ account: reviwer, amount: reviewReward, type: 'review' });
 
   const referralAcc = _.find(_.get(user, 'referral'),
@@ -248,7 +286,7 @@ const distributeReward = async ({
   const commissionPayments = await commissionRecords(reward, commission, server_acc, referralAgent, host);
   payables = _.concat(payables, commissionPayments);
 
-  for (const bnf of bnftsData) {
+  for (const bnf of beneficiariesData) {
     payables.push({
       account: bnf.account, amount: bnf.amount, weight: bnf.weight, type: 'beneficiary_fee',
     });
@@ -260,12 +298,12 @@ const distributeReward = async ({
  * Find enable match bot and create record for upvote with bot in database if bot exist
  * @param campaign {Object}
  * @param permlink {string}
- * @param currency
+ * @param rewardInHive{Number}
  * @param owner
  * @returns {Promise<void>}
  */
 const executeMatchBots = async ({
-  campaign, permlink, currency, owner,
+  campaign, permlink, owner, rewardInHive,
 }) => {
   for (const matchBot of campaign.match_bots) {
     const bot = await MatchBot.findOne(
@@ -274,14 +312,17 @@ const executeMatchBots = async ({
     if (bot) {
       const { result } = await redisGetter.getTTLData(`expire:${RECALCULATION_DEBT}|${owner || campaign.userName}|${permlink}`);
       if (!result) await redisSetter.saveTTL(`expire:${RECALCULATION_DEBT}|${owner || campaign.userName}|${permlink}`, 605000);
-      const sponsorsPermissions = _.find(bot.sponsors, (sponsor) => sponsor.sponsor_name === campaign.guideName);
-      const reward = _.round(((campaign.reward / currency) + campaign.rewardRaisedBy) * 2, 3);
+      const sponsorsPermissions = _.find(
+        bot.sponsors,
+        (sponsor) => sponsor.sponsor_name === campaign.guideName
+      );
+      const reward = multiply(rewardInHive, 2, 3);
       await BotUpvote.create({
         requiredObject: campaign.requiredObject,
         reservationPermlink: campaign.userReservationPermlink,
         botName: bot.bot_name,
         author: owner || campaign.userName,
-        amountToVote: reward * sponsorsPermissions.voting_percent,
+        amountToVote: multiply(reward, sponsorsPermissions.voting_percent),
         sponsor: campaign.guideName,
         permlink,
         reward,
@@ -295,38 +336,52 @@ const commissionRecords = async (reward, commission, server_acc, referralAgent, 
   const payables = [];
 
   const { commissions } = await getCommissions(server_acc, host);
+  const campaignCommission = multiply(
+    multiply(reward, commission),
+    commissions.campaignsCommission,
+    3,
+  );
 
-  const campaignCommission = _.round(((reward * commission) * commissions.campaignsCommission), 3);
   if (campaignCommission > 0) {
     payables.push({
       account: commissions.campaignsAccount,
       amount: campaignCommission,
       type: 'campaign_server_fee',
-      commission: _.round((campaignCommission / reward) * 10000, 4),
+      commission: multiply(divide(campaignCommission, reward), 10000, 4),
     });
   }
 
-  // eslint-disable-next-line max-len
-  const indexCommission = _.round(((reward * commission) - campaignCommission) * commissions.indexCommission, 3);
+  const indexCommission = multiply(
+    subtract(multiply(reward, commission), campaignCommission),
+    commissions.indexCommission,
+    3,
+  );
+
   if (indexCommission > 0) {
     payables.push({
       account: commissions.indexAccount,
       amount: indexCommission,
       type: 'index_fee',
-      commission: _.round((indexCommission / reward) * 10000, 4),
+      commission: multiply(
+        divide(indexCommission, reward),
+        10000,
+        4,
+      ),
     });
   }
 
-  if ((campaignCommission + indexCommission) === (reward * commission)) return payables;
+  if (add(campaignCommission, indexCommission) === multiply(reward, commission)) return payables;
 
-  // eslint-disable-next-line max-len
-  const referralCommission = _.round(((reward * commission) - campaignCommission - indexCommission), 3);
-  // eslint-disable-next-line camelcase
+  const referralCommission = subtract(
+    subtract(multiply(reward, commission, 3), campaignCommission),
+    indexCommission,
+  );
+
   payables.push({
     account: referralAgent || commissions.referralAccount,
     amount: referralCommission,
     type: 'referral_server_fee',
-    commission: _.round((referralCommission / reward) * 10000, 4),
+    commission: multiply(divide(referralCommission, reward), 10000, 4),
   });
 
   return payables;
