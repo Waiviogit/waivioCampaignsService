@@ -127,7 +127,7 @@ const doubleCastReward = async ({
     sort: { dateString: -1 },
   });
   return add(
-    divide(multiply(rewardInCurrency, _.get(latest, `rates.${currency}`)), hiveCurrency, 3),
+    divide(divide(rewardInCurrency, _.get(latest, `rates.${currency}`)), hiveCurrency, 3),
     rewardRaisedBy,
   );
 };
