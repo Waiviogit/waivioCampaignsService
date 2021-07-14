@@ -1,4 +1,5 @@
 const { faker, ObjectID, Campaign } = require('test/testHelper');
+const { SUPPORTED_CURRENCIES } = require('constants/constants');
 
 const Create = async (data = {}) => {
   const campaignData = {
@@ -10,6 +11,8 @@ const Create = async (data = {}) => {
     note: data.note || faker.lorem.words(),
     budget: data.budget || 100,
     reward: data.reward || 10.5,
+    rewardInCurrency: data.rewardInCurrency || data.reward || 10.5,
+    currency: data.currency || SUPPORTED_CURRENCIES.USD,
     requirements: data.requirements || { minPhotos: 1 },
     userRequirements: data.userRequirements || { minFollowers: 1, minPosts: 1, minExpertise: 0 },
     requiredObject: data.requiredObject || 'req_obj1',

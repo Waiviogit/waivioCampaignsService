@@ -1,6 +1,6 @@
 const Joi = require('@hapi/joi');
 const {
-  RESERVATION_STATUSES, CAMPAIGN_STATUSES, CAMPAIGN_SORTS,
+  RESERVATION_STATUSES, CAMPAIGN_STATUSES, CAMPAIGN_SORTS, SUPPORTED_CURRENCIES,
 } = require('constants/constants');
 
 const options = { allowUnknown: true, stripUnknown: true };
@@ -66,6 +66,8 @@ exports.createSchema = Joi.object().keys({
   commissionAgreement: Joi.number().required(),
   app: Joi.string().min(1).max(256),
   expired_at: Joi.date(),
+  currency: Joi.string()
+    .valid(...Object.values(SUPPORTED_CURRENCIES)).default(SUPPORTED_CURRENCIES.USD),
 }).options(options);
 
 exports.validateActivationSchema = Joi.object().keys({
