@@ -159,17 +159,6 @@ const getRequirementFilters = async (campaign, user) => {
   const thisMonthCompleted = _.filter(campaign.users,
     (payment) => payment.updatedAt > moment.utc().startOf('month') && payment.status === 'completed');
   const assigned = _.filter(campaign.users, (usr) => usr.status === 'assigned');
-  const yo = {
-    can_assign_by_budget: campaign.budget > (thisMonthCompleted.length + assigned.length) * campaign.rewardInCurrency,
-    can_assign_by_current_day: campaign.reservation_timetable[currentDay],
-    posts: user ? user.count_posts >= _.get(campaign, 'userRequirements.minPosts', 0) : false,
-    followers: user ? user.followers_count >= _.get(campaign, 'userRequirements.minFollowers', 0) : false,
-    expertise: user ? user.wobjects_weight >= _.get(campaign, 'userRequirements.minExpertise', 0) : false,
-    freeReservation: user ? !_.find(campaign.users, (usr) => usr.name === user.name && usr.status === 'assigned') : true,
-    frequency: _.isNumber(daysPassed) ? daysPassed >= campaign.frequency_assign : true,
-    not_blacklisted: user ? !_.includes(_.difference(blackListUsers, whiteList), user.name) : true,
-    not_same_assigns: !assignedUser,
-  };
 
   return {
     can_assign_by_budget: campaign.budget > (thisMonthCompleted.length + assigned.length) * campaign.rewardInCurrency,
