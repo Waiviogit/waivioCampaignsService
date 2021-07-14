@@ -1,12 +1,15 @@
 const {
   PAYMENT_HISTORIES_TYPES, REVIEW_TYPES, TRANSFER_TYPES, NOT_PAYED_DEBT_TYPES,
+  SUPPORTED_CRYPTO_CURRENCIES, SUPPORTED_CURRENCIES,
 } = require('constants/constants');
 const {
   paymentHistoryModel, userModel, wobjectModel, campaignModel,
 } = require('models');
 const { processWobjects, getSessionApp } = require('utilities/helpers/wobjectHelper');
 const { sumBy, add, subtract } = require('utilities/helpers/calcHelper');
+const { getCurrencyRates } = require('utilities/helpers/walletHelper');
 const { FIELDS_NAMES } = require('constants/wobjectsData');
+const BigNumber = require('bignumber.js');
 const moment = require('moment');
 const _ = require('lodash');
 
@@ -156,6 +159,9 @@ const fillPayments = async (histories, currency) => {
 
   const { result: payments, error } = await paymentHistoryModel.find({ type: 'review', 'details.reservation_permlink': { $in: reviewPermlinks } });
   if (error) return { error };
+  const { rates } = await getCurrencyRates({
+    wallet: histories, currency, pathTimestamp: 'createdAt', momentCallback: moment,
+  });
 
   _.forEach(histories, (history) => {
     if (_.includes(['transfer', 'demo_debt', 'overpayment_refund'], history.type)) return;
@@ -167,9 +173,23 @@ const fillPayments = async (histories, currency) => {
       (wobject) => wobject.author_permlink === history.details.review_object);
     history.details.main_object = _.find(wobjects,
       (wobject) => wobject.author_permlink === history.details.main_object);
-    if (currency === 'usd') history.amount = history.details.payableInDollars;
+    history.amount = getCurrencyAmount({ history, currency, rates });
   });
   return { histories };
+};
+
+const getCurrencyAmount = ({ history, currency, rates }) => {
+  const currencyAmount = {
+    [SUPPORTED_CRYPTO_CURRENCIES.HIVE]: () => _.get(history, 'amount'),
+    [SUPPORTED_CURRENCIES.USD]: () => _.get(history, 'details.payableInDollars'),
+    getAmount: () => getAmountFromRate({ rates, history, currency }),
+  };
+  return (currencyAmount[currency] || currencyAmount.getAmount)();
+};
+
+const getAmountFromRate = ({ rates, history, currency }) => {
+  const rate = _.find(rates, (el) => moment(el.dateString).isSame(moment(history.createdAt), 'day'));
+  return new BigNumber(_.get(history, 'details.payableInDollars')).times(_.get(rate, `rates.${currency}`)).toNumber();
 };
 
 const withWrapperPayables = async ({

@@ -14,4 +14,5 @@ module.exports = {
   AppendObjectFactory: require('./Wobject/AppendObjectFactory'),
   WobjectSubscriptionFactory: require('./WobjectSubscriptionFactory/WobjectSubscriptionFactory'),
   CurrenciesStatisticsFactory: require('./CurrenciesStatistics/CurrenciesStatisticsFactory'),
+  CurrenciesRatesFactory: require('./CurrenciesRates/CurrenciesRatesFactory'),
 };

@@ -30,7 +30,9 @@ module.exports = async ({
     .value();
 
   const limitedWallet = _.take(usersJointArr, limit);
-  const { rates } = await getCurrencyRates({ wallet: limitedWallet, currency });
+  const { rates } = await getCurrencyRates({
+    wallet: limitedWallet, currency, pathTimestamp: 'timestamp', momentCallback: moment.unix,
+  });
 
   await getExemptions({ user, wallet: limitedWallet });
 

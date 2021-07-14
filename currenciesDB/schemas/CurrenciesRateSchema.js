@@ -1,5 +1,6 @@
 const db = require('currenciesDB/currenciesDB_Connection');
-const { BASE_CURRENCIES, RATE_CURRENCIES, SUPPORTED_CURRENCIES } = require('constants/serviceData');
+const { BASE_CURRENCIES, RATE_CURRENCIES } = require('constants/serviceData');
+const { SUPPORTED_CURRENCIES } = require('constants/constants');
 const mongoose = require('mongoose');
 const _ = require('lodash');
 
