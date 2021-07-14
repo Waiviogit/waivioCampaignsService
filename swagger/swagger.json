@@ -451,6 +451,10 @@
                 "expired_at": {
                   "description": "Date of expired",
                   "type": "string"
+                },
+                "currency": {
+                  "type": "string",
+                  "example": "USD"
                 }
               }
             }

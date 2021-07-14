@@ -2,6 +2,7 @@ const _ = require('lodash');
 const { campaignModel, userModel } = require('models');
 const { setExpireCampaign } = require('utilities/redis/redisSetter');
 const { hiveClient, hiveOperations } = require('utilities/hiveApi');
+const { getRewardUSD } = require('utilities/helpers/paymentsHelper');
 
 module.exports = async (data) => {
   const { user } = await userModel.findOne(data.guideName);
@@ -32,5 +33,10 @@ module.exports = async (data) => {
 
 const createParams = async (params) => {
   params.objects = _.filter(params.objects, (object) => object.match(/\S+/));
+  params.rewardInCurrency = params.reward;
+  params.reward = await getRewardUSD({
+    reward: params.reward, currency: params.currency,
+  });
+
   return params;
 };

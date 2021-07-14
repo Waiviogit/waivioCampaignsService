@@ -17,6 +17,7 @@
     "addCampaignCounterForWobject": "NODE_PATH=. node ./utilities/tasks/addCampaignCounterForObjects/run.js",
     "addDetailsGuestTransfer": "NODE_PATH=. node ./utilities/tasks/addDetailsGuestTransfer/run.js",
     "addTransactionHash": "NODE_PATH=. node ./utilities/tasks/addTransactionHash/run.js",
+    "setRewardInCurrency": "NODE_PATH=. node ./utilities/tasks/setRewardInCurrencyField/run.js",
     "test": "NODE_PATH=. NODE_ENV=test nyc --reporter=html mocha"
   },
   "dependencies": {
