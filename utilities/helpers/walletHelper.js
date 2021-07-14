@@ -1,5 +1,8 @@
-const { PAYMENT_HISTORIES_TYPES, HIVE_OPERATIONS_TYPES, SUPPORTED_CURRENCIES } = require('constants/constants');
-const { SAVINGS_TRANSFERS, CURRENCIES, ACCOUNT_FILTER_TYPES } = require('constants/walletData');
+const {
+  PAYMENT_HISTORIES_TYPES, HIVE_OPERATIONS_TYPES, SUPPORTED_CURRENCIES,
+  SUPPORTED_CRYPTO_CURRENCIES, DONT_GET_RATES,
+} = require('constants/constants');
+const { SAVINGS_TRANSFERS, ACCOUNT_FILTER_TYPES } = require('constants/walletData');
 const { internalExchangeModel, currenciesStatiscticModel, currenciesRateModel } = require('models');
 const { hiveRequests, currencyRequest } = require('utilities/requests');
 const jsonHelper = require('utilities/helpers/jsonHelper');
@@ -84,12 +87,14 @@ exports.getHiveCurrencyHistory = async (walletOperations, path = 'timestamp') =>
   return result;
 };
 
-exports.getCurrencyRates = async ({ wallet, currency }) => {
-  if (currency === SUPPORTED_CURRENCIES.USD) return { rates: [] };
+exports.getCurrencyRates = async ({
+  wallet, currency, pathTimestamp, momentCallback,
+}) => {
+  if (_.includes(DONT_GET_RATES, currency)) return { rates: [] };
   let includeToday = false;
   const dates = _.uniq(_.map(wallet, (record) => {
-    if (moment.unix(record.timestamp).isSame(Date.now(), 'day')) includeToday = true;
-    return moment.unix(record.timestamp).format('YYYY-MM-DD');
+    if (momentCallback(_.get(record, `${pathTimestamp}`)).isSame(Date.now(), 'day')) includeToday = true;
+    return momentCallback(_.get(record, `${pathTimestamp}`)).format('YYYY-MM-DD');
   }));
 
   const { result = [] } = await currenciesRateModel.find(
@@ -272,7 +277,7 @@ const getPriceInUSD = (record) => {
 
   const [value, currency] = record.amount.split(' ');
   return new BigNumber(value)
-    .times(currency === CURRENCIES.HBD ? record.hbdUSD : record.hiveUSD)
+    .times(currency === SUPPORTED_CRYPTO_CURRENCIES.HBD ? record.hbdUSD : record.hiveUSD)
     .toNumber();
 };
 
@@ -306,7 +311,9 @@ const getPriceFromClaimReward = (record, dynamicProperties) => {
 };
 
 const getHivePowerFromVests = (vests, dynamicProperties) => {
-  if (!dynamicProperties.total_vesting_fund_hive || !dynamicProperties.total_vesting_shares) return `0.000 ${CURRENCIES.HP}`;
+  if (!dynamicProperties.total_vesting_fund_hive || !dynamicProperties.total_vesting_shares) {
+    return `0.000 ${SUPPORTED_CRYPTO_CURRENCIES.HP}`;
+  }
   const totalVestingFundHive = parseFloat(dynamicProperties.total_vesting_fund_hive);
   const totalVestingShares = parseFloat(dynamicProperties.total_vesting_shares);
 
@@ -314,5 +321,5 @@ const getHivePowerFromVests = (vests, dynamicProperties) => {
     .times(vests)
     .dividedBy(totalVestingShares)
     .toNumber();
-  return `${hpAmount} ${CURRENCIES.HP}`;
+  return `${hpAmount} ${SUPPORTED_CRYPTO_CURRENCIES.HP}`;
 };
