@@ -179,6 +179,8 @@ const fillPayments = async (histories, currency) => {
 };
 
 const getCurrencyAmount = ({ history, currency, rates }) => {
+  if (!currency) return history.amount;
+  if (_.isNil(_.get(history, 'details.payableInDollars'))) history.details.payableInDollars = 0;
   const currencyAmount = {
     [SUPPORTED_CRYPTO_CURRENCIES.HIVE]: () => _.get(history, 'amount'),
     [SUPPORTED_CURRENCIES.USD]: () => _.get(history, 'details.payableInDollars'),

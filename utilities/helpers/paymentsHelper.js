@@ -414,7 +414,7 @@ const getRewardUSD = async ({ reward, currency }) => {
     select: { [`rates.${currency}`]: 1 },
     sort: { dateString: -1 },
   });
-  return multiply(reward, _.get(result, `rates.${currency}`));
+  return divide(reward, _.get(result, `rates.${currency}`));
 };
 
 module.exports = {
