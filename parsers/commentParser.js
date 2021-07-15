@@ -15,6 +15,7 @@ const parse = async (post, opts) => {
   const app = metadata && metadata.app ? metadata.app : null;
 
   await parseReviews(post, metadata, app, beneficiaries);
+
   if (_.has(metadata, 'waivioRewards')) await parseActions(post, metadata, app);
   if (_.has(metadata, 'comment.userId') && post.parent_author === '') {
     await redisSetter.setDemoPost({ author: post.author, permlink: post.permlink });

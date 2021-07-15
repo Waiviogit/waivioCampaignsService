@@ -1,13 +1,16 @@
 const {
   maxMapRadius, minCountMapCampaigns, PAYMENT_HISTORIES_TYPES, CAMPAIGN_STATUSES,
   RESERVATION_STATUSES, CAMPAIGN_FIELDS_FOR_CARDS, CAMPAIGN_SORTS, CAMPAIGN_PAYMENT_SORTS,
+  CAMPAIGN_STATUSES_REWARD_JOB, REWARD_JOB_CURRENCIES, SUPPORTED_CURRENCIES,
 } = require('constants/constants');
 const {
   campaignModel, userModel, paymentHistoryModel, Subscriptions, wobjectSubscriptions, appModel,
+  currenciesRateModel,
 } = require('models');
 const { CAMPAIGN_FIELDS, REMOVE_OBJ_STATUSES, STATUSES } = require('constants/wobjectsData');
 const blackListHelper = require('utilities/helpers/blackListHelper');
 const wobjectHelper = require('utilities/helpers/wobjectHelper');
+const { divide } = require('utilities/helpers/calcHelper');
 const { getNamespace } = require('cls-hooked');
 const moment = require('moment');
 const _ = require('lodash');
@@ -158,7 +161,7 @@ const getRequirementFilters = async (campaign, user) => {
   const assigned = _.filter(campaign.users, (usr) => usr.status === 'assigned');
 
   return {
-    can_assign_by_budget: campaign.budget > (thisMonthCompleted.length + assigned.length) * campaign.reward,
+    can_assign_by_budget: campaign.budget > (thisMonthCompleted.length + assigned.length) * campaign.rewardInCurrency,
     can_assign_by_current_day: campaign.reservation_timetable[currentDay],
     posts: user ? user.count_posts >= _.get(campaign, 'userRequirements.minPosts', 0) : false,
     followers: user ? user.followers_count >= _.get(campaign, 'userRequirements.minFollowers', 0) : false,
@@ -366,7 +369,7 @@ exports.checkCampaignsBudget = (campaigns, userName) => _.filter(campaigns,
   });
 
 exports.eligibleCampaignsFilter = (campaigns, userName) => _.filter(campaigns,
-  (campaign) => campaign.budget > campaign.reward
+  (campaign) => campaign.budget > campaign.rewardInCurrency
     * _.filter(campaign.users, (usr) => usr.status === 'assigned' || (usr.status === 'completed' && usr.updatedAt > moment.utc().startOf('month'))).length
     && !_.find(campaign.users, (user) => user.name === userName && user.status === 'assigned'));
 
@@ -420,3 +423,25 @@ const amountPayments = (campaign) => {
 const primaryCampaignsPayout = (campaigns, sort) => (_.includes(CAMPAIGN_PAYMENT_SORTS, sort)
   ? _.sumBy(campaigns, (campaign) => campaign.payout) / campaigns.length
   : 0);
+
+exports.rewardConvertJob = async () => {
+  const { campaigns } = await campaignModel.find(
+    {
+      status: { $in: CAMPAIGN_STATUSES_REWARD_JOB },
+      currency: { $in: REWARD_JOB_CURRENCIES },
+    },
+    {},
+    { currency: 1, rewardInCurrency: 1 },
+  );
+  if (_.isEmpty(campaigns)) return;
+
+  const { result } = await currenciesRateModel.findOne({
+    condition: { base: SUPPORTED_CURRENCIES.USD },
+    sort: { dateString: -1 },
+  });
+
+  for (const campaign of campaigns) {
+    const reward = divide(campaign.rewardInCurrency, _.get(result, `rates.${campaign.currency}`));
+    await campaignModel.updateOne({ _id: campaign._id }, { $set: { reward } });
+  }
+};

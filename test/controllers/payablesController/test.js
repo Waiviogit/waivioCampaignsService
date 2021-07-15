@@ -1,7 +1,8 @@
 const {
   chai, chaiHttp, app, dropDatabase, moment, _, sinon, faker, expect, PaymentHistory,
 } = require('test/testHelper');
-const { PaymentHistoryFactory, WobjectFactory } = require('test/factories');
+const { PaymentHistoryFactory, WobjectFactory, CurrenciesRatesFactory } = require('test/factories');
+const { SUPPORTED_CURRENCIES } = require('constants/constants');
 
 chai.use(chaiHttp);
 chai.should();
@@ -477,12 +478,16 @@ describe('Payables', async () => {
       });
     });
     describe('On global report', async () => {
-      let sponsor, countRewardPayments, object, reward;
+      let sponsor, countRewardPayments, object, reward, currency, rate;
       beforeEach(async () => {
         await dropDatabase();
         reward = _.random(5, 20);
         object = WobjectFactory.Create();
         countRewardPayments = _.random(5, 20);
+        currency = _.sample(
+          Object.values(_.omit(SUPPORTED_CURRENCIES, SUPPORTED_CURRENCIES.USD)),
+        );
+        rate = _.random(1, 100);
         sponsor = faker.name.firstName();
         for (let count = 0; count < countRewardPayments; count++) {
           await PaymentHistoryFactory.Create(
@@ -608,9 +613,6 @@ describe('Payables', async () => {
               .post('/campaigns-api/payments/payables')
               .send(Object.assign(requestBody, { processingFees: true }));
           });
-          // it('should return all payment histories for current sponsor', async () => {
-          //   expect(result.body.histories.length).to.be.eq(countRewardPayments * 2);
-          // });
           it('should return correct amount of all histories', async () => {
             expect(result.body.amount).to.be.eq((reward * countRewardPayments) * 2);
           });
@@ -628,10 +630,30 @@ describe('Payables', async () => {
           beforeEach(async () => {
             result = await chai.request(app)
               .post('/campaigns-api/payments/payables')
-              .send(Object.assign(requestBody, { currency: 'usd' }));
+              .send(Object.assign(requestBody, { currency: SUPPORTED_CURRENCIES.USD }));
           });
           it('should return correct amount of histories', async () => {
             expect(result.body.amount).to.be.eq((reward * countRewardPayments) / 2);
+          });
+          it('should return all payment histories for current sponsor', async () => {
+            expect(result.body.histories.length).to.be.eq(countRewardPayments);
+          });
+        });
+
+        describe('On request with currency other supported currencies', async () => {
+          let result;
+          beforeEach(async () => {
+            await CurrenciesRatesFactory.Create({ rates: { [currency]: rate } });
+            const reqPayable = reward * countRewardPayments * 2 * rate;
+            result = await chai.request(app)
+              .post('/campaigns-api/payments/payables')
+              .send(
+                Object.assign(requestBody, { currency, payable: reqPayable }),
+              );
+          });
+          it('should return correct amount of histories', async () => {
+            const expectedAmount = ((reward * rate) / 2) * countRewardPayments;
+            expect(result.body.amount).to.be.eq(expectedAmount);
           });
           it('should return all payment histories for current sponsor', async () => {
             expect(result.body.histories.length).to.be.eq(countRewardPayments);

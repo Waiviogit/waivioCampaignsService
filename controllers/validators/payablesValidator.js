@@ -1,8 +1,8 @@
 const moment = require('moment');
 const Joi = require('@hapi/joi');
 const {
-  WALLET_TYPES_FOR_PARSE, SUPPORTED_CURRENCIES,
-  PAYMENT_HISTORIES_TYPES, GUEST_WALLET_OPERATIONS,
+  WALLET_TYPES_FOR_PARSE, SUPPORTED_CURRENCIES, PAYABLES_CURRENCIES,
+  PAYMENT_HISTORIES_TYPES, GUEST_WALLET_OPERATIONS, SUPPORTED_CRYPTO_CURRENCIES,
 } = require('constants/constants');
 
 const options = { allowUnknown: true, stripUnknown: true };
@@ -18,7 +18,7 @@ exports.payablesSchema = Joi.object().keys({
   userName: Joi.string(),
   type: Joi.string().valid(...Object.values(PAYMENT_HISTORIES_TYPES)),
   sort: Joi.string(),
-  currency: Joi.string().valid('usd', 'hive').default('hive'),
+  currency: Joi.string().valid(...PAYABLES_CURRENCIES).default(SUPPORTED_CRYPTO_CURRENCIES.HIVE),
   objects: Joi.array().items(Joi.string()).default([]),
   globalReport: Joi.boolean().default(false),
   processingFees: Joi.boolean().default(false),

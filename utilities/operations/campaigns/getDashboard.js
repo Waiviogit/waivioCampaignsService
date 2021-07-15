@@ -1,7 +1,10 @@
 const paymentHistory = require('utilities/operations/paymentHistory');
 const { hiveClient, hiveOperations } = require('utilities/hiveApi');
+const { SUPPORTED_CURRENCIES } = require('constants/constants');
+const { divide } = require('utilities/helpers/calcHelper');
 const { currencyRequest } = require('utilities/requests');
 const { campaignHelper } = require('utilities/helpers');
+const { currenciesRateModel } = require('models');
 const moment = require('moment');
 const _ = require('lodash');
 
@@ -38,14 +41,27 @@ module.exports = async (data) => {
           expired_at: 1,
           createdAt: 1,
           guide: 1,
+          currency: 1,
+          rewardInCurrency: 1,
           commissionAgreement: 1, // ? need decimal128
-          remaining: { $cond: [{ $eq: ['$status', 'active'] }, { $subtract: [{ $divide: ['$budget', '$reward'] }, { $add: ['$completed', '$reserved'] }] }, 0] },
+          remaining: { $cond: [{ $eq: ['$status', 'active'] }, { $subtract: [{ $divide: ['$budget', '$rewardInCurrency'] }, { $add: ['$completed', '$reserved'] }] }, 0] },
         },
       },
     ],
   });
 
   if (error) return { error };
+
+  const { result: currencyRate } = await currenciesRateModel.findOne({
+    condition: { base: SUPPORTED_CURRENCIES.USD },
+    sort: { dateString: -1 },
+  });
+
+  for (const item of dashboard) {
+    item.budgetUSD = item.currency === SUPPORTED_CURRENCIES.USD
+      ? item.budget
+      : divide(item.budget, _.get(currencyRate, `rates.${item.currency}`), 4);
+  }
 
   const { payable } = await paymentHistory.getPayableHistory({
     skip: 0, limit: 1, sponsor: data.guideName,

@@ -1,7 +1,9 @@
+const {
+  CAMPAIGN_TYPES, CAMPAIGN_STATUSES, RESERVATION_STATUSES, SUPPORTED_CURRENCIES,
+} = require('constants/constants');
 const mongoose = require('mongoose');
 const Float = require('mongoose-float').loadType(mongoose, 4);
 const db = require('database/db_Connection');
-const { CAMPAIGN_TYPES, CAMPAIGN_STATUSES, RESERVATION_STATUSES } = require('constants/constants');
 const config = require('config');
 const _ = require('lodash');
 
@@ -99,6 +101,14 @@ const campaignSchema = new Schema({
   },
   app: { type: String, default: null },
   expired_at: { type: Date },
+  currency: {
+    type: String,
+    enum: Object.values(SUPPORTED_CURRENCIES),
+    default: SUPPORTED_CURRENCIES.USD,
+  },
+  rewardInCurrency: {
+    type: Float, required: true, min: 0.001, max: 50000,
+  },
 },
 {
   timestamps: true,
