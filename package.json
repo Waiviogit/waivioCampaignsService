@@ -18,7 +18,9 @@
     "addDetailsGuestTransfer": "NODE_PATH=. node ./utilities/tasks/addDetailsGuestTransfer/run.js",
     "addTransactionHash": "NODE_PATH=. node ./utilities/tasks/addTransactionHash/run.js",
     "setRewardInCurrency": "NODE_PATH=. node ./utilities/tasks/setRewardInCurrencyField/run.js",
-    "test": "NODE_PATH=. NODE_ENV=test nyc --reporter=html mocha"
+    "test": "NODE_PATH=. NODE_ENV=test nyc --reporter=html mocha",
+    "migrate:up": "migrate-mongo up",
+    "migrate:down": "migrate-mongo down"
   },
   "dependencies": {
     "@hapi/joi": "^16.1.7",

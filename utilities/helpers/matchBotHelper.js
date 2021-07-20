@@ -1,11 +1,15 @@
 /* eslint-disable camelcase */
 const _ = require('lodash');
 const moment = require('moment');
+const BigNumber = require('bignumber.js');
 const {
   botUpvoteModel, postModel, matchBotModel, paymentHistoryModel, campaignModel,
 } = require('models');
 const { voteCoefficients } = require('constants/constants');
 const { hiveClient, hiveOperations } = require('utilities/hiveApi');
+const {
+  subtract, multiply, add, sumBy, divide,
+} = require('utilities/helpers/calcHelper');
 
 /**
  * Find all expired match bot upvotes and recount sponsors debt to the contractors
@@ -102,12 +106,12 @@ const executeUpvotes = async () => {
 
 const getNeededVoteWeight = async (totalAmount, upvote) => {
   let needVotePower, iteration = 0;
-  let idealCoef = upvote.amountToVote / totalAmount;
+  let idealCoef = divide(upvote.amountToVote, totalAmount);
   if (idealCoef >= 1) return { votePower: 10000, voteWeight: totalAmount };
-  const minAmount = (upvote.amountToVote - upvote.amountToVote * 0.005);
-  const maxAmount = (upvote.amountToVote + upvote.amountToVote * 0.005);
+  const minAmount = subtract(upvote.amountToVote, multiply(upvote.amountToVote, 0.005));
+  const maxAmount = add(upvote.amountToVote, multiply(upvote.amountToVote, 0.005));
   while ((totalAmount > maxAmount || totalAmount < minAmount) && iteration !== 7) {
-    idealCoef = _.round(upvote.amountToVote / totalAmount, 3);
+    idealCoef = _.round(divide(upvote.amountToVote, totalAmount), 3);
     const realFault = idealCoef > 1 ? idealCoef : voteCoefficients[_.round(upvote.amountToVote / totalAmount, 1) * 100];
     const realVote = totalAmount * idealCoef * realFault;
     if (!needVotePower)needVotePower = idealCoef + (((totalAmount * idealCoef) - realVote) / totalAmount);
@@ -138,8 +142,8 @@ const updateCompensationFee = async (upvote, campaign, voteAmount) => {
     (user) => user.permlink === upvote.reservationPermlink);
   const { result } = await paymentHistoryModel.findOne(condition);
 
-  if (voteAmount + _.get(result, 'amount', 0) > campaign.reward / reservation.hiveCurrency) {
-    voteAmount = (campaign.reward / reservation.hiveCurrency) - _.get(result, 'amount', 0);
+  if (voteAmount + _.get(result, 'amount', 0) > divide(campaign.reward, reservation.hiveCurrency)) {
+    voteAmount = subtract(divide(campaign.reward, reservation.hiveCurrency), _.get(result, 'amount', 0));
   }
   const { result: transfer } = await paymentHistoryModel.findOne({
     type: { $in: ['transfer', 'demo_debt'] }, userName: campaign.compensationAccount, sponsor: upvote.sponsor, payed: false,
@@ -244,16 +248,18 @@ const lookForDownVotes = async (post, bots, voteWeight) => {
   });
   if (!matchBotsVoteWeight) return voteWeight;
   if (!downVoteRshares) return 0;
-  const oneHBDRshares = allRshares / (parseFloat(post.total_payout_value) + parseFloat(post.curator_payout_value));
+  const oneHBDRshares = divide(allRshares, add(
+    new BigNumber(post.total_payout_value).toNumber(), new BigNumber(post.curator_payout_value).toNumber(),
+  ));
 
   if ((matchBotsVoteWeight < -downVoteRshares)) {
     if (voteWeight > parseFloat(post.total_payout_value)) {
-      return voteWeight - parseFloat(post.total_payout_value);
+      return subtract(voteWeight, new BigNumber(post.total_payout_value).toNumber());
     }
     if (voteWeight < parseFloat(post.total_payout_value)) return 0;
   }
 
-  return _.round(-downVoteRshares / oneHBDRshares, 4);
+  return _.round(divide(-downVoteRshares, oneHBDRshares), 4);
 };
 
 const checkForEnable = async (botName) => {
@@ -308,7 +314,7 @@ const updateUpvotedRecord = async ({ botUpvote, voteWeight }) => {
 
   if (result && result.length) {
     compensationFee = _.find(result, (res) => res.type === 'compensation_fee');
-    const amount = _.sumBy(result, (history) => {
+    const amount = sumBy(result, (history) => {
       if (history.type !== 'compensation_fee') return history.amount;
     });
     if (currentVote > 0 && currentVote >= amount) {
@@ -339,7 +345,8 @@ const updatePaymentHistories = async (histories, voteWeight, marker, payed, afte
     let insidePayed = _.cloneDeep(payed);
     let amount = voteWeight;
     if (history.type === 'review' && _.get(history, 'details.beneficiaries', []).length) {
-      amount = _.round(voteWeight * ((10000 - (_.sumBy(history.details.beneficiaries, 'weight'))) / 10000), 4);
+      amount = _.round(multiply(voteWeight,
+        divide(subtract(10000, (_.sumBy(history.details.beneficiaries, 'weight'))), 10000)), 4);
     }
     if (history.type === 'review' && !_.get(history, 'details.beneficiaries', []).length) {
       amount = _.round(voteWeight, 4);
@@ -347,7 +354,7 @@ const updatePaymentHistories = async (histories, voteWeight, marker, payed, afte
     if (history.type === 'beneficiary_fee') {
       const beneficiarie = _.find(history.details.beneficiaries,
         (acc) => acc.account === history.userName);
-      amount = _.round(voteWeight * (beneficiarie.weight / 10000), 4);
+      amount = _.round(multiply(voteWeight, divide(beneficiarie.weight, 10000)), 4);
     }
     if (!payed) insidePayed = await checkForPayed({ history, amount, marker: marker === 'add' ? 'subtract' : 'add' });
     updateResult.push(await paymentHistoryModel.updateAmount({
@@ -486,10 +493,10 @@ const recountMatchBotVotes = async ({ user, reward, amount }) => {
   if (!upvotes || !upvotes.length) return false;
 
   for (const upvote of upvotes) {
-    const newAmountToVote = (upvote.reward - amount * 2) * (upvote.amountToVote / upvote.reward);
+    const newAmountToVote = multiply((upvote.reward - amount * 2), divide(upvote.amountToVote, upvote.reward));
     switch (upvote.status) {
       case 'pending':
-        if (amount >= (reward / user.hiveCurrency) + user.rewardRaisedBy) {
+        if (amount >= add(divide(reward, user.hiveCurrency), user.rewardRaisedBy)) {
           await botUpvoteModel.deleteOne(upvote._id);
         } else {
           await botUpvoteModel.update({ _id: upvote._id }, {

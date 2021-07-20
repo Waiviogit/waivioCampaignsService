@@ -1,6 +1,7 @@
 const { PaymentHistory } = require('database').models;
-
 const currencyRequest = require('utilities/requests/currencyRequest');
+const BigNumber = require('bignumber.js');
+const { multiply } = require('utilities/helpers/calcHelper');
 
 const addPaymentHistory = async ({
   // eslint-disable-next-line camelcase
@@ -36,7 +37,7 @@ const addPaymentHistory = async ({
         transfer_permlink,
         remaining,
         hiveCurrency,
-        payableInDollars: usdCurrency * payable,
+        payableInDollars: multiply(new BigNumber(usdCurrency).toNumber(), payable),
       };
       if (transactionId) details.transactionId = transactionId;
       break;

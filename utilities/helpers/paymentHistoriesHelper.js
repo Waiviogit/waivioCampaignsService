@@ -120,7 +120,7 @@ const filterByPayable = (histories, amount) => {
   const filtered = [];
   _.reverse(histories);
   while (currentAmount <= amount) {
-    if ((currentAmount + histories[counter].amount) > amount) break;
+    if (add(currentAmount, histories[counter].amount) > amount) break;
     if (_.includes(['transfer', 'demo_debt'], histories[counter].type)) {
       currentAmount -= histories[counter].amount;
       histories[counter].balance = currentAmount;

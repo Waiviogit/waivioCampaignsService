@@ -3,6 +3,7 @@ const { paymentsHelper, transferHelper } = require('utilities/helpers');
 const { notificationsRequest } = require('utilities/requests');
 const { userModel, paymentHistoryModel } = require('models');
 const config = require('config');
+const BigNumber = require('bignumber.js');
 
 const parse = async (data, transactionId) => {
   await parseCampaignsTransfer(data, transactionId);
@@ -40,7 +41,7 @@ const parseCampaignsTransfer = async ({
           case 'user_reward':
             if (memoJson.app && memoJson.app === config.blackListApp) return;
             ({ remaining, payed } = await transferHelper.recountDebtAfterTransfer({
-              guideName: from, userName: to, amount: parseFloat(amount), isGuest: false,
+              guideName: from, userName: to, amount: new BigNumber(amount), isGuest: false,
             }));
             await paymentsHelper.transfer({
               permlink: null, userName: to, sponsor: from, amount, transactionId, remaining, payed,
@@ -95,7 +96,7 @@ const parseGuestTransfers = async ({
 
     if (memoJson.id === 'guest_reward') {
       ({ remaining, payed } = await transferHelper.recountDebtAfterTransfer({
-        guideName: from, userName: memoJson.to, amount: parseFloat(amount), isGuest: true,
+        guideName: from, userName: memoJson.to, amount: new BigNumber(amount), isGuest: true,
       }));
       const { result: payment } = await paymentHistoryModel.find(
         { sponsor: from, userName: memoJson.to },

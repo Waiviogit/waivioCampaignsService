@@ -1,7 +1,7 @@
 const getPayableHistory = require('utilities/operations/paymentHistory/getPayableHistory');
 const { MIN_DEBT_TO_SUSPENDED, MIN_TO_PAYED_VALUE } = require('constants/appData');
 const { paymentHistoryModel, campaignModel, wobjectModel } = require('models');
-const { sumBy, add, subtract } = require('utilities/helpers/calcHelper');
+const { sumBy, add, subtract, multiply } = require('utilities/helpers/calcHelper');
 const { CAMPAIGN_STATUSES } = require('constants/constants');
 const moment = require('moment');
 const config = require('config');
@@ -27,7 +27,7 @@ const checkForUnblockCampaign = async (guideName) => {
       userName: payment.userName,
       payed: false,
     });
-    if (payment.amount - _.get(transfer, 'details.remaining', 0) > MIN_DEBT_TO_SUSPENDED) {
+    if (subtract(payment.amount, _.get(transfer, 'details.remaining', 0)) > MIN_DEBT_TO_SUSPENDED) {
       unblock = false;
       break;
     }
@@ -41,7 +41,7 @@ const checkForUnblockCampaign = async (guideName) => {
     if (campaign.expired_at < new Date()) status = campaign.deactivation_permlink ? 'unassigned' : 'expired';
     else {
       const completedUsers = _.filter(campaign.users, (user) => user.createdAt > moment.utc().startOf('month').toDate());
-      status = campaign.budget - campaign.reward * completedUsers.length > campaign.reward
+      status = subtract(campaign.budget, multiply(campaign.reward, completedUsers.length)) > campaign.reward
         ? CAMPAIGN_STATUSES.ACTIVE
         : CAMPAIGN_STATUSES.REACHED_LIMIT;
     }
@@ -119,8 +119,7 @@ exports.overpaymentRefund = async ({
     sponsor: to,
     payed: false,
   });
-  const balance = _.round(_.get(lastTransfer, 'details.remaining', 0), 4)
-        - amount.match(/.\d*.\d*/)[0];
+  const balance = subtract(_.get(lastTransfer, 'details.remaining', 0), amount.match(/.\d*.\d*/)[0]);
 
   if (lastTransfer) {
     await paymentHistoryModel.updateOne({ _id: lastTransfer._id }, {
