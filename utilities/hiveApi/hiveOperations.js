@@ -191,7 +191,7 @@ exports.calculateVotePower = async (client, {
   const power = (((accountVotingPower / 100) * voteWeight)) / 50;
   const rShares = (vests * power * 100) - 50000000;
 
-  const postVoteRhares = await getPostVoteRhares(client, { author, permlink });
+  const { postVoteRhares, isPost } = await getPostVoteRhares(client, { author, permlink });
 
   const tRShares = postVoteRhares + rShares;
 
@@ -201,7 +201,9 @@ exports.calculateVotePower = async (client, {
   const rewards = parseFloat(rewardFund.reward_balance) / parseFloat(rewardFund.recent_claims);
   const postValue = tClaims * rewards; // *price - to calculate in HBD
   const voteValue = postValue * (rShares / tRShares);
-  return { voteValue, voteValueHBD: voteValue * price, votePower: accountVotingPower };
+  return {
+    voteValue, voteValueHBD: voteValue * price, votePower: accountVotingPower, isPost,
+  };
 };
 
 exports.getVotingInfo = async (client, {
@@ -260,7 +262,9 @@ const getPostVoteRhares = async (client, { author, permlink }) => {
   if (!post) {
     post = await this.getPostInfo(client, { author, permlink });
   }
-  return _.get(post, 'vote_rshares')
+  const postVoteRhares = _.get(post, 'vote_rshares')
     ? parseFloat(post.vote_rshares)
     : 0;
+  const isPost = !post.parent_author;
+  return { postVoteRhares, isPost };
 };

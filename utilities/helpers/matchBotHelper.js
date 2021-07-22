@@ -595,7 +595,7 @@ const voteExtendedMatchBots = async (voteData) => {
 const canVote = async ({
   name, voteWeight, author, permlink, minVotingPower, minHBD,
 }) => {
-  const { voteValueHBD, votePower } = await hiveClient.execute(
+  const { voteValueHBD, votePower, isPost } = await hiveClient.execute(
     hiveOperations.calculateVotePower,
     {
       name, voteWeight, author, permlink,
@@ -603,6 +603,7 @@ const canVote = async ({
   );
   if (votePower < minVotingPower) return false;
   if (voteValueHBD < minHBD) return false;
+  if (!isPost) return false;
 
   return true;
 };
