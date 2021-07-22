@@ -1,13 +1,13 @@
 /* eslint-disable camelcase */
-const _ = require('lodash');
-const moment = require('moment');
 const {
   botUpvoteModel, postModel, matchBotModel, paymentHistoryModel, campaignModel,
 } = require('models');
-const { voteCoefficients } = require('constants/constants');
 const { hiveClient, hiveOperations } = require('utilities/hiveApi');
+const { voteCoefficients } = require('constants/constants');
 const jsonHelper = require('utilities/helpers/jsonHelper');
 const validators = require('controllers/validators');
+const moment = require('moment');
+const _ = require('lodash');
 
 /**
  * Find all expired match bot upvotes and recount sponsors debt to the contractors
@@ -571,7 +571,7 @@ const voteExtendedMatchBots = async (voteData) => {
     voter, author, permlink, voteWeight, minVotingPower, minHBD, botKey,
   } = params;
   const canVote = await canVote({
-    voteWeight: Math.abs(voteWeight / 10),
+    voteWeight: Math.abs(voteWeight / 10), // #TODO  100?
     minVotingPower,
     name: voter,
     permlink,
@@ -609,21 +609,20 @@ const canVote = async ({
 };
 
 module.exports = {
+  checkAndRemoveHistories,
   removePaymentHistories,
   updatePaymentHistories,
-  removeVotes,
-  checkDisable,
+  voteExtendedMatchBots,
+  updateCompensationFee,
+  recountMatchBotVotes,
+  updateUpvotedRecord,
   getNeededVoteWeight,
-  setRule,
+  executeUpvotes,
   executeRecount,
   checkForGuest,
-  executeUpvotes,
-  updateUpvotedRecord,
-  updateCompensationFee,
   checkForPayed,
-  recountMatchBotVotes,
-  checkAndRemoveHistories,
+  checkDisable,
+  removeVotes,
+  setRule,
   canVote,
-  voteExtendedMatchBots,
-
 };

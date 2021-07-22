@@ -13,7 +13,7 @@ exports.matchBotVoteSchema = Joi.object().keys({
   permlink: Joi.string().required(),
   author: Joi.string().required(),
   voter: Joi.string().required(),
-  botKey: Joi.string().enum(Object.values(BOT_ENV_KEY)).required(),
+  botKey: Joi.string().valid(...Object.values(BOT_ENV_KEY)).required(),
   minHBD: Joi.number().min(0.0001).required(),
   minVotingPower: Joi.number().integer().min(1).max(10000)
     .required(),
