@@ -201,7 +201,7 @@ exports.calculateVotePower = async (client, {
   const rewards = parseFloat(rewardFund.reward_balance) / parseFloat(rewardFund.recent_claims);
   const postValue = tClaims * rewards; // *price - to calculate in HBD
   const voteValue = postValue * (rShares / tRShares);
-  return { voteValue };
+  return { voteValue, voteValueHBD: voteValue * price, votePower: accountVotingPower };
 };
 
 exports.getVotingInfo = async (client, {

@@ -561,6 +561,21 @@ const checkForGuest = (author, metadata) => {
   }
 };
 
+const canVote = async ({
+  name, voteWeight, author, permlink, minVotingPower, minHBD,
+}) => {
+  const { voteValueHBD, votePower } = await hiveClient.execute(
+    hiveOperations.calculateVotePower,
+    {
+      name, voteWeight, author, permlink,
+    },
+  );
+  if (votePower < minVotingPower) return false;
+  if (voteValueHBD < minHBD) return false;
+
+  return true;
+};
+
 module.exports = {
   removePaymentHistories,
   updatePaymentHistories,
@@ -576,4 +591,5 @@ module.exports = {
   checkForPayed,
   recountMatchBotVotes,
   checkAndRemoveHistories,
+  canVote,
 };

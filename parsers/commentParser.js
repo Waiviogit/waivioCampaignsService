@@ -8,6 +8,7 @@ const { paymentsHelper, usersHelper } = require('utilities/helpers');
 const { notificationsRequest } = require('utilities/requests');
 const redisSetter = require('utilities/redis/redisSetter');
 const { hiveClient, hiveOperations } = require('utilities/hiveApi');
+const authorsBot = require('utilities/operations/matchBots/authorsBot');
 
 const parse = async (post, opts) => {
   const beneficiaries = _.get(opts, '[1].extensions[0][1].beneficiaries', null);
@@ -15,6 +16,7 @@ const parse = async (post, opts) => {
   const app = metadata && metadata.app ? metadata.app : null;
 
   await parseReviews(post, metadata, app, beneficiaries);
+  await authorsBot.processAuthorsMatchBot(post);
 
   if (_.has(metadata, 'waivioRewards')) await parseActions(post, metadata, app);
   if (_.has(metadata, 'comment.userId') && post.parent_author === '') {
