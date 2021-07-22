@@ -4,9 +4,11 @@ const { MATCH_BOT_VOTE, DOWNVOTE_ON_REVIEW } = require('constants/ttlData');
 const { campaignModel } = require('models');
 const { redisSetter, redisGetter } = require('utilities/redis');
 const { hiveClient, hiveOperations } = require('utilities/hiveApi');
+const curatorsBot = require('utilities/operations/matchBots/curatorsBot');
 
 exports.parse = async (votes) => {
   await Promise.all(votes.map(async (vote) => {
+    await curatorsBot.processCuratorsMatchBot(vote);
     const { result: campaign } = await campaignModel.findOne({
       $or: [{ guideName: vote.voter }, { match_bots: vote.voter }],
       payments: { $elemMatch: { postPermlink: vote.permlink, rootAuthor: vote.author } },

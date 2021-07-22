@@ -1,3 +1,4 @@
+const matchBotHelper = require('utilities/helpers/matchBotHelper');
 const { BOTS_QUEUE } = require('constants/matchBotsData');
 const RedisSMQWorker = require('rsmq-worker');
 const config = require('config');
@@ -11,7 +12,8 @@ const curatorsBotQueue = new RedisSMQWorker(
 );
 
 curatorsBotQueue.on('message', async (msg, next, id) => {
-  // handler
+  await matchBotHelper.voteExtendedMatchBots(msg);
+  await curatorsBotQueue.del(id);
   next();
 });
 

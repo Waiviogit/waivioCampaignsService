@@ -6,6 +6,8 @@ const {
 } = require('models');
 const { voteCoefficients } = require('constants/constants');
 const { hiveClient, hiveOperations } = require('utilities/hiveApi');
+const jsonHelper = require('utilities/helpers/jsonHelper');
+const validators = require('controllers/validators');
 
 /**
  * Find all expired match bot upvotes and recount sponsors debt to the contractors
@@ -561,6 +563,35 @@ const checkForGuest = (author, metadata) => {
   }
 };
 
+const voteExtendedMatchBots = async (voteData) => {
+  const { params, validationError } = validators
+    .validate(jsonHelper.parseJson(voteData), validators.matchBots.matchBotVoteSchema);
+  if (validationError) console.log(validationError); // #TODO Sentry
+  const {
+    voter, author, permlink, voteWeight, minVotingPower, minHBD, botKey,
+  } = params;
+  const canVote = await canVote({
+    voteWeight: Math.abs(voteWeight / 10),
+    minVotingPower,
+    name: voter,
+    permlink,
+    minHBD,
+    author,
+  });
+  if (!canVote) return;
+  const { result: vote, error: votingError } = await hiveClient.execute(
+    hiveOperations.likePost,
+    {
+      key: process.env[botKey],
+      weight: voteWeight,
+      permlink,
+      author,
+      voter,
+    },
+  );
+  if (votingError) console.log(votingError); // #TODO Sentry
+};
+
 const canVote = async ({
   name, voteWeight, author, permlink, minVotingPower, minHBD,
 }) => {
@@ -592,4 +623,6 @@ module.exports = {
   recountMatchBotVotes,
   checkAndRemoveHistories,
   canVote,
+  voteExtendedMatchBots,
+
 };
