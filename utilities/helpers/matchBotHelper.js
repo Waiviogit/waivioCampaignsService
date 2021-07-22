@@ -194,7 +194,6 @@ const updateDataAfterVote = async ({ upvote, voteWeight, weight }) => {
  * @returns {Promise<{result: boolean}>}
  */
 const setRule = async ({
-
   bot_name, sponsor, voting_percent, note, enabled, expiredAt,
 }) => {
   const [botAcc, sponsorAcc] = await hiveClient.execute(

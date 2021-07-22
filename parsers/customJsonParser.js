@@ -1,7 +1,8 @@
-const _ = require('lodash');
-const moment = require('moment');
-const matchBotHelper = require('utilities/helpers/matchBotHelper');
 const { matchBotModel, blacklistModel, userModel } = require('models');
+const matchBotHelper = require('utilities/helpers/matchBotHelper');
+const jsonHelper = require('utilities/helpers/jsonHelper');
+const moment = require('moment');
+const _ = require('lodash');
 
 /**
  * match_bot_set_rule => check conditions =>
@@ -13,13 +14,8 @@ const { matchBotModel, blacklistModel, userModel } = require('models');
  * @returns {Promise<void>}
  */
 const parse = async (data) => {
-  let json;
+  const json = jsonHelper.parseJson(data.json);
 
-  try {
-    json = JSON.parse(data.json);
-  } catch (error) {
-    json = {};
-  }
   const authorizedUser = data.required_posting_auths ? data.required_posting_auths[0] : null;
   switch (data.id) {
     case 'match_bot_set_rule':
