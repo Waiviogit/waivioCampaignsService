@@ -1,5 +1,6 @@
 const { matchBotModel, blacklistModel, userModel } = require('models');
 const matchBotHelper = require('utilities/helpers/matchBotHelper');
+const { CUSTOM_JSON_TYPES } = require('constants/parsersData');
 const jsonHelper = require('utilities/helpers/jsonHelper');
 const moment = require('moment');
 const _ = require('lodash');
@@ -18,7 +19,7 @@ const parse = async (data) => {
 
   const authorizedUser = data.required_posting_auths ? data.required_posting_auths[0] : null;
   switch (data.id) {
-    case 'match_bot_set_rule':
+    case CUSTOM_JSON_TYPES.MATCH_BOT_SET_RULE:
       const expired = moment(json.expiredAt).utc().toDate();
       const tomorrow = moment().utc().add(1, 'days').startOf('day')
         .toDate();
@@ -33,33 +34,33 @@ const parse = async (data) => {
         });
       }
       break;
-    case 'match_bot_remove_rule':
+    case CUSTOM_JSON_TYPES.MATCH_BOT_REMOVE_RULE:
       if (json.sponsor) {
         await matchBotModel.removeRule({ bot_name: authorizedUser, sponsor: json.sponsor });
       }
       break;
-    case 'match_bot_change_power':
+    case CUSTOM_JSON_TYPES.MATCH_BOT_CHANGE_POWER:
       if (json.voting_power) {
         await matchBotModel.setVotingPower(
           { bot_name: authorizedUser, voting_power: json.voting_power },
         );
       }
       break;
-    case 'addUsersToWhiteList':
+    case CUSTOM_JSON_TYPES.ADD_USERS_TO_WHITE_LIST:
       if (json.names) {
         await blacklistModel.updateOne({ user: authorizedUser }, {
           $addToSet: { whiteList: { $each: json.names } },
         });
       }
       break;
-    case 'removeUsersFromBlackList':
-    case 'removeUsersFromWhiteList':
+    case CUSTOM_JSON_TYPES.REMOVE_USERS_FROM_BLACK_LIST:
+    case CUSTOM_JSON_TYPES.REMOVE_USERS_FROM_WHITE_LIST:
       if (json.names) {
         await blacklistModel.updateOne({ user: authorizedUser },
           { $pull: { [data.id === 'removeUsersFromWhiteList' ? 'whiteList' : 'blackList']: { $in: json.names } } });
       }
       break;
-    case 'addUsersToBlackList':
+    case CUSTOM_JSON_TYPES.ADD_USERS_TO_BLACK_LIST:
       if (json.names) {
         await blacklistModel.updateOne({ user: authorizedUser }, {
           $addToSet: { blackList: { $each: json.names } },
@@ -67,8 +68,8 @@ const parse = async (data) => {
         });
       }
       break;
-    case 'unFollowAnotherBlacklist':
-    case 'followAnotherBlacklist':
+    case CUSTOM_JSON_TYPES.UNFOLLOW_ANOTHER_BLACK_LIST:
+    case CUSTOM_JSON_TYPES.FOLLOW_ANOTHER_BLACK_LIST:
       if (json.names) {
         const { users } = await userModel.findByNames(json.names);
         if (!users || !users.length) return;
