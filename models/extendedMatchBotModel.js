@@ -60,3 +60,11 @@ exports.unsetMatchBot = async ({ botName, type, name }) => {
     return false;
   }
 };
+
+exports.updateStatus = async ({ botName, type, enabled }) => {
+  const result = await ExtendedMatchBot.updateOne(
+    { botName, type }, { 'sponsors.$[].enabled': enabled }, { runValidators: true },
+  );
+
+  return !!result.n;
+};

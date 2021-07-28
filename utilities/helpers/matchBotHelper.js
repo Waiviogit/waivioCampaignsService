@@ -214,14 +214,28 @@ const setRule = async ({
 };
 
 const checkDisable = async ({ bot_name: botName, account_auths: accountAuths }) => {
-  if (!_.flattenDepth(accountAuths).includes(process.env.UPVOTE_BOT_NAME)) {
+  if (!isAccountsIncludeBot({ accountAuths, botName: process.env.UPVOTE_BOT_NAME })) {
     const bots = await matchBotModel.getMatchBots({ bot_name: botName, limit: 1 });
 
     if (!_.isEmpty(bots.results)) {
       await matchBotModel.updateStatus({ bot_name: botName, enabled: false });
     }
   }
+  for (const extendedBot of getExtendedBotsArr()) {
+    if (isAccountsIncludeBot({ accountAuths, botName: extendedBot })) continue;
+    const { result } = await extendedMatchBotModel
+      .find({ botName, type: getMatchBotType(extendedBot) });
+    if (!_.isEmpty(result)) {
+      await extendedMatchBotModel
+        .updateStatus({ bot_name: botName, type: getMatchBotType(extendedBot), enabled: false });
+    }
+  }
 };
+
+const getExtendedBotsArr = () => [process.env.AUTHOR_BOT, process.env.CURATOR_BOT];
+
+const isAccountsIncludeBot = ({ botName, accountAuths }) => (
+  _.flattenDepth(accountAuths).includes(botName));
 
 const removeVote = async ({ botName, author, permlink }) => {
   const enabled = await checkForEnable(botName);
@@ -642,6 +656,15 @@ const getMatchBotName = (type) => {
     default: () => '',
   };
   return (botName[type] || botName.default)();
+};
+
+const getMatchBotType = (botName) => {
+  const botType = {
+    [process.env.AUTHOR_BOT]: () => MATCH_BOT_TYPES.AUTHOR,
+    [process.env.CURATOR_BOT]: () => MATCH_BOT_TYPES.CURATOR,
+    default: () => '',
+  };
+  return (botType[botName] || botType.default)();
 };
 
 module.exports = {
