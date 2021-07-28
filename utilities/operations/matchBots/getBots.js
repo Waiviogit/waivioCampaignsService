@@ -10,5 +10,6 @@ exports.getBotByType = async ({
   );
   if (error) return { error };
   if (_.isEmpty(_.get(result, 'accounts'))) return { bots: [] };
+
   return { bots: result.accounts };
 };
