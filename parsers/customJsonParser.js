@@ -46,6 +46,12 @@ const parse = async (data) => {
         );
       }
       break;
+    case CUSTOM_JSON_TYPES.MATCH_BOT_SET:
+      await matchBotHelper.setBot({ botName: authorizedUser, json });
+      break;
+    case CUSTOM_JSON_TYPES.MATCH_BOT_UNSET:
+      await matchBotHelper.unsetBot({ botName: authorizedUser, json });
+      break;
     case CUSTOM_JSON_TYPES.ADD_USERS_TO_WHITE_LIST:
       if (json.names) {
         await blacklistModel.updateOne({ user: authorizedUser }, {

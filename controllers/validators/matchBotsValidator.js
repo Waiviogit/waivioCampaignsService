@@ -1,5 +1,5 @@
+const { BOT_ENV_KEY, MATCH_BOT_TYPES } = require('constants/matchBotsData');
 const Joi = require('@hapi/joi');
-const {  BOT_ENV_KEY } = require('constants/matchBotsData');
 
 const options = { allowUnknown: true, stripUnknown: true };
 
@@ -19,4 +19,32 @@ exports.matchBotVoteSchema = Joi.object().keys({
     .required(),
   voteWeight: Joi.number().integer().min(-10000).max(10000)
     .required(),
+}).options(options);
+
+exports.matchBotSetSchema = Joi.object().keys({
+  botName: Joi.string().required(),
+  name: Joi.string().required(),
+  type: Joi.string().valid(...Object.values(MATCH_BOT_TYPES)).required(),
+  voteWeight: Joi.when('type', {
+    is: MATCH_BOT_TYPES.AUTHOR,
+    then: Joi.number().integer().min(1).max(10000)
+      .required(),
+    otherwise: Joi.forbidden(),
+  }),
+  voteRatio: Joi.when('type', {
+    is: MATCH_BOT_TYPES.CURATOR,
+    then: Joi.number().min(0.01).max(10)
+      .required(),
+    otherwise: Joi.forbidden(),
+  }),
+  note: Joi.string(),
+  enabled: Joi.boolean().required(),
+  enablePowerDown: Joi.boolean(),
+  expiredAt: Joi.date(),
+}).options(options);
+
+exports.matchBotUnsetSchema = Joi.object().keys({
+  botName: Joi.string().required(),
+  name: Joi.string().required(),
+  type: Joi.string().valid(...Object.values(MATCH_BOT_TYPES)).required(),
 }).options(options);

@@ -607,6 +607,17 @@ const canVote = async ({
   return true;
 };
 
+const setBot = async ({ botName, json }) => {
+  const { params, validationError } = validators
+    .validate({ botName, ...json }, validators.matchBots.matchBotSetSchema);
+  // check set exopired null
+};
+
+const unsetBot = async ({ botName, json }) => {
+  const { params, validationError } = validators
+    .validate({ botName, ...json }, validators.matchBots.matchBotUnsetSchema);
+};
+
 module.exports = {
   checkAndRemoveHistories,
   removePaymentHistories,
@@ -622,6 +633,8 @@ module.exports = {
   checkForPayed,
   checkDisable,
   removeVotes,
+  unsetBot,
   setRule,
   canVote,
+  setBot,
 };

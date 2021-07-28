@@ -8,4 +8,6 @@ exports.CUSTOM_JSON_TYPES = {
   REMOVE_USERS_FROM_WHITE_LIST: 'removeUsersFromWhiteList',
   UNFOLLOW_ANOTHER_BLACK_LIST: 'unFollowAnotherBlacklist',
   FOLLOW_ANOTHER_BLACK_LIST: 'followAnotherBlacklist',
+  MATCH_BOT_SET: 'matchBotSet',
+  MATCH_BOT_UNSET: 'matchBotUnset',
 };

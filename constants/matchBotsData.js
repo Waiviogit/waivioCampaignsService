@@ -1,5 +1,4 @@
 exports.MATCH_BOT_TYPES = {
-  SPONSOR: 'sponsor',
   CURATOR: 'curator',
   AUTHOR: 'author',
 };

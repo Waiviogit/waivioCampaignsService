@@ -17,6 +17,7 @@ const ExtendedMatchBotSchema = new Schema({
       voteRatio: { type: Number, min: 0.01, max: 10 },
       note: { type: String, maxlength: 256 },
       enabled: { type: Boolean, default: false, required: true },
+      enablePowerDown: { type: Boolean, default: false },
       expiredAt: { type: Date, default: null },
     },
   ],
