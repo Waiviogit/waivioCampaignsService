@@ -7,5 +7,4 @@ module.exports = {
   withdrawController: require('./withdrawController'),
   mailerController: require('./mailerController'),
   referralsController: require('./referralsController'),
-
 };

@@ -9,6 +9,14 @@ exports.find = async (condition, select) => {
   }
 };
 
+exports.findOne = async (condition, select) => {
+  try {
+    return { result: await ExtendedMatchBot.findOne(condition, select).lean() };
+  } catch (error) {
+    return { error };
+  }
+};
+
 exports.setMatchBot = async (data) => {
   const findMatchBot = await ExtendedMatchBot.findOne(
     { botName: data.bot_name, 'account.name': data.name, type: data.type },

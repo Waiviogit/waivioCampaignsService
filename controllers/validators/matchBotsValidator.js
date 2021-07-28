@@ -10,6 +10,13 @@ exports.sponsorMatchBotsSchema = Joi.object().keys({
   bot_name: Joi.string(),
 }).options(options);
 
+exports.getMatchBotsSchema = Joi.object().keys({
+  skip: Joi.number().default(0),
+  limit: Joi.number().default(30),
+  botName: Joi.string().required(),
+  type: Joi.string().required(),
+}).options(options);
+
 exports.matchBotVoteSchema = Joi.object().keys({
   permlink: Joi.string().required(),
   author: Joi.string().required(),
