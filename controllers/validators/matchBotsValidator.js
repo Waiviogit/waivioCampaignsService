@@ -1,5 +1,6 @@
 const { BOT_ENV_KEY, MATCH_BOT_TYPES } = require('constants/matchBotsData');
 const Joi = require('@hapi/joi');
+const moment = require('moment');
 
 const options = { allowUnknown: true, stripUnknown: true };
 
@@ -40,7 +41,7 @@ exports.matchBotSetSchema = Joi.object().keys({
   note: Joi.string(),
   enabled: Joi.boolean().required(),
   enablePowerDown: Joi.boolean(),
-  expiredAt: Joi.date(),
+  expiredAt: Joi.date().greater(moment().utc().add(1, 'days').startOf('day')),
 }).options(options);
 
 exports.matchBotUnsetSchema = Joi.object().keys({

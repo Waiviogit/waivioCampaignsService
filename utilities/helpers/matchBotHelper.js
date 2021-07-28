@@ -1,8 +1,9 @@
 /* eslint-disable camelcase */
 const {
-  botUpvoteModel, postModel, matchBotModel, paymentHistoryModel, campaignModel,
+  botUpvoteModel, postModel, matchBotModel, paymentHistoryModel, campaignModel, extendedMatchBotModel,
 } = require('models');
 const { hiveClient, hiveOperations } = require('utilities/hiveApi');
+const { MATCH_BOT_TYPES } = require('constants/matchBotsData');
 const { voteCoefficients } = require('constants/constants');
 const jsonHelper = require('utilities/helpers/jsonHelper');
 const validators = require('controllers/validators');
@@ -610,12 +611,37 @@ const canVote = async ({
 const setBot = async ({ botName, json }) => {
   const { params, validationError } = validators
     .validate({ botName, ...json }, validators.matchBots.matchBotSetSchema);
-  // check set exopired null
+  if (validationError) return { result: false };
+  const [botAcc, watchAcc] = await hiveClient.execute(
+    hiveOperations.getAccountsInfo,
+    [params.botName, params.name],
+  );
+  if (!botAcc || !watchAcc) return { result: false };
+  params.enabled = params.enabled
+    && _.flattenDepth(botAcc.posting.account_auths).includes(getMatchBotName(params.type));
+
+  return {
+    result: await extendedMatchBotModel.setMatchBot(params),
+  };
 };
 
 const unsetBot = async ({ botName, json }) => {
   const { params, validationError } = validators
     .validate({ botName, ...json }, validators.matchBots.matchBotUnsetSchema);
+  if (validationError) return { result: false };
+
+  return {
+    result: await extendedMatchBotModel.unsetMatchBot(params),
+  };
+};
+
+const getMatchBotName = (type) => {
+  const botName = {
+    [MATCH_BOT_TYPES.AUTHOR]: () => process.env.AUTHOR_BOT,
+    [MATCH_BOT_TYPES.CURATOR]: () => process.env.CURATOR_BOT,
+    default: () => '',
+  };
+  return (botName[type] || botName.default)();
 };
 
 module.exports = {
