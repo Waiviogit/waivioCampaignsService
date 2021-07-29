@@ -5,6 +5,7 @@ const {
 const {
   MatchBotFactory, BotUpvoteFactory, PostFactory, PaymentHistoryFactory, CampaignFactory,
 } = require('test/factories');
+const { MATCH_BOT_TYPES } = require('constants/matchBotsData');
 
 describe('matchBotHelper', async () => {
   describe('payableRecount', async () => {
@@ -840,4 +841,70 @@ describe('matchBotHelper', async () => {
       });
     });
   });
+
+  describe('On getMatchBotName', async () => {
+    it('should get correct author bot name', async () => {
+      const expected = 'authorbot';
+      const actual = matchBotHelper.getMatchBotName(MATCH_BOT_TYPES.AUTHOR);
+      expect(actual).to.be.eq(expected);
+    });
+    it('should get correct curatot bot name', async () => {
+      const expected = 'curatorbot';
+      const actual = matchBotHelper.getMatchBotName(MATCH_BOT_TYPES.CURATOR);
+      expect(actual).to.be.eq(expected);
+    });
+    it('when type not supported should return empty string', async () => {
+      const expected = '';
+      const actual = matchBotHelper.getMatchBotName(faker.random.string());
+      expect(actual).to.be.eq(expected);
+    });
+  });
+
+  describe('On getMatchBotType', async () => {
+    it('should get correct author bot name', async () => {
+      const authorBotName = 'authorbot';
+      const actual = matchBotHelper.getMatchBotType(authorBotName);
+      expect(actual).to.be.eq(MATCH_BOT_TYPES.AUTHOR);
+    });
+    it('should get correct curatot bot name', async () => {
+      const curatorBotName = 'curatorbot';
+      const actual = matchBotHelper.getMatchBotType(curatorBotName);
+      expect(actual).to.be.eq(MATCH_BOT_TYPES.CURATOR);
+    });
+    it('when type not supported should return empty string', async () => {
+      const expected = '';
+      const actual = matchBotHelper.getMatchBotType(faker.random.string());
+      expect(actual).to.be.eq(expected);
+    });
+  });
+
+  describe('On isAccountsIncludeBot', async () => {
+    it('should return true if auth accounts include bot', async () => {
+      const name = faker.random.string();
+      const mock = {
+        botName: name,
+        accountAuths: [[name]],
+      };
+      const actual = matchBotHelper.isAccountsIncludeBot(mock);
+      expect(actual).to.be.eq(true);
+    });
+    it('should return false if auth accounts not include bot', async () => {
+      const name = faker.random.string();
+      const mock = {
+        botName: faker.random.string(),
+        accountAuths: [[name]],
+      };
+      const actual = matchBotHelper.isAccountsIncludeBot(mock);
+      expect(actual).to.be.eq(false);
+    });
+  });
+
+  describe('On getExtendedBotsArr', async () => {
+    it('should return valid bot names', async () => {
+      const expected = ['authorbot', 'curatorbot'];
+      const actual = matchBotHelper.getExtendedBotsArr();
+      expect(actual).to.be.deep.eq(expected);
+    });
+  });
+
 });

@@ -232,7 +232,7 @@ const checkDisable = async ({ bot_name: botName, account_auths: accountAuths }) 
   }
 };
 
-const getExtendedBotsArr = () => [process.env.AUTHOR_BOT, process.env.CURATOR_BOT];
+const getExtendedBotsArr = () => [process.env.AUTHOR_BOT_NAME, process.env.CURATOR_BOT_NAME];
 
 const isAccountsIncludeBot = ({ botName, accountAuths }) => (
   _.flattenDepth(accountAuths).includes(botName));
@@ -651,8 +651,8 @@ const unsetBot = async ({ botName, json }) => {
 
 const getMatchBotName = (type) => {
   const botName = {
-    [MATCH_BOT_TYPES.AUTHOR]: () => process.env.AUTHOR_BOT,
-    [MATCH_BOT_TYPES.CURATOR]: () => process.env.CURATOR_BOT,
+    [MATCH_BOT_TYPES.AUTHOR]: () => process.env.AUTHOR_BOT_NAME,
+    [MATCH_BOT_TYPES.CURATOR]: () => process.env.CURATOR_BOT_NAME,
     default: () => '',
   };
   return (botName[type] || botName.default)();
@@ -660,8 +660,8 @@ const getMatchBotName = (type) => {
 
 const getMatchBotType = (botName) => {
   const botType = {
-    [process.env.AUTHOR_BOT]: () => MATCH_BOT_TYPES.AUTHOR,
-    [process.env.CURATOR_BOT]: () => MATCH_BOT_TYPES.CURATOR,
+    [process.env.AUTHOR_BOT_NAME]: () => MATCH_BOT_TYPES.AUTHOR,
+    [process.env.CURATOR_BOT_NAME]: () => MATCH_BOT_TYPES.CURATOR,
     default: () => '',
   };
   return (botType[botName] || botType.default)();
@@ -675,7 +675,11 @@ module.exports = {
   updateCompensationFee,
   recountMatchBotVotes,
   updateUpvotedRecord,
+  isAccountsIncludeBot,
   getNeededVoteWeight,
+  getExtendedBotsArr,
+  getMatchBotName,
+  getMatchBotType,
   executeUpvotes,
   executeRecount,
   checkForGuest,
