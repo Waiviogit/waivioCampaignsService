@@ -1,4 +1,6 @@
-const { faker, ExtendedMatchBot, moment } = require('test/testHelper');
+const {
+  faker, ExtendedMatchBot, moment, _,
+} = require('test/testHelper');
 const { MATCH_BOT_TYPES } = require('constants/matchBotsData');
 
 const Create = async (data = {}) => {
@@ -8,13 +10,18 @@ const Create = async (data = {}) => {
     accounts: data.accounts || [{
       name: data.sponsor || `${faker.name.firstName()}${faker.random.number()}`,
       minVotingPower: data.minVotingPower || 8000,
-      votingPercent: data.votingPercent || 1,
       enabled: data.enabled !== false,
-      expiredAt: data.expiredAt || moment().utc().add(1, 'days').startOf('day'),
+      expiredAt: data.expiredAt || moment().utc().add(1, 'days').startOf('day').toDate(),
       note: data.note || 'some note',
     },
     ],
   };
+  if (data.createData) {
+    return {
+      ..._.pick(matchBotData, ['botName', 'type']),
+      ...matchBotData.accounts[0],
+    };
+  }
   const matchBot = new ExtendedMatchBot(matchBotData);
 
   await matchBot.save();

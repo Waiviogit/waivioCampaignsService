@@ -23,6 +23,10 @@ const ExtendedMatchBotSchema = new Schema({
   ],
 }, { timestamps: true });
 
-ExtendedMatchBotSchema.index({ bot_name: 1, type: 1 }, { unique: true });
+ExtendedMatchBotSchema.index({ botName: 1, type: 1 }, { unique: true });
+ExtendedMatchBotSchema.pre('updateOne', function (next) {
+  this.options.runValidators = true;
+  next();
+});
 
 module.exports = db.model('extended_match_bots', ExtendedMatchBotSchema);

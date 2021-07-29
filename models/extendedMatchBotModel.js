@@ -31,7 +31,7 @@ exports.createMatchBot = async (data) => {
     const { botName, type } = data;
     const result = await ExtendedMatchBot.updateOne(
       { botName, type },
-      { $addToSet: { sponsors: _.omit(data, ['botName', 'type']) } },
+      { $addToSet: { accounts: _.omit(data, ['botName', 'type']) } },
       { upsert: true, setDefaultsOnInsert: true, runValidators: true },
     );
 
@@ -46,7 +46,7 @@ exports.updateMatchBot = async (data) => {
     const { botName, type, name } = data;
     const result = await ExtendedMatchBot.updateOne(
       { botName, type, 'accounts.name': name },
-      { $set: { 'sponsors.$': _.omit(data, ['botName', 'type']) } },
+      { $set: { 'accounts.$': _.omit(data, ['botName', 'type']) } },
       { runValidators: true, setDefaultsOnInsert: true },
     );
 
@@ -71,7 +71,7 @@ exports.unsetMatchBot = async ({ botName, type, name }) => {
 
 exports.updateStatus = async ({ botName, type, enabled }) => {
   const result = await ExtendedMatchBot.updateOne(
-    { botName, type }, { 'sponsors.$[].enabled': enabled }, { runValidators: true },
+    { botName, type }, { 'accounts.$[].enabled': enabled }, { runValidators: true },
   );
 
   return !!result.n;
