@@ -8,7 +8,7 @@ const Create = async (data = {}) => {
     botName: data.botName || `${faker.name.firstName()}${faker.random.number()}`,
     type: data.type || _.sample(Object.values(MATCH_BOT_TYPES)),
     accounts: data.accounts || [{
-      name: data.sponsor || `${faker.name.firstName()}${faker.random.number()}`,
+      name: data.name || `${faker.name.firstName()}${faker.random.number()}`,
       minVotingPower: data.minVotingPower || 8000,
       enabled: data.enabled !== false,
       expiredAt: data.expiredAt || moment().utc().add(1, 'days').startOf('day').toDate(),

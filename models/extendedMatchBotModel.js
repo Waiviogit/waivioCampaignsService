@@ -18,8 +18,8 @@ exports.findOne = async (condition, select) => {
 };
 
 exports.setMatchBot = async (data) => {
-  const findMatchBot = await ExtendedMatchBot.findOne(
-    { botName: data.bot_name, 'account.name': data.name, type: data.type },
+  const { result: findMatchBot } = await this.findOne(
+    { botName: data.botName, 'accounts.name': data.name, type: data.type },
   );
 
   if (findMatchBot) return this.updateMatchBot(data);
