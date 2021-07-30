@@ -6,6 +6,7 @@ const {
   MatchBotFactory, BotUpvoteFactory, PostFactory, PaymentHistoryFactory, CampaignFactory,
 } = require('test/factories');
 const { MATCH_BOT_TYPES } = require('constants/matchBotsData');
+const { getSetBotData } = require('test/mockData/matchBots');
 
 describe('matchBotHelper', async () => {
   describe('payableRecount', async () => {
@@ -904,6 +905,36 @@ describe('matchBotHelper', async () => {
       const expected = ['authorbot', 'curatorbot'];
       const actual = matchBotHelper.getExtendedBotsArr();
       expect(actual).to.be.deep.eq(expected);
+    });
+  });
+
+  describe('On setBot', async () => {
+    describe('On Error', async () => {
+      const expected = { result: false };
+      it('should failed when not send type', async () => {
+        const actual = await matchBotHelper.setBot(getSetBotData({ remove: 'type' }));
+        expect(actual).to.be.deep.eq(expected);
+      });
+      it('should failed when not send name', async () => {
+        const actual = await matchBotHelper.setBot(getSetBotData({ remove: 'name' }));
+        expect(actual).to.be.deep.eq(expected);
+      });
+      it('should failed when not send enabled', async () => {
+        const actual = await matchBotHelper.setBot(getSetBotData({ remove: 'enabled' }));
+        expect(actual).to.be.deep.eq(expected);
+      });
+      it('should when type curator and not send voteRatio', async () => {
+        const actual = await matchBotHelper.setBot(
+          getSetBotData({ type: MATCH_BOT_TYPES.CURATOR, remove: 'voteRatio' }),
+        );
+        expect(actual).to.be.deep.eq(expected);
+      });
+      it('should when type author and not send voteWeight', async () => {
+        const actual = await matchBotHelper.setBot(
+          getSetBotData({ type: MATCH_BOT_TYPES.AUTHOR, remove: 'voteWeight' }),
+        );
+        expect(actual).to.be.deep.eq(expected);
+      });
     });
   });
 });
