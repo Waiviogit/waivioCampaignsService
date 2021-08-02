@@ -1,4 +1,5 @@
 const { MATCH_BOT_TYPES, BOTS_QUEUE, BOT_ENV_KEY } = require('constants/matchBotsData');
+const sentryHelper = require('utilities/helpers/sentryHelper');
 const { curatorsBotQueue } = require('utilities/redis/queues');
 const validators = require('controllers/validators');
 const { extendedMatchBotModel } = require('models');
@@ -19,7 +20,10 @@ exports.sendToCuratorsQueue = async ({ vote, bots }) => {
     if (vote.weight < 0 && !_.get(bot, 'accounts[0].enablePowerDown')) continue;
     const { params, validationError } = validators
       .validate(getCuratorVoteData({ vote, bot }), validators.matchBots.matchBotVoteSchema);
-    if (validationError) continue; // #TODO Sentry
+    if (validationError) {
+      await sentryHelper.handleError(validationError);
+      continue;
+    }
 
     curatorsBotQueue.send(JSON.stringify(params), BOTS_QUEUE.CURATOR.DELAY);
   }
