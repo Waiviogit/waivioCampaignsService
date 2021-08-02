@@ -11,7 +11,8 @@ const Create = async (data = {}) => {
       name: data.name || `${faker.name.firstName()}${faker.random.number()}`,
       minVotingPower: data.minVotingPower || 8000,
       enabled: data.enabled !== false,
-      expiredAt: data.expiredAt || moment().utc().add(1, 'days').startOf('day').toDate(),
+      expiredAt: data.expiredAt || moment().utc().add(1, 'days').startOf('day')
+        .toDate(),
       note: data.note || 'some note',
     },
     ],
@@ -21,6 +22,9 @@ const Create = async (data = {}) => {
       ..._.pick(matchBotData, ['botName', 'type']),
       ...matchBotData.accounts[0],
     };
+  }
+  if (data.onlyData) {
+    return matchBotData;
   }
   const matchBot = new ExtendedMatchBot(matchBotData);
 

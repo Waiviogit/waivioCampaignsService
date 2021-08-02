@@ -1,51 +1,55 @@
 const authorsBot = require('utilities/operations/matchBots/authorsBot');
 const {
-  expect, revoteOnPost, dropDatabase, sinon, faker,
-  _, matchBotModel, BotUpvote, matchBotHelper, hiveOperations, hiveClient, moment,
+  expect, sinon, faker, extendedMatchBotModel,
 } = require('test/testHelper');
-const { MATCH_BOT_TYPES } = require('constants/matchBotsData');
-const { BotUpvoteFactory, ExtendedMatchBotFactory } = require('test/factories');
-const { getPostData, getVoteData } = require('./mocks');
+
+const { ExtendedMatchBotFactory } = require('test/factories');
+const { getPostData } = require('./mocks');
 
 describe('On processAuthorsMatchBot', async () => {
-  beforeEach(async () => {
-    await dropDatabase();
-    const data = getPostData();
-
-    const accounts = [
-      {
-        name: `${faker.name.firstName()}${faker.random.number()}`,
-        votingPercent: 1,
-        minVotingPower: 8000,
-        enabled: true,
-        expiredAt: moment().utc().add(1, 'days').startOf('day'),
-        note: '',
-      },
-      {
-        name: data.author,
-        votingPercent: 1,
-        minVotingPower: 8000,
-        enabled: true,
-        expiredAt: moment().utc().add(1, 'days').startOf('day'),
-        note: '',
-      },
-    ];
-    await ExtendedMatchBotFactory.Create({ type: MATCH_BOT_TYPES.AUTHOR, accounts });
-    await authorsBot.processAuthorsMatchBot(data);
+  afterEach(() => {
+    sinon.restore();
   });
-  it('should ', async () => {
-    console.log('yo');
+  describe('When dont find bots or comment', async () => {
+    let result;
+    beforeEach(async () => {
+      sinon.stub(extendedMatchBotModel, 'find').returns({ result: [] });
+      sinon.spy(authorsBot, 'sendToAuthorsQueue');
+      const data = getPostData();
+      result = await authorsBot.processAuthorsMatchBot(data);
+    });
+    it('should return false result when not found bots', async () => {
+      expect(result).to.be.deep.eq({ result: false });
+    });
+    it('should return false result when parent_author not empty', async () => {
+      const data = getPostData({ parent_author: faker.random.string() });
+      result = await authorsBot.processAuthorsMatchBot(data);
+      expect(result).to.be.deep.eq({ result: false });
+    });
+    it('should not call sendToAuthorsQueue', async () => {
+      const actual = authorsBot.sendToAuthorsQueue.called;
+      expect(actual).to.be.false;
+    });
   });
-});
-
-describe('On voteAuthorMatchBot', async () => {
-  beforeEach(async () => {
-    await dropDatabase();
-    const data = getVoteData({ stringify: true });
-    await authorsBot.voteAuthorMatchBot(data);
-  });
-
-  it('should ', async () => {
-    console.log('yo');
+  describe('When bots founded', async () => {
+    let bot, data;
+    beforeEach(async () => {
+      data = getPostData();
+      bot = await ExtendedMatchBotFactory.Create({ onlyData: true });
+      sinon.stub(extendedMatchBotModel, 'find').returns({ result: [bot] });
+      sinon.spy(authorsBot, 'sendToAuthorsQueue');
+      await authorsBot.processAuthorsMatchBot(data);
+    });
+    it('should call sendToAuthorsQueue once', async () => {
+      const actual = authorsBot.sendToAuthorsQueue.calledOnce;
+      expect(actual).to.be.true;
+    });
+    it('should call sendToAuthorsQueue with proper params', async () => {
+      const actual = authorsBot.sendToAuthorsQueue.calledWith({
+        post: data,
+        bots: [bot],
+      });
+      expect(actual).to.be.true;
+    });
   });
 });
