@@ -1,5 +1,5 @@
 const {
-  matchBotHelper, expect, sinon, dropDatabase, moment, _,
+  matchBotHelper, expect, sinon, dropDatabase, moment, _, extendedMatchBotModel,
   BotUpvote, PaymentHistory, MatchBot, faker, hiveOperations,
 } = require('test/testHelper');
 const {
@@ -909,6 +909,9 @@ describe('matchBotHelper', async () => {
   });
 
   describe('On setBot', async () => {
+    afterEach(() => {
+      sinon.restore();
+    });
     describe('On Error', async () => {
       const expected = { result: false };
       it('should failed when not send type', async () => {
@@ -933,6 +936,66 @@ describe('matchBotHelper', async () => {
         const actual = await matchBotHelper.setBot(
           getSetBotData({ type: MATCH_BOT_TYPES.AUTHOR, remove: 'voteWeight' }),
         );
+        expect(actual).to.be.deep.eq(expected);
+      });
+      it('should failed when dont found bot and follow acc', async () => {
+        sinon.stub(hiveOperations, 'getAccountsInfo').returns(Promise.resolve([]));
+        const actual = await matchBotHelper.setBot(
+          getSetBotData(),
+        );
+        expect(actual).to.be.deep.eq(expected);
+      });
+      it('should failed when dont found  follow acc', async () => {
+        sinon.stub(hiveOperations, 'getAccountsInfo').returns(Promise.resolve([faker.random.string()]));
+        const actual = await matchBotHelper.setBot(
+          getSetBotData(),
+        );
+        expect(actual).to.be.deep.eq(expected);
+      });
+      it('should failed when dont found bot', async () => {
+        sinon.stub(hiveOperations, 'getAccountsInfo').returns(
+          Promise.resolve([undefined, faker.random.string()]),
+        );
+        const actual = await matchBotHelper.setBot(
+          getSetBotData(),
+        );
+        expect(actual).to.be.deep.eq(expected);
+      });
+    });
+    describe('On ok', async () => {
+      it('should not failed on valid params', async () => {
+        sinon.stub(hiveOperations, 'getAccountsInfo').returns(
+          Promise.resolve([faker.random.string(), faker.random.string()]),
+        );
+        const actual = await matchBotHelper.setBot(getSetBotData());
+        expect(actual).to.be.deep.eq({ result: true });
+      });
+    });
+  });
+
+  describe('On unset bot', async () => {
+    afterEach(() => {
+      sinon.restore();
+    });
+    describe('On Ok', async () => {
+      it('should not failed with valid params', async () => {
+        sinon.stub(extendedMatchBotModel, 'unsetMatchBot').returns(Promise.resolve(true));
+        const actual = await matchBotHelper.unsetBot(getSetBotData());
+        expect(actual).to.be.deep.eq({ result: true });
+      });
+    });
+    describe('On Error', async () => {
+      const expected = { result: false };
+      it('should failed when not find bot', async () => {
+        const actual = await matchBotHelper.unsetBot(getSetBotData());
+        expect(actual).to.be.deep.eq(expected);
+      });
+      it('should when missing name', async () => {
+        const actual = await matchBotHelper.unsetBot(getSetBotData({ remove: 'name' }));
+        expect(actual).to.be.deep.eq(expected);
+      });
+      it('should when missing type', async () => {
+        const actual = await matchBotHelper.unsetBot(getSetBotData({ remove: 'type' }));
         expect(actual).to.be.deep.eq(expected);
       });
     });

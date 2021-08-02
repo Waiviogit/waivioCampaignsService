@@ -58,7 +58,7 @@ exports.updateMatchBot = async (data) => {
 
 exports.unsetMatchBot = async ({ botName, type, name }) => {
   try {
-    const result = ExtendedMatchBot.updateOne(
+    const result = await ExtendedMatchBot.updateOne(
       { botName, type },
       { $pull: { accounts: { name } } },
     );
