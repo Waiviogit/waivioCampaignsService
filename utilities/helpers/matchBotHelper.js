@@ -589,7 +589,7 @@ const voteExtendedMatchBots = async (voteData) => {
     voter, author, permlink, voteWeight, minVotingPower, minHBD, botKey,
   } = params;
   const validVote = await canVote({
-    voteWeight: Math.abs(voteWeight / 10), // #TODO  100?
+    voteWeight: Math.abs(voteWeight / 100),
     minVotingPower,
     name: voter,
     permlink,
