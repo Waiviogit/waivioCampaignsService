@@ -2475,13 +2475,14 @@ describe('eligible: if have received a reward from campaign in the last frequenc
   });
 });
 describe('eligible: if have not received a reward from campaign in the last frequency_assign days', async () => {
-  let user, wobject;
+  let user, wobject, secondary;
   beforeEach(async () => {
     await dropDatabase();
 
     const frequency = _.random(1, 30);
     user = await UserFactory.Create({ followers_count: 10, count_posts: 10 });
     wobject = await WobjectFactory.Create();
+    secondary = await WobjectFactory.Create();
     const users = [];
     for (let i = 0; i < _.random(2, 5); i++) {
       const time = moment().subtract(frequency * (i + 1), 'days').toISOString();
@@ -2500,6 +2501,7 @@ describe('eligible: if have not received a reward from campaign in the last freq
       status: 'active',
       frequency_assign: frequency,
       requiredObject: wobject.author_permlink,
+      objects: [secondary.author_permlink],
       users,
       customTimestamps : true,
     });
@@ -2512,12 +2514,13 @@ describe('eligible: if have not received a reward from campaign in the last freq
   });
 });
 describe('route /campaigns-api/rewards/:userName', async () => {
-  let user, campaign, wobject;
+  let user, campaign, wobject, secondary;
   beforeEach(async () => {
     await dropDatabase();
     wobject = await WobjectFactory.Create();
+    secondary = await WobjectFactory.Create();
     campaign = await CampaignFactory.Create({
-      status: 'active', requiredObject: wobject.author_permlink,
+      status: 'active', requiredObject: wobject.author_permlink, objects: [secondary.author_permlink],
     });
     user = await UserFactory.Create({
       name: faker.name.firstName(),
