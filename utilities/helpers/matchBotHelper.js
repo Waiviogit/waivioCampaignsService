@@ -3,6 +3,7 @@ const {
   botUpvoteModel, postModel, matchBotModel, paymentHistoryModel, campaignModel, extendedMatchBotModel,
 } = require('models');
 const { hiveClient, hiveOperations } = require('utilities/hiveApi');
+const sentryHelper = require('utilities/helpers/sentryHelper');
 const { MATCH_BOT_TYPES } = require('constants/matchBotsData');
 const { voteCoefficients } = require('constants/constants');
 const jsonHelper = require('utilities/helpers/jsonHelper');
@@ -580,7 +581,10 @@ const checkForGuest = (author, metadata) => {
 const voteExtendedMatchBots = async (voteData) => {
   const { params, validationError } = validators
     .validate(jsonHelper.parseJson(voteData), validators.matchBots.matchBotVoteSchema);
-  if (validationError) console.log(validationError); // #TODO Sentry
+  if (validationError) {
+    await sentryHelper.handleError(validationError);
+    return { result: false };
+  }
   const {
     voter, author, permlink, voteWeight, minVotingPower, minHBD, botKey,
   } = params;
@@ -592,7 +596,7 @@ const voteExtendedMatchBots = async (voteData) => {
     minHBD,
     author,
   });
-  if (!canVote) return;
+  if (!canVote) return { result: false };
   const { result: vote, error: votingError } = await hiveClient.execute(
     hiveOperations.likePost,
     {
@@ -603,7 +607,11 @@ const voteExtendedMatchBots = async (voteData) => {
       voter,
     },
   );
-  if (votingError) console.log(votingError); // #TODO Sentry
+  if (votingError) {
+    await sentryHelper.handleError(votingError);
+    return { result: false };
+  }
+  return { result: !!vote };
 };
 
 const canVote = async ({

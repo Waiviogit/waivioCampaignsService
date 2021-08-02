@@ -1014,7 +1014,7 @@ describe('matchBotHelper', async () => {
           isPost: true,
         });
         const actual = await matchBotHelper.canVote(mock);
-        expect(actual).to.be.eq(false)
+        expect(actual).to.be.eq(false);
       });
       it('should return false when voteValueHBD less than required', async () => {
         const mock = getCanVoteMock();
@@ -1024,7 +1024,7 @@ describe('matchBotHelper', async () => {
           isPost: true,
         });
         const actual = await matchBotHelper.canVote(mock);
-        expect(actual).to.be.eq(false)
+        expect(actual).to.be.eq(false);
       });
       it('should return false when not a post', async () => {
         const mock = getCanVoteMock();
@@ -1034,7 +1034,7 @@ describe('matchBotHelper', async () => {
           isPost: false,
         });
         const actual = await matchBotHelper.canVote(mock);
-        expect(actual).to.be.eq(false)
+        expect(actual).to.be.eq(false);
       });
     });
     describe('On Ok', async () => {
@@ -1046,8 +1046,11 @@ describe('matchBotHelper', async () => {
           isPost: true,
         });
         const actual = await matchBotHelper.canVote(mock);
-        expect(actual).to.be.eq(true)
+        expect(actual).to.be.eq(true);
       });
     });
+  });
+  describe('On voteExtendedMatchBots', async () => {
+
   });
 });
