@@ -6,7 +6,7 @@ const {
   MatchBotFactory, BotUpvoteFactory, PostFactory, PaymentHistoryFactory, CampaignFactory,
 } = require('test/factories');
 const { MATCH_BOT_TYPES } = require('constants/matchBotsData');
-const { getSetBotData } = require('test/mockData/matchBots');
+const { getSetBotData, getCanVoteMock } = require('test/mockData/matchBots');
 
 describe('matchBotHelper', async () => {
   describe('payableRecount', async () => {
@@ -997,6 +997,56 @@ describe('matchBotHelper', async () => {
       it('should when missing type', async () => {
         const actual = await matchBotHelper.unsetBot(getSetBotData({ remove: 'type' }));
         expect(actual).to.be.deep.eq(expected);
+      });
+    });
+  });
+
+  describe('On canVote', async () => {
+    afterEach(() => {
+      sinon.restore();
+    });
+    describe('On Error', async () => {
+      it('should return false when voting power lower than required', async () => {
+        const mock = getCanVoteMock();
+        sinon.stub(hiveOperations, 'calculateVotePower').returns({
+          votePower: mock.minVotingPower - _.random(1, 100),
+          voteValueHBD: mock.minHBD + _.random(1, 100),
+          isPost: true,
+        });
+        const actual = await matchBotHelper.canVote(mock);
+        expect(actual).to.be.eq(false)
+      });
+      it('should return false when voteValueHBD less than required', async () => {
+        const mock = getCanVoteMock();
+        sinon.stub(hiveOperations, 'calculateVotePower').returns({
+          votePower: mock.minVotingPower + _.random(1, 100),
+          voteValueHBD: mock.minHBD - _.random(1, 100),
+          isPost: true,
+        });
+        const actual = await matchBotHelper.canVote(mock);
+        expect(actual).to.be.eq(false)
+      });
+      it('should return false when not a post', async () => {
+        const mock = getCanVoteMock();
+        sinon.stub(hiveOperations, 'calculateVotePower').returns({
+          votePower: mock.minVotingPower + _.random(1, 100),
+          voteValueHBD: mock.minHBD + _.random(1, 100),
+          isPost: false,
+        });
+        const actual = await matchBotHelper.canVote(mock);
+        expect(actual).to.be.eq(false)
+      });
+    });
+    describe('On Ok', async () => {
+      it('should return true on valid params', async () => {
+        const mock = getCanVoteMock();
+        sinon.stub(hiveOperations, 'calculateVotePower').returns({
+          votePower: mock.minVotingPower + _.random(1, 100),
+          voteValueHBD: mock.minHBD + _.random(1, 100),
+          isPost: true,
+        });
+        const actual = await matchBotHelper.canVote(mock);
+        expect(actual).to.be.eq(true)
       });
     });
   });

@@ -25,3 +25,15 @@ exports.getSetBotData = (data = {}) => {
 
   return { botName, json };
 };
+
+exports.getCanVoteMock = (data = {}) => {
+  const canVoteData = {
+    name: data.name || faker.random.string(),
+    voteWeight: data.voteWeight || faker.random.string(),
+    author: data.author || faker.random.string(),
+    permlink: data.permlink || faker.random.string(),
+    minVotingPower: data.minVotingPower || _.random(1, 10000),
+    minHBD: data.minHBD || _.random(0.001, 10),
+  };
+  return canVoteData;
+};
