@@ -1,4 +1,6 @@
-const { MATCH_BOT_TYPES, BOTS_QUEUE, BOT_ENV_KEY, WORK_BOTS_ENV } = require('constants/matchBotsData');
+const {
+  MATCH_BOT_TYPES, BOTS_QUEUE, BOT_ENV_KEY, WORK_BOTS_ENV,
+} = require('constants/matchBotsData');
 const sentryHelper = require('utilities/helpers/sentryHelper');
 const { authorsBotQueue } = require('utilities/redis/queues');
 const validators = require('controllers/validators');

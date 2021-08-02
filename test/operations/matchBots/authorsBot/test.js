@@ -1,10 +1,11 @@
 const authorsBot = require('utilities/operations/matchBots/authorsBot');
 const {
-  expect, sinon, faker, extendedMatchBotModel,
+  expect, sinon, faker, extendedMatchBotModel, _,
 } = require('test/testHelper');
+const { authorsBotQueue } = require('utilities/redis/queues');
 
 const { ExtendedMatchBotFactory } = require('test/factories');
-const { getPostData } = require('./mocks');
+const { getPostData, getBotData } = require('./mocks');
 
 describe('On processAuthorsMatchBot', async () => {
   afterEach(() => {
@@ -50,6 +51,50 @@ describe('On processAuthorsMatchBot', async () => {
         bots: [bot],
       });
       expect(actual).to.be.true;
+    });
+  });
+});
+
+describe('On sendToAuthorsQueue', async () => {
+  afterEach(() => {
+    sinon.restore();
+  });
+  describe('On valid data', async () => {
+    const counter = _.random(2, 10);
+    beforeEach(async () => {
+      sinon.spy(authorsBotQueue, 'send');
+      const bots = [];
+      for (let i = 0; i < counter; i++) {
+        bots.push(getBotData());
+      }
+      const post = getPostData();
+      await authorsBot.sendToAuthorsQueue({ post, bots });
+    });
+    it('should call authorsBotQueue send times valid bots array length', async () => {
+      const actual = authorsBotQueue.send.callCount;
+      expect(actual).to.be.eq(counter);
+    });
+  });
+  describe('On invalid data', async () => {
+    beforeEach(async () => {
+      sinon.spy(authorsBotQueue, 'send');
+    });
+    it('should not call on invalid post data', async () => {
+      const post = getPostData({ remove: _.sample(['author', 'permlink']) });
+      const bots = [getBotData()];
+      await authorsBot.sendToAuthorsQueue({ post, bots });
+
+      const actual = authorsBotQueue.send.called;
+      expect(actual).to.be.false;
+    });
+
+    it('should not call on invalid bots data', async () => {
+      const post = getPostData();
+      const bots = [getBotData({ remove: _.sample(['minVotingPower', 'voteWeight']) })];
+      await authorsBot.sendToAuthorsQueue({ post, bots });
+
+      const actual = authorsBotQueue.send.called;
+      expect(actual).to.be.false;
     });
   });
 });
