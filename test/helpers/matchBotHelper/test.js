@@ -1,12 +1,12 @@
 const {
   matchBotHelper, expect, sinon, dropDatabase, moment, _, extendedMatchBotModel,
-  BotUpvote, PaymentHistory, MatchBot, faker, hiveOperations,
+  BotUpvote, PaymentHistory, MatchBot, faker, hiveOperations, sentryHelper,
 } = require('test/testHelper');
 const {
   MatchBotFactory, BotUpvoteFactory, PostFactory, PaymentHistoryFactory, CampaignFactory,
 } = require('test/factories');
 const { MATCH_BOT_TYPES } = require('constants/matchBotsData');
-const { getSetBotData, getCanVoteMock } = require('test/mockData/matchBots');
+const { getSetBotData, getCanVoteMock, getVoteDataMock } = require('test/mockData/matchBots');
 
 describe('matchBotHelper', async () => {
   describe('payableRecount', async () => {
@@ -1051,6 +1051,90 @@ describe('matchBotHelper', async () => {
     });
   });
   describe('On voteExtendedMatchBots', async () => {
-
+    let result;
+    afterEach(() => {
+      sinon.restore();
+    });
+    describe('On Error', async () => {
+      const expected = { result: false };
+      describe('On validation error', async () => {
+        beforeEach(async () => {
+          sinon.spy(sentryHelper, 'handleError');
+          const mock = getVoteDataMock({
+            remove: _.sample([
+              'permlink',
+              'author',
+              'voter',
+              'botKey',
+              'minHBD',
+              'minVotingPower',
+              'voteWeight',
+            ]),
+          });
+          result = await matchBotHelper.voteExtendedMatchBots(mock);
+        });
+        it('should return false result', async () => {
+          expect(result).to.be.deep.eq(expected);
+        });
+        it('should call sentry once', async () => {
+          const actual = sentryHelper.handleError.calledOnce;
+          expect(actual).to.be.true;
+        });
+      });
+      describe('When can vote return false', async () => {
+        beforeEach(async () => {
+          const mock = getVoteDataMock();
+          sinon.stub(hiveOperations, 'calculateVotePower').returns({
+            votePower: mock.minVotingPower + _.random(1, 100),
+            voteValueHBD: mock.minHBD + _.random(1, 100),
+            isPost: false,
+          });
+          result = await matchBotHelper.voteExtendedMatchBots(JSON.stringify(mock));
+        });
+        it('should return false result', async () => {
+          expect(result).to.be.deep.eq(expected);
+        });
+      });
+      describe('On like post error', async () => {
+        beforeEach(async () => {
+          const mock = getVoteDataMock();
+          sinon.stub(hiveOperations, 'calculateVotePower').returns({
+            votePower: mock.minVotingPower + _.random(1, 100),
+            voteValueHBD: mock.minHBD + _.random(1, 100),
+            isPost: true,
+          });
+          sinon.stub(hiveOperations, 'likePost').returns({ error: {} });
+          sinon.spy(sentryHelper, 'handleError');
+          result = await matchBotHelper.voteExtendedMatchBots(JSON.stringify(mock));
+        });
+        it('should should return false result', async () => {
+          expect(result).to.be.deep.eq(expected);
+        });
+        it('should call sentry once', async () => {
+          const actual = sentryHelper.handleError.calledOnce;
+          expect(actual).to.be.true;
+        });
+      });
+    });
+    describe('On Ok', async () => {
+      beforeEach(async () => {
+        const mock = getVoteDataMock();
+        sinon.stub(hiveOperations, 'calculateVotePower').returns({
+          votePower: mock.minVotingPower + _.random(1, 100),
+          voteValueHBD: mock.minHBD + _.random(1, 100),
+          isPost: true,
+        });
+        sinon.stub(hiveOperations, 'likePost').returns({ result: {} });
+        sinon.spy(sentryHelper, 'handleError');
+        result = await matchBotHelper.voteExtendedMatchBots(JSON.stringify(mock));
+      });
+      it('should return true result', async () => {
+        expect(result).to.be.deep.eq({result: true})
+      });
+      it('should not call sentry', async () => {
+        const actual = sentryHelper.handleError.calledOnce;
+        expect(actual).to.be.false;
+      });
+    });
   });
 });

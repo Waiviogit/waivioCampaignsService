@@ -588,7 +588,7 @@ const voteExtendedMatchBots = async (voteData) => {
   const {
     voter, author, permlink, voteWeight, minVotingPower, minHBD, botKey,
   } = params;
-  const canVote = await canVote({
+  const validVote = await canVote({
     voteWeight: Math.abs(voteWeight / 10), // #TODO  100?
     minVotingPower,
     name: voter,
@@ -596,7 +596,7 @@ const voteExtendedMatchBots = async (voteData) => {
     minHBD,
     author,
   });
-  if (!canVote) return { result: false };
+  if (!validVote) return { result: false };
   const { result: vote, error: votingError } = await hiveClient.execute(
     hiveOperations.likePost,
     {

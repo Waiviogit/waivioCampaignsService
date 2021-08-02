@@ -1,4 +1,4 @@
-const { MATCH_BOT_TYPES } = require('constants/matchBotsData');
+const { MATCH_BOT_TYPES, BOT_ENV_KEY } = require('constants/matchBotsData');
 const { faker } = require('test/testHelper');
 const moment = require('moment');
 const _ = require('lodash');
@@ -36,4 +36,20 @@ exports.getCanVoteMock = (data = {}) => {
     minHBD: data.minHBD || _.random(0.001, 10),
   };
   return canVoteData;
+};
+
+exports.getVoteDataMock = (data = {}) => {
+  const voteData = {
+    voter: data.voter || faker.random.string(),
+    botKey: data.botKey || _.sample(Object.values(BOT_ENV_KEY)),
+    author: data.author || faker.random.string(),
+    permlink: data.permlink || faker.random.string(),
+    minVotingPower: data.minVotingPower || _.random(1, 10000),
+    minHBD: data.minHBD || _.random(0.001, 10),
+    voteWeight: data.voteWeight || _.random(1, 10000),
+  };
+  if (data.remove) {
+    delete voteData[data.remove];
+  }
+  return voteData;
 };
