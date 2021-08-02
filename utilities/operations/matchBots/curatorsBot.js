@@ -1,4 +1,6 @@
-const { MATCH_BOT_TYPES, BOTS_QUEUE, BOT_ENV_KEY } = require('constants/matchBotsData');
+const {
+  MATCH_BOT_TYPES, BOTS_QUEUE, BOT_ENV_KEY, WORK_BOTS_ENV,
+} = require('constants/matchBotsData');
 const sentryHelper = require('utilities/helpers/sentryHelper');
 const { curatorsBotQueue } = require('utilities/redis/queues');
 const validators = require('controllers/validators');
@@ -6,12 +8,13 @@ const { extendedMatchBotModel } = require('models');
 const _ = require('lodash');
 
 exports.processCuratorsMatchBot = async (vote) => {
+  // if (_.includes(WORK_BOTS_ENV, process.env.NODE_ENV)) return;
   const accountsCondition = { accounts: { $elemMatch: { name: vote.voter, enabled: true } } };
   const { result: bots } = await extendedMatchBotModel.find(
     { $and: [accountsCondition, { type: MATCH_BOT_TYPES.CURATOR }] },
     { ...accountsCondition, botName: 1 },
   );
-  if (_.isEmpty(bots)) return;
+  if (_.isEmpty(bots)) return { result: false };
   return this.sendToCuratorsQueue({ vote, bots });
 };
 

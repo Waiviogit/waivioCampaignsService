@@ -20,3 +20,8 @@ exports.BOT_ENV_KEY = {
   CURATOR: 'CURATOR_BOT_KEY',
   AUTHOR: 'AUTHOR_BOT_KEY',
 };
+
+exports.WORK_BOTS_ENV = [
+  'test',
+  'production',
+];

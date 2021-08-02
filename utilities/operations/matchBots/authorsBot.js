@@ -1,4 +1,4 @@
-const { MATCH_BOT_TYPES, BOTS_QUEUE, BOT_ENV_KEY } = require('constants/matchBotsData');
+const { MATCH_BOT_TYPES, BOTS_QUEUE, BOT_ENV_KEY, WORK_BOTS_ENV } = require('constants/matchBotsData');
 const sentryHelper = require('utilities/helpers/sentryHelper');
 const { authorsBotQueue } = require('utilities/redis/queues');
 const validators = require('controllers/validators');
@@ -6,13 +6,14 @@ const { extendedMatchBotModel } = require('models');
 const _ = require('lodash');
 
 exports.processAuthorsMatchBot = async (post) => {
-  if (post.parent_author) return;
+  // if (_.includes(WORK_BOTS_ENV, process.env.NODE_ENV)) return;
+  if (post.parent_author) return { result: false };
   const accountsCondition = { accounts: { $elemMatch: { name: post.author, enabled: true } } };
   const { result: bots } = await extendedMatchBotModel.find(
     { $and: [accountsCondition, { type: MATCH_BOT_TYPES.AUTHOR }] },
     { ...accountsCondition, botName: 1 },
   );
-  if (_.isEmpty(bots)) return;
+  if (_.isEmpty(bots)) return { result: false };
   return this.sendToAuthorsQueue({ post, bots });
 };
 
