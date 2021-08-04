@@ -35,6 +35,7 @@ exports.sendToCuratorsQueue = async ({ vote, bots }) => {
 const getCuratorVoteData = ({ vote, bot }) => ({
   voteWeight: getWeightFromRatio({ curatorWeight: vote.weight, ratio: _.get(bot, 'accounts[0].voteRatio') }),
   minVotingPower: _.get(bot, 'accounts[0].minVotingPower'),
+  voteComments: _.get(bot, 'accounts[0].voteComments', false),
   minHBD: BOTS_QUEUE.CURATOR.MIN_HBD,
   botKey: BOT_ENV_KEY.CURATOR,
   permlink: vote.permlink,

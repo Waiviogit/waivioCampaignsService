@@ -28,6 +28,7 @@ exports.matchBotVoteSchema = Joi.object().keys({
   voteWeight: Joi.number().integer().min(-10000).max(10000)
     .invalid(0)
     .required(),
+  voteComments: Joi.boolean(),
 }).options(options);
 
 exports.matchBotSetSchema = Joi.object().keys({
@@ -50,6 +51,11 @@ exports.matchBotSetSchema = Joi.object().keys({
   enabled: Joi.boolean().required(),
   enablePowerDown: Joi.boolean(),
   expiredAt: Joi.date().greater(moment().utc().add(1, 'days').startOf('day')),
+  voteComments: Joi.when('type', {
+    is: MATCH_BOT_TYPES.CURATOR,
+    then: Joi.boolean(),
+    otherwise: Joi.forbidden(),
+  }),
 }).options(options);
 
 exports.matchBotUnsetSchema = Joi.object().keys({

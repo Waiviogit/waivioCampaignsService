@@ -14,6 +14,7 @@ const Create = async (data = {}) => {
       expiredAt: data.expiredAt || moment().utc().add(1, 'days').startOf('day')
         .toDate(),
       note: data.note || 'some note',
+      voteComments: data.voteComments || false,
     },
     ],
   };

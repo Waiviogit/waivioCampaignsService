@@ -586,11 +586,12 @@ const voteExtendedMatchBots = async (voteData) => {
     return { result: false };
   }
   const {
-    voter, author, permlink, voteWeight, minVotingPower, minHBD, botKey,
+    voter, author, permlink, voteWeight, minVotingPower, minHBD, botKey, voteComments,
   } = params;
   const validVote = await canVote({
     voteWeight: Math.abs(voteWeight / 100),
     minVotingPower,
+    voteComments,
     name: voter,
     permlink,
     minHBD,
@@ -615,7 +616,7 @@ const voteExtendedMatchBots = async (voteData) => {
 };
 
 const canVote = async ({
-  name, voteWeight, author, permlink, minVotingPower, minHBD,
+  name, voteWeight, author, permlink, minVotingPower, minHBD, voteComments,
 }) => {
   const { voteValueHBD, votePower, isPost } = await hiveClient.execute(
     hiveOperations.calculateVotePower,
@@ -625,7 +626,7 @@ const canVote = async ({
   );
   if (votePower < minVotingPower) return false;
   if (voteValueHBD < minHBD) return false;
-  if (!isPost) return false;
+  if (!isPost && !voteComments) return false;
 
   return true;
 };
