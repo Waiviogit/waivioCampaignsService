@@ -1,29 +1,27 @@
-const { nodeUrls } = require('constants/appData');
-const steem = require('steem');
-const _ = require('lodash');
-const axios = require('axios');
 const { parseSwitcher, parseOrders } = require('parsers/mainParser');
-const bluebird = require('bluebird');
 const redisSetter = require('utilities/redis/redisSetter');
 const redisGetter = require('utilities/redis/redisGetter');
+const { nodeUrls } = require('constants/appData');
+const { Client } = require('@hiveio/dhive');
+const axios = require('axios');
+const _ = require('lodash');
 
-bluebird.promisifyAll(steem.api);
-steem.api.setOptions({ url: nodeUrls[0] });
+const hive = new Client(nodeUrls[0]);
 
 const getBlockNumberStream = async ({
   startFromBlock, startFromCurrent, loadBlock, redisTitle,
 }) => {
   if (startFromCurrent) {
-    loadNextBlock({
+    await loadNextBlock({
       startBlock: (
-        await steem.api.getDynamicGlobalPropertiesAsync()).last_irreversible_block_num,
+        await hive.database.getDynamicGlobalProperties()).last_irreversible_block_num,
       loadBlock,
       redisTitle,
     });
   } else if (startFromBlock && Number.isInteger(startFromBlock)) {
-    loadNextBlock({ startBlock: startFromBlock, loadBlock, redisTitle });
+    await loadNextBlock({ startBlock: startFromBlock, loadBlock, redisTitle });
   } else {
-    loadNextBlock({ loadBlock, redisTitle });
+    await loadNextBlock({ loadBlock, redisTitle });
   }
   return true;
 };
@@ -51,7 +49,7 @@ const loadBlock = async (block_num) => {
   let block;
 
   try {
-    block = await steem.api.getBlockAsync(block_num);
+    block = await hive.database.getBlock(block_num);
   } catch (error) {
     console.error(error);
     changeNodeUrl();
@@ -72,7 +70,7 @@ const loadBlock = async (block_num) => {
 const loadBlockRest = async (block_num) => { // return true if block exist and parsed, else - false
   const block = [];
   try {
-    const currentBlock = await steem.api.getDynamicGlobalPropertiesAsync();
+    const currentBlock = await hive.database.getDynamicGlobalProperties();
     if (block_num > currentBlock.last_irreversible_block_num) return false;
     const result = await axios.post(nodeUrls[0], getOpsInBlockReqData(block_num));
 
@@ -93,10 +91,10 @@ const loadBlockRest = async (block_num) => { // return true if block exist and p
 };
 
 const changeNodeUrl = () => {
-  const index = nodeUrls.indexOf(steem.config.url);
+  const index = nodeUrls.indexOf(hive.address);
 
-  steem.config.url = index === nodeUrls.length - 1 ? nodeUrls[0] : nodeUrls[index + 1];
-  console.error(`Node URL was changed to ${steem.config.url}`);
+  hive.address = index === nodeUrls.length - 1 ? nodeUrls[0] : nodeUrls[index + 1];
+  console.error(`Node URL was changed to ${hive.address}`);
 };
 
 const getOpsInBlockReqData = (blockNum) => ({
