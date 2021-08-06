@@ -3,7 +3,7 @@ const moment = require('moment');
 const { MATCH_BOT_VOTE, DOWNVOTE_ON_REVIEW } = require('constants/ttlData');
 const { campaignModel } = require('models');
 const { redisSetter, redisGetter } = require('utilities/redis');
-const { hiveClient, hiveOperations } = require('utilities/hiveApi');
+const { hiveOperations } = require('utilities/hiveApi');
 const curatorsBot = require('utilities/operations/matchBots/curatorsBot');
 
 exports.parse = async (votes) => {
@@ -20,8 +20,8 @@ exports.parse = async (votes) => {
       });
       const { result: existedTTL } = await redisGetter.getTTLData(`expire:${DOWNVOTE_ON_REVIEW}|${vote.author}|${vote.permlink}`);
       if (!result || _.isString(existedTTL)) return;
-      const post = await hiveClient.execute(
-        hiveOperations.getPostInfo, { author: vote.author, permlink: vote.permlink },
+      const post = await hiveOperations.getPostInfo(
+        { author: vote.author, permlink: vote.permlink },
       );
       if (!post.author || moment.utc(post.created) < moment.utc().subtract(7, 'days')) return;
 

@@ -3,17 +3,14 @@ const moment = require('moment');
 const { botUpvoteModel, matchBotModel } = require('models');
 const matchBotHelper = require('utilities/helpers/matchBotHelper');
 const { BOT_UPVOTE_STATUSES, MIN_TO_VOTE_VALUE } = require('constants/constants');
-const { hiveClient, hiveOperations } = require('utilities/hiveApi');
+const { hiveOperations } = require('utilities/hiveApi');
 
 module.exports = async ({ author, permlink }) => {
   const { result: upvotes } = await botUpvoteModel.find(
     { author, permlink, status: BOT_UPVOTE_STATUSES.UPVOTED },
   );
   if (!upvotes.length) return;
-  const post = await hiveClient.execute(
-    hiveOperations.getPostInfo,
-    { author, permlink },
-  );
+  const post = await hiveOperations.getPostInfo({ author, permlink });
   if (!post.author || moment.utc(post.created).add(7, 'days').toDate() < moment.utc().toDate()) return;
   const botNames = _.map(upvotes, 'botName');
   /** Exit from method without downvotes on post */
@@ -31,7 +28,7 @@ module.exports = async ({ author, permlink }) => {
   });
   const oneHBDRshares = (upvoteWeight - downvoteWeight) / parseFloat(post.pending_payout_value);
   const toVoteValue = downvoteWeight / oneHBDRshares;
-  const { currentPrice } = await hiveClient.execute(hiveOperations.getCurrentPriceInfo);
+  const { currentPrice } = await hiveOperations.getCurrentPriceInfo();
   await toVoteOnPost({
     author, permlink, toVoteValue: toVoteValue / currentPrice, upvotes, botNames,
   });
@@ -39,8 +36,7 @@ module.exports = async ({ author, permlink }) => {
 
 const unVoteOnPost = async ({ author, permlink, botNames }) => {
   for (const bot of botNames) {
-    await hiveClient.execute(
-      hiveOperations.likePost,
+    await hiveOperations.likePost(
       {
         key: process.env.UPVOTE_BOT_KEY,
         voter: bot,
@@ -73,8 +69,7 @@ const toVoteOnPost = async ({
     const upvote = _.find(upvotes, { botName: bot.bot_name });
     if (upvote.votePercent === 10000) continue;
     /** In future we may need to check current currentVotePower with permissions */
-    const { currentVotePower, voteWeight } = await hiveClient.execute(
-      hiveOperations.getVotingInfo,
+    const { currentVotePower, voteWeight } = await hiveOperations.getVotingInfo(
       {
         accountName: bot.bot_name,
         weight: 100,
@@ -96,8 +91,7 @@ const toVoteOnPost = async ({
     if (bot.voteWeight > toVoteValue) {
       bot.amountToVote = bot.currentVote + toVoteValue;
       const { votePower } = await matchBotHelper.getNeededVoteWeight(bot.voteWeight, bot);
-      await hiveClient.execute(
-        hiveOperations.likePost,
+      await hiveOperations.likePost(
         {
           voter: bot.botName,
           author,
@@ -108,8 +102,7 @@ const toVoteOnPost = async ({
       );
       return;
     }
-    await hiveClient.execute(
-      hiveOperations.likePost,
+    await hiveOperations.likePost(
       {
         voter: bot.botName,
         author,

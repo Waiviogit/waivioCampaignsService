@@ -1,6 +1,6 @@
 const {
   expect, revoteOnPost, dropDatabase, sinon, faker,
-  _, matchBotModel, BotUpvote, matchBotHelper, hiveOperations, hiveClient
+  _, matchBotModel, BotUpvote, matchBotHelper, hiveOperations,
 } = require('test/testHelper');
 const moment = require('moment');
 const { BOT_UPVOTE_STATUSES } = require('constants/constants');
@@ -70,7 +70,7 @@ describe('On reVoteOnPost', async () => {
     });
     it('should call like method with correct params', async () => {
       await revoteOnPost({ author, permlink });
-      expect(hiveOperations.likePost.calledWith(hiveClient.client, {
+      expect(hiveOperations.likePost.calledWith({
         key: process.env.UPVOTE_BOT_KEY, voter: botName, author, permlink, weight: 0,
       })).to.be.true;
     });
@@ -203,7 +203,7 @@ describe('On reVoteOnPost', async () => {
       it('should call like method with valid params if available toVote <50% of all value ', async () => {
         sinon.stub(hiveOperations, 'getVotingInfo').returns(Promise.resolve({ voteWeight: upvote.currentVote + 1 }));
         await revoteOnPost({ author, permlink });
-        expect(hiveOperations.likePost.calledWith(hiveClient.client, {
+        expect(hiveOperations.likePost.calledWith({
           key: process.env.UPVOTE_BOT_KEY, voter: bot.bot_name, author, permlink, weight: 0,
         })).to.be.true;
       });
@@ -249,7 +249,7 @@ describe('On reVoteOnPost', async () => {
           sinon.stub(hiveOperations, 'getVotingInfo').returns(Promise.resolve({ voteWeight: 20 }));
           sinon.stub(matchBotHelper, 'getNeededVoteWeight').returns(Promise.resolve({ votePower: 1000 }));
           await revoteOnPost({ author, permlink });
-          expect(hiveOperations.likePost.calledWith(hiveClient.client, {
+          expect(hiveOperations.likePost.calledWith({
             key: process.env.UPVOTE_BOT_KEY, voter: bot1.bot_name, author, permlink, weight: 1000,
           })).to.be.true;
         });

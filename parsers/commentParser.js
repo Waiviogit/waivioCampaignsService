@@ -7,7 +7,7 @@ const {
 const { paymentsHelper, usersHelper } = require('utilities/helpers');
 const { notificationsRequest } = require('utilities/requests');
 const redisSetter = require('utilities/redis/redisSetter');
-const { hiveClient, hiveOperations } = require('utilities/hiveApi');
+const { hiveOperations } = require('utilities/hiveApi');
 const authorsBot = require('utilities/operations/matchBots/authorsBot');
 
 const parse = async (post, opts) => {
@@ -58,8 +58,8 @@ const parseReviews = async (post, metadata, app, beneficiaries) => {
     if (!_.isEmpty(campaigns)) {
       campaigns = await usersHelper.validateReview(metadata, postAuthor, campaigns);
       if (campaigns.length && !beneficiaries) {
-        const hivePost = await hiveClient.execute(
-          hiveOperations.getPostInfo, { author: post.author, permlink: post.permlink },
+        const hivePost = await hiveOperations.getPostInfo(
+          { author: post.author, permlink: post.permlink },
         );
         beneficiaries = _.get(hivePost, 'beneficiaries', []);
       }

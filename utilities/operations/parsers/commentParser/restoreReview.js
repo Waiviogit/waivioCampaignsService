@@ -3,7 +3,7 @@ const campaignModel = require('models/campaignModel.js');
 const { RESERVATION_STATUSES } = require('constants/constants.js');
 const paymentHelper = require('utilities/helpers/paymentsHelper.js');
 const jsonHelper = require('utilities/helpers/jsonHelper');
-const { hiveClient, hiveOperations } = require('utilities/hiveApi');
+const { hiveOperations } = require('utilities/hiveApi');
 
 const prepareCampaignData = (userData, campaign) => ({
   hiveCurrency: userData.hiveCurrency,
@@ -40,8 +40,9 @@ module.exports = async ({
 
   if (paymentData) {
     /** Find post for get beneficiaries from it */
-    const post = await hiveClient.execute(hiveOperations.getPostInfo,
-      { author: paymentData.rootAuthor, permlink: paymentData.postPermlink });
+    const post = await hiveOperations.getPostInfo(
+      { author: paymentData.rootAuthor, permlink: paymentData.postPermlink }
+    );
 
     /** Prepare correct campaign data */
     const campaignForReview = prepareCampaignData(userData, campaign);

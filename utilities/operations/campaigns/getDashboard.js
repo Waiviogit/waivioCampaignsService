@@ -1,5 +1,5 @@
 const paymentHistory = require('utilities/operations/paymentHistory');
-const { hiveClient, hiveOperations } = require('utilities/hiveApi');
+const { hiveOperations } = require('utilities/hiveApi');
 const { SUPPORTED_CURRENCIES } = require('constants/constants');
 const { divide } = require('utilities/helpers/calcHelper');
 const { currencyRequest } = require('utilities/requests');
@@ -66,10 +66,7 @@ module.exports = async (data) => {
   const { payable } = await paymentHistory.getPayableHistory({
     skip: 0, limit: 1, sponsor: data.guideName,
   });
-  const user = await hiveClient.execute(
-    hiveOperations.getAccountInfo,
-    data.guideName,
-  );
+  const user = await hiveOperations.getAccountInfo(data.guideName);
   const budgetTotal = {
     account_amount: parseFloat(_.get(user, 'balance', 0)),
     sum_payable: payable,

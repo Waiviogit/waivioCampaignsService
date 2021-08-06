@@ -1222,7 +1222,7 @@ describe('parseRejectReservationByGuide', async () => {
           expect(histories).to.have.length(0);
         });
         it('should like post with correct data', async () => {
-          expect(hiveOperations.likePost.args[0][1]).to.be.deep.eq({
+          expect(hiveOperations.likePost.args[0][0]).to.be.deep.eq({
             key: process.env.UPVOTE_BOT_KEY,
             voter: matchBot.bot_name,
             author: user.name,
@@ -1280,7 +1280,7 @@ describe('parseRejectReservationByGuide', async () => {
           expect(histories).to.have.length(0);
         });
         it('should like with second bot with correct params', async () => {
-          expect([hiveOperations.likePost.args[0][1], hiveOperations.likePost.args[1][1]]).to.be.deep.eq([{
+          expect([hiveOperations.likePost.args[0][0], hiveOperations.likePost.args[1][0]]).to.be.deep.eq([{
             key: process.env.UPVOTE_BOT_KEY,
             voter: matchBot.bot_name,
             author: user.name,

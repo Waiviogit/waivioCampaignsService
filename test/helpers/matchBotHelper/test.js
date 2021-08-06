@@ -299,7 +299,7 @@ describe('matchBotHelper', async () => {
         });
         it('should call vote method with not full vote weight', async () => {
           await matchBotHelper.executeUpvotes();
-          expect(hiveOperations.likePost.args[1][1].weight).to.be.eq(10000);
+          expect(hiveOperations.likePost.args[1][0].weight).to.be.eq(10000);
         });
 
         it('should update payment history by all allowed upvote reward', async () => {
@@ -376,7 +376,7 @@ describe('matchBotHelper', async () => {
       await matchBotHelper.executeUpvotes();
       const pendingUpvotes = await BotUpvote.find({ status: 'pending' });
       expect(hiveOperations.likePost.callCount).to.be.eq(1);
-      expect(hiveOperations.likePost.args[0][1].weight).to.be.eq(10000);
+      expect(hiveOperations.likePost.args[0][0].weight).to.be.eq(10000);
       expect(pendingUpvotes.length).to.be.eq(1);
     });
 

@@ -2,10 +2,10 @@ const _ = require('lodash');
 const { campaignModel, paymentHistoryModel } = require('models');
 const mathBotHelper = require('utilities/helpers/matchBotHelper');
 const { CAMPAIGN_STATUSES, PAYMENT_HISTORIES_TYPES, TRANSFER_TYPES } = require('constants/constants');
-const { hiveClient, hiveOperations } = require('utilities/hiveApi');
+const { hiveOperations } = require('utilities/hiveApi');
 
 module.exports = async (author, permlink) => {
-  const post = await hiveClient.execute(hiveOperations.getPostInfo, { author, permlink });
+  const post = await hiveOperations.getPostInfo({ author, permlink });
   if (!post.author) return;
   author = mathBotHelper.checkForGuest(author, post.json_metadata);
   const { result: campaign } = await campaignModel.findOne({
@@ -39,7 +39,7 @@ module.exports = async (author, permlink) => {
   }
   if (downvotes >= (botUpvotes + elseUpvotes)) return removeVoteDebt(author, permlink, campaign);
   if (downvotes && botUpvotes < (botUpvotes + elseUpvotes) - downvotes) {
-    const { currentPrice } = await hiveClient.execute(hiveOperations.getCurrentPriceInfo);
+    const { currentPrice } = await hiveOperations.getCurrentPriceInfo();
     const payout = _.round((totalPayout / 2) / currentPrice, 3);
 
     await recountVoteDebt({
