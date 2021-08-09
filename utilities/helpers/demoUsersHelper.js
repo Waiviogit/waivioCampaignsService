@@ -1,13 +1,10 @@
 const getDemoDebtHistory = require('utilities/operations/paymentHistory/getDemoDebtHistory');
-const { hiveClient, hiveOperations } = require('utilities/hiveApi');
+const { hiveOperations } = require('utilities/hiveApi');
 
 exports.transfer = async ({
   demoUser, data, id = 'demo_user_transfer', app,
 }) => {
-  const fromData = await hiveClient.execute(
-    hiveOperations.getAccountInfo,
-    process.env.WALLET_ACC_NAME,
-  );
+  const fromData = await hiveOperations.getAccountInfo(process.env.WALLET_ACC_NAME);
   const { payable } = await getDemoDebtHistory(
     { userName: demoUser, limit: 0 },
   );
@@ -17,8 +14,7 @@ exports.transfer = async ({
   const demoMemo = app ? `{"id":"${id}", "from":"${demoUser}","to":"${data.to}", "message":"${data.memo}", "app": "${app}"}`
     : `{"id":"${id}", "from":"${demoUser}","to":"${data.to}", "message":"${data.memo}"}`;
 
-  return hiveClient.execute(
-    hiveOperations.transfer,
+  return hiveOperations.transfer(
     {
       from: process.env.WALLET_ACC_NAME,
       to: data.to,

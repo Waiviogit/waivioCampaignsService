@@ -11,6 +11,7 @@ const {
   PaymentHistoryFactory, BotUpvoteFactory, MatchBotFactory,
 } = require('test/factories');
 const { campaignsForPayments } = require('test/mockData/campaigns');
+const authorsBot = require('utilities/operations/matchBots/authorsBot');
 const { getMocksData } = require('./mocks');
 
 describe('comment Parser', async () => {
@@ -1221,7 +1222,7 @@ describe('parseRejectReservationByGuide', async () => {
           expect(histories).to.have.length(0);
         });
         it('should like post with correct data', async () => {
-          expect(hiveOperations.likePost.args[0][1]).to.be.deep.eq({
+          expect(hiveOperations.likePost.args[0][0]).to.be.deep.eq({
             key: process.env.UPVOTE_BOT_KEY,
             voter: matchBot.bot_name,
             author: user.name,
@@ -1279,7 +1280,7 @@ describe('parseRejectReservationByGuide', async () => {
           expect(histories).to.have.length(0);
         });
         it('should like with second bot with correct params', async () => {
-          expect([hiveOperations.likePost.args[0][1], hiveOperations.likePost.args[1][1]]).to.be.deep.eq([{
+          expect([hiveOperations.likePost.args[0][0], hiveOperations.likePost.args[1][0]]).to.be.deep.eq([{
             key: process.env.UPVOTE_BOT_KEY,
             voter: matchBot.bot_name,
             author: user.name,
@@ -1924,5 +1925,25 @@ describe('Restore reservation', async () => {
       }).lean();
       expect(_.round(_.sumBy(result, 'amount'), 3)).to.be.eq(amount);
     });
+  });
+});
+
+describe('On Authors match bot', async () => {
+  let mock;
+  beforeEach(async () => {
+    mock = await getMocksData();
+    sinon.spy(authorsBot, 'processAuthorsMatchBot');
+    await commentParser.parse(mock.operation);
+  });
+  afterEach(() => {
+    sinon.restore();
+  });
+  it('should should call authorsBot once', async () => {
+    const actual = authorsBot.processAuthorsMatchBot.calledOnce;
+    expect(actual).to.be.true;
+  });
+  it('should call processAuthorsMatchBot with proper params', async () => {
+    const actual = authorsBot.processAuthorsMatchBot.calledWith(mock.operation);
+    expect(actual).to.be.true;
   });
 });

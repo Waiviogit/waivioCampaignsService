@@ -7,6 +7,7 @@ module.exports = {
   WobjectFactory: require('./Wobject/WobjectFactory'),
   PaymentHistoryFactory: require('./PaymentHistory/PaymentHistoryFactory'),
   MatchBotFactory: require('./MatchBot/MatchBotFactory'),
+  ExtendedMatchBotFactory: require('./MatchBot/ExtendedMatchBotFactory'),
   BotUpvoteFactory: require('./BotUpvote/BotUpvoteFactory'),
   ExchangeFactory: require('./InternalExchange/exchangeFactory'),
   AppFactory: require('./AppFactory/AppFactory'),

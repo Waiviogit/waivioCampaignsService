@@ -6,7 +6,7 @@ const { campaignHelper } = require('utilities/helpers');
 const currenciesStatisticModel = require('models/currenciesStatisticModel');
 const appModel = require('models/appModel');
 const config = require('config');
-const { hiveClient, hiveOperations } = require('utilities/hiveApi');
+const { hiveOperations } = require('utilities/hiveApi');
 
 const getMatchData = ({
   onlyWithMessages, fraudSuspicion, guideNames, guideName, userName,
@@ -44,8 +44,7 @@ const getConversationsFromHive = async (campaigns) => {
     const { users } = campaign;
     if (users.children === 0) return;
 
-    const { result: comments } = await hiveClient.execute(
-      hiveOperations.getPostState,
+    const { result: comments } = await hiveOperations.getPostState(
       { author: users.rootName || users.name, permlink: users.permlink, category: 'waivio' },
     );
     if (!_.get(comments, 'content')) return;

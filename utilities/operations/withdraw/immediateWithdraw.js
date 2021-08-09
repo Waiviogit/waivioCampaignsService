@@ -1,7 +1,7 @@
 const { sendSentryNotification } = require('utilities/requests/telegramNotificationsRequest');
 const { withdrawFundsModel, paymentHistoryModel, userModel } = require('models');
 const { validateTransaction } = require('utilities/helpers/transactionsHelper');
-const { hiveClient, hiveOperations } = require('utilities/hiveApi');
+const { hiveOperations } = require('utilities/hiveApi');
 const redisSetter = require('utilities/redis/redisSetter');
 const { WITHDRAW_REQUEST } = require('constants/ttlData');
 const { guestRequests } = require('utilities/requests');
@@ -33,8 +33,7 @@ module.exports = async ({
   });
   if (createWithdrawErr) return { error: createWithdrawErr };
 
-  const { data, error: transactionError } = await hiveClient.execute(
-    hiveOperations.transfer,
+  const { data, error: transactionError } = await hiveOperations.transfer(
     {
       amount: withdraw.amount,
       from: process.env.WALLET_ACC_NAME,

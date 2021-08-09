@@ -13,6 +13,7 @@
     "redis": {
       "notifications" : 0,
       "lastBlock": 2,
+      "actionsQueue": 3,
       "campaigns": 6,
       "demoPosts": 8,
       "appDayUsers": 11
@@ -41,6 +42,7 @@
     "redis": {
       "notifications" : 0,
       "lastBlock": 2,
+      "actionsQueue": 3,
       "campaigns": 6,
       "demoPosts": 8,
       "appDayUsers": 11
@@ -69,6 +71,7 @@
     "redis": {
       "notifications" : 0,
       "lastBlock": 2,
+      "actionsQueue": 3,
       "campaigns": 6,
       "demoPosts": 8,
       "appDayUsers": 11
@@ -99,7 +102,8 @@
       "lastBlock": 14,
       "campaigns": 14,
       "demoPosts": 14,
-      "appDayUsers": 14
+      "appDayUsers": 14,
+      "actionsQueue": 14
     },
     "waivio_app_name": "waiviodev",
     "steemConnectUrl": "http://app.steemconnect.com/api/broadcast",

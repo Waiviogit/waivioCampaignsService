@@ -1,9 +1,10 @@
 const {
-  expect, voteParser, dropDatabase, faker, ObjectID, sinon, redisSetter, redisGetter, hiveOperations,
+  expect, voteParser, dropDatabase, faker, ObjectID, sinon, redisSetter, redisGetter, hiveOperations, _,
 } = require('test/testHelper');
 const moment = require('moment');
 const { DOWNVOTE_ON_REVIEW, MATCH_BOT_VOTE } = require('constants/ttlData');
 const { CampaignFactory } = require('test/factories');
+const curatorsBot = require('utilities/operations/matchBots/curatorsBot');
 
 describe('On vote parser', async () => {
   describe('On parse', async () => {
@@ -135,6 +136,22 @@ describe('On vote parser', async () => {
           }]);
           expect(redisSetter.setSimpleTtl.notCalled).to.be.true;
         });
+      });
+    });
+    describe('On curators bot', async () => {
+      let counter;
+      beforeEach(async () => {
+        sinon.spy(curatorsBot, 'processCuratorsMatchBot');
+        counter = _.random(2, 10);
+        const voteArr = [];
+        for (let i = 0; i < counter; i++) {
+          voteArr.push({ voter: faker.random.string() });
+        }
+        await voteParser.parse(voteArr);
+      });
+      it('should call on every vote', async () => {
+        const actual = curatorsBot.processCuratorsMatchBot.callCount;
+        expect(actual).to.be.eq(counter);
       });
     });
   });

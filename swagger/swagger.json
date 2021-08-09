@@ -2088,6 +2088,41 @@
         }
       }
     },
+    "/match-bots/{type}": {
+      "get": {
+        "tags": [
+          "MatchBot"
+        ],
+        "description": "getMatchBots",
+        "produces": [
+          "application/json"
+        ],
+        "parameters": [
+          {
+            "name": "botName",
+            "in": "query",
+            "description": "bot name",
+            "type": "string",
+            "required": true
+          },
+          {
+            "name": "type",
+            "in": "query",
+            "description": "bot type",
+            "type": "string",
+            "required": true
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful operation",
+            "schema": {
+              "$ref": "#/definitions/matchBotTypes"
+            }
+          }
+        }
+      }
+    },
     "/withdraw/estimate-output-amount": {
       "get": {
         "tags": [
@@ -2653,6 +2688,35 @@
     }
   },
   "definitions": {
+    "matchBotTypes" : {
+      "type": "object",
+      "properties": {
+        "name": {
+          "type": "string"
+        },
+        "minVotingPower": {
+          "type": "number"
+        },
+        "voteWeight": {
+          "type": "number"
+        },
+        "voteRatio": {
+          "type": "number"
+        },
+        "note": {
+          "type": "string"
+        },
+        "enabled": {
+          "type": "boolean"
+        },
+        "enablePowerDown": {
+          "type": "boolean"
+        },
+        "expiredAt" : {
+          "type": "string"
+        }
+      }
+    },
     "demo_payables": {
       "type": "object",
       "properties": {
@@ -2902,23 +2966,23 @@
         "received": "2020-07-05T12:08:40.979Z"
       }
     },
-"withdraw": {
-  "type": "object",
-  "example": {
-    "account": "account",
-    "email": "user@gmail.com",
-    "inputCoinType": "hive",
-    "outputCoinType": "eth",
-    "amount": 10,
-    "status": "success",
-    "address": "0x3fdsfsf333ukgnbvn7678",
-    "memo": "sdfsdf35-fgdfnvvyj-64564ghfdgh-gdfgdg54",
-    "usdValue": 3.2,
-    "commission": 0.989,
-    "receiver": "blocktrades",
-    "transactionId": "specialID"
-  }
-},
+    "withdraw": {
+      "type": "object",
+      "example": {
+        "account": "account",
+        "email": "user@gmail.com",
+        "inputCoinType": "hive",
+        "outputCoinType": "eth",
+        "amount": 10,
+        "status": "success",
+        "address": "0x3fdsfsf333ukgnbvn7678",
+        "memo": "sdfsdf35-fgdfnvvyj-64564ghfdgh-gdfgdg54",
+        "usdValue": 3.2,
+        "commission": 0.989,
+        "receiver": "blocktrades",
+        "transactionId": "specialID"
+      }
+    },
     "validateWallet": {
       "type": "object",
       "example": {

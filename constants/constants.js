@@ -1,7 +1,7 @@
 const dotenv = require('dotenv');
 
 dotenv.config({ path: `env/${process.env.NODE_ENV || 'development'}.env` });
-const specialTransferBeneficiaries = process.env.SPECIAL_BENEFICIARIES.split(',');
+const specialTransferBeneficiaries = process.env.SPECIAL_BENEFICIARIES && process.env.SPECIAL_BENEFICIARIES.split(',');
 
 const match_bots_settings = {
   min_vote_power: 9000,
