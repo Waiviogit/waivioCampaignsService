@@ -58,7 +58,7 @@ campaignsRoutes.route('/payments/payable-warning').get(payablesController.payabl
 
 campaignsRoutes.route('/guest/transfer').post(guestRequests.validateAuthToken, demoUserController.transfer);
 campaignsRoutes.route('/match_bots').get(matchBotController.sponsorMatchBots);
-campaignsRoutes.route('/match-bots/:type').get(matchBotController.sponsorMatchBots);
+campaignsRoutes.route('/match-bots/:type').get(matchBotController.getMatchBots);
 
 withdrawRoutes.route('/get-withdraw-data').get(withdrawController.getTransactionStatus);
 withdrawRoutes.route('/validate-crypto-wallet').get(withdrawController.validateWallet);

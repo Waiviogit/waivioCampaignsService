@@ -14,7 +14,7 @@ exports.getMatchBotsSchema = Joi.object().keys({
   skip: Joi.number().default(0),
   limit: Joi.number().default(30),
   botName: Joi.string().required(),
-  type: Joi.string().required(),
+  type: Joi.string().valid(...Object.values(MATCH_BOT_TYPES)).required(),
 }).options(options);
 
 exports.matchBotVoteSchema = Joi.object().keys({
