@@ -2107,17 +2107,35 @@
           },
           {
             "name": "type",
-            "in": "query",
+            "in": "path",
             "description": "bot type",
             "type": "string",
+            "enum": ["curator", "author"],
             "required": true
+          },
+          {
+            "name": "skip",
+            "in": "query",
+            "description": "skip",
+            "type": "number",
+            "required": false
+          },
+          {
+            "name": "limit",
+            "in": "query",
+            "description": "limit",
+            "type": "number",
+            "required": false
           }
         ],
         "responses": {
           "200": {
             "description": "Successful operation",
             "schema": {
-              "$ref": "#/definitions/matchBotTypes"
+              "type": "array",
+              "items": {
+                "$ref": "#/definitions/matchBotTypes"
+              }
             }
           }
         }
