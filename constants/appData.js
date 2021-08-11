@@ -78,6 +78,8 @@ const orderIds = {
 const MIN_DEBT_TO_SUSPENDED = 2;
 const MIN_TO_PAYED_VALUE = 0.001;
 
+const BLOCK_REQ_MAX_TIME = 1000;
+
 module.exports = {
   telegramApi,
   MIN_DEBT_TO_SUSPENDED,
@@ -87,4 +89,5 @@ module.exports = {
   mailerApi: mailerApi[process.env.NODE_ENV || 'development'],
   orderIds,
   blocktradesApi,
+  BLOCK_REQ_MAX_TIME,
 };

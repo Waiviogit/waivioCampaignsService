@@ -1,12 +1,14 @@
+const { nodeUrls, BLOCK_REQ_MAX_TIME } = require('constants/appData');
 const { parseSwitcher, parseOrders } = require('parsers/mainParser');
+const processHelper = require('utilities/helpers/processHelper');
 const redisSetter = require('utilities/redis/redisSetter');
 const redisGetter = require('utilities/redis/redisGetter');
-const { nodeUrls } = require('constants/appData');
 const { Client } = require('@hiveio/dhive');
 const axios = require('axios');
 const _ = require('lodash');
 
 const hive = new Client(nodeUrls[0]);
+let CURRENT_NODE_URL = nodeUrls[0];
 
 const getBlockNumberStream = async ({
   startFromBlock, startFromCurrent, loadBlock, redisTitle,
@@ -45,18 +47,21 @@ const loadNextBlock = async ({ startBlock, loadBlock, redisTitle }) => {
   }
 };
 
-const loadBlock = async (block_num) => {
+const loadBlock = async (blockNum) => {
   let block;
 
   try {
-    block = await hive.database.getBlock(block_num);
+    const reqStart = process.hrtime();
+    block = await hive.database.getBlock(blockNum);
+    const reqDuration = processHelper.getDurationInMilliseconds(reqStart);
+    if (reqDuration > BLOCK_REQ_MAX_TIME) changeNodeUrl();
   } catch (error) {
     console.error(error);
     changeNodeUrl();
     return false;
   }
   if (block && (!block.transactions || !block.transactions[0])) {
-    console.error(`EMPTY BLOCK: ${block_num}`);
+    console.error(`EMPTY BLOCK: ${blockNum}`);
     return true;
   }
   if (block && block.transactions && block.transactions[0]) {
@@ -67,12 +72,15 @@ const loadBlock = async (block_num) => {
   } return false;
 };
 
-const loadBlockRest = async (block_num) => { // return true if block exist and parsed, else - false
+const loadBlockRest = async (blockNum) => { // return true if block exist and parsed, else - false
   const block = [];
   try {
     const currentBlock = await hive.database.getDynamicGlobalProperties();
-    if (block_num > currentBlock.last_irreversible_block_num) return false;
-    const result = await axios.post(nodeUrls[0], getOpsInBlockReqData(block_num));
+    if (blockNum > currentBlock.last_irreversible_block_num) return false;
+    const reqStart = process.hrtime();
+    const result = await axios.post(CURRENT_NODE_URL, getOpsInBlockReqData(blockNum));
+    const reqDuration = processHelper.getDurationInMilliseconds(reqStart);
+    if (reqDuration > BLOCK_REQ_MAX_TIME) changeRestNodeUrl();
 
     if (!_.get(result, 'data.result.ops')) throw ({ message: 'No result from request' });
     const groupedOperations = _.groupBy(result.data.result.ops, 'trx_id');
@@ -83,7 +91,7 @@ const loadBlockRest = async (block_num) => { // return true if block exist and p
     return false;
   }
   if (!block.length) {
-    console.error(`NO DATA FROM BLOCK BY REST: ${block_num}`);
+    console.error(`NO DATA FROM BLOCK BY REST: ${blockNum}`);
     return true;
   }
   await parseOrders(block);
@@ -95,6 +103,13 @@ const changeNodeUrl = () => {
 
   hive.address = index === nodeUrls.length - 1 ? nodeUrls[0] : nodeUrls[index + 1];
   console.error(`Node URL was changed to ${hive.address}`);
+};
+
+const changeRestNodeUrl = () => {
+  const index = nodeUrls.indexOf(CURRENT_NODE_URL);
+
+  CURRENT_NODE_URL = index === nodeUrls.length - 1 ? nodeUrls[0] : nodeUrls[index + 1];
+  console.error(`REST Node URL was changed to ${CURRENT_NODE_URL}`);
 };
 
 const getOpsInBlockReqData = (blockNum) => ({
