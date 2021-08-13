@@ -223,7 +223,7 @@ const checkDisable = async ({ bot_name: botName, account_auths: accountAuths }) 
       .find({ botName, type: getMatchBotType(extendedBot) });
     if (!_.isEmpty(result)) {
       await extendedMatchBotModel
-        .updateStatus({ bot_name: botName, type: getMatchBotType(extendedBot), enabled: false });
+        .updateStatus({ botName, type: getMatchBotType(extendedBot), enabled: false });
     }
   }
 };
