@@ -10,7 +10,8 @@ json:
   "name" - required, string
   "enabled" - required, boolean
   "voteRatio" - if type === curator required, number min 0.01, max 10
-  "voteRatio" - if type === author required, number min 1, max 10000
+  "voteWeight" - if type === author required, number min 1, max 10000
+  "minVotingPower" - min voting power required, number min 1, max 10000
   "note" - optional, string
   "enablePowerDown" - optional, boolean
   "expiredAt" - optional, date, 
