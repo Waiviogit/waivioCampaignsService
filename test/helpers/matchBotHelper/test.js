@@ -1,9 +1,9 @@
 const {
   matchBotHelper, expect, sinon, dropDatabase, moment, _, extendedMatchBotModel,
-  BotUpvote, PaymentHistory, MatchBot, faker, hiveOperations, sentryHelper,
+  BotUpvote, PaymentHistory, MatchBot, faker, hiveOperations, sentryHelper, ExtendedMatchBot,
 } = require('test/testHelper');
 const {
-  MatchBotFactory, BotUpvoteFactory, PostFactory, PaymentHistoryFactory, CampaignFactory,
+  MatchBotFactory, BotUpvoteFactory, PostFactory, PaymentHistoryFactory, CampaignFactory, ExtendedMatchBotFactory,
 } = require('test/factories');
 const { MATCH_BOT_TYPES } = require('constants/matchBotsData');
 const { getSetBotData, getCanVoteMock, getVoteDataMock } = require('test/mockData/matchBots');
@@ -702,6 +702,7 @@ describe('matchBotHelper', async () => {
           { sponsor_name: 'sponsor1', enabled: true, expiredAt },
         ],
       });
+      await ExtendedMatchBotFactory.Create({botName:bot1,  enabled: true });
 
       // await MatchBotFactory.Create( { bot_name: bot1, sponsor: sponsor1, enabled: true } );
       // await MatchBotFactory.Create( { bot_name: bot1, sponsor: sponsor2, enabled: true } );
@@ -711,7 +712,12 @@ describe('matchBotHelper', async () => {
     afterEach(() => {
       sinon.restore();
     });
+    it('should disable extended matchBots', async () => {
+      await matchBotHelper.checkDisable({ bot_name: bot1, account_auths: [] });
+      const [extendedBot] = await ExtendedMatchBot.find().lean()
 
+      expect(extendedBot.accounts[0].enabled).to.be.false;
+    });
     it('should disable match bots', async () => {
       await matchBotHelper.checkDisable({ bot_name: bot1, account_auths: [] });
       const matchBots = await MatchBot.findOne({ bot_name: bot1 });
@@ -1129,7 +1135,7 @@ describe('matchBotHelper', async () => {
         result = await matchBotHelper.voteExtendedMatchBots(JSON.stringify(mock));
       });
       it('should return true result', async () => {
-        expect(result).to.be.deep.eq({result: true})
+        expect(result).to.be.deep.eq({ result: true });
       });
       it('should not call sentry', async () => {
         const actual = sentryHelper.handleError.calledOnce;

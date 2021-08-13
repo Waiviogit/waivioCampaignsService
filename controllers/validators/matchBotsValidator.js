@@ -51,6 +51,8 @@ exports.matchBotSetSchema = Joi.object().keys({
   enabled: Joi.boolean().required(),
   enablePowerDown: Joi.boolean(),
   expiredAt: Joi.date().greater(moment().utc().add(1, 'days').startOf('day')),
+  minVotingPower: Joi.number().integer().min(1).max(10000)
+    .required(),
   voteComments: Joi.when('type', {
     is: MATCH_BOT_TYPES.CURATOR,
     then: Joi.boolean(),
