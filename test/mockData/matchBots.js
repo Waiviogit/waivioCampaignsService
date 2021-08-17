@@ -12,6 +12,7 @@ exports.getSetBotData = (data = {}) => {
     enabled: !!data.enabled,
     enablePowerDown: !!data.enablePowerDown,
     expiredAt: data.expiredAt || moment().utc().add(1, 'days').toDate(),
+    minVotingPower: data.minVotingPower || _.random(1, 10000),
   };
   if (json.type === MATCH_BOT_TYPES.CURATOR) {
     json.voteRatio = data.voteRatio || _.random(0.01, 10);
