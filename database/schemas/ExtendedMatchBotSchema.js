@@ -18,8 +18,8 @@ const ExtendedMatchBotSchema = new Schema({
       note: { type: String, maxlength: 256 },
       enabled: { type: Boolean, default: false, required: true },
       enablePowerDown: { type: Boolean, default: false },
-      expiredAt: { type: Date, default: null },
-      voteComments: { type: Boolean, default: false },
+      expiredAt: { type: Date },
+      voteComments: { type: Boolean },
     },
   ],
 }, { timestamps: true });
