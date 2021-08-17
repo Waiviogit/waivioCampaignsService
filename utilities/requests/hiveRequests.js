@@ -1,6 +1,6 @@
 const axios = require('axios');
 
-const hiveUrl = 'https://anyx.io';
+const hiveUrl = 'https://hive-api.arcange.eu';
 
 exports.getTransactionsHistory = async (name) => {
   try {
@@ -30,7 +30,7 @@ exports.getAccountHistory = async (name, id, limit) => {
         [name, id, limit],
       ],
     });
-    return { result: result.data.result};
+    return { result: result.data.result };
   } catch (error) {
     return { error };
   }
