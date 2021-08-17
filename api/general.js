@@ -1,8 +1,7 @@
-const { nodeUrls, BLOCK_REQ_MAX_TIME } = require('constants/appData');
 const { parseSwitcher, parseOrders } = require('parsers/mainParser');
-const processHelper = require('utilities/helpers/processHelper');
 const redisSetter = require('utilities/redis/redisSetter');
 const redisGetter = require('utilities/redis/redisGetter');
+const { nodeUrls } = require('constants/appData');
 const { Client } = require('@hiveio/dhive');
 const axios = require('axios');
 const _ = require('lodash');
@@ -51,10 +50,7 @@ const loadBlock = async (blockNum) => {
   let block;
 
   try {
-    const reqStart = process.hrtime();
     block = await hive.database.getBlock(blockNum);
-    const reqDuration = processHelper.getDurationInMilliseconds(reqStart);
-    if (reqDuration > BLOCK_REQ_MAX_TIME) changeNodeUrl();
   } catch (error) {
     console.error(error);
     changeNodeUrl();
@@ -77,16 +73,19 @@ const loadBlockRest = async (blockNum) => { // return true if block exist and pa
   try {
     const currentBlock = await hive.database.getDynamicGlobalProperties();
     if (blockNum > currentBlock.last_irreversible_block_num) return false;
-    const reqStart = process.hrtime();
-    const result = await axios.post(CURRENT_NODE_URL, getOpsInBlockReqData(blockNum));
-    const reqDuration = processHelper.getDurationInMilliseconds(reqStart);
-    if (reqDuration > BLOCK_REQ_MAX_TIME) changeRestNodeUrl();
+    const instance = axios.create();
+    const result = await instance.post(
+      CURRENT_NODE_URL,
+      getOpsInBlockReqData(blockNum),
+      { timeout: 8000 },
+    );
 
     if (!_.get(result, 'data.result.ops')) throw ({ message: 'No result from request' });
     const groupedOperations = _.groupBy(result.data.result.ops, 'trx_id');
     _.forEach(Object.keys(groupedOperations), (id) => block.push(groupedOperations[id]));
   } catch (error) {
     console.error(error.message);
+    changeRestNodeUrl();
     await loadBlockRest();
     return false;
   }
