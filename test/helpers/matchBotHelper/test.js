@@ -1,10 +1,12 @@
 const {
-  matchBotHelper, expect, sinon, dropDatabase, moment, _,
-  BotUpvote, PaymentHistory, MatchBot, faker, hiveOperations,
+  matchBotHelper, expect, sinon, dropDatabase, moment, _, extendedMatchBotModel,
+  BotUpvote, PaymentHistory, MatchBot, faker, hiveOperations, sentryHelper, ExtendedMatchBot,
 } = require('test/testHelper');
 const {
-  MatchBotFactory, BotUpvoteFactory, PostFactory, PaymentHistoryFactory, CampaignFactory,
+  MatchBotFactory, BotUpvoteFactory, PostFactory, PaymentHistoryFactory, CampaignFactory, ExtendedMatchBotFactory,
 } = require('test/factories');
+const { MATCH_BOT_TYPES } = require('constants/matchBotsData');
+const { getSetBotData, getCanVoteMock, getVoteDataMock } = require('test/mockData/matchBots');
 
 describe('matchBotHelper', async () => {
   describe('payableRecount', async () => {
@@ -297,7 +299,7 @@ describe('matchBotHelper', async () => {
         });
         it('should call vote method with not full vote weight', async () => {
           await matchBotHelper.executeUpvotes();
-          expect(hiveOperations.likePost.args[1][1].weight).to.be.eq(10000);
+          expect(hiveOperations.likePost.args[1][0].weight).to.be.eq(10000);
         });
 
         it('should update payment history by all allowed upvote reward', async () => {
@@ -374,7 +376,7 @@ describe('matchBotHelper', async () => {
       await matchBotHelper.executeUpvotes();
       const pendingUpvotes = await BotUpvote.find({ status: 'pending' });
       expect(hiveOperations.likePost.callCount).to.be.eq(1);
-      expect(hiveOperations.likePost.args[0][1].weight).to.be.eq(10000);
+      expect(hiveOperations.likePost.args[0][0].weight).to.be.eq(10000);
       expect(pendingUpvotes.length).to.be.eq(1);
     });
 
@@ -700,6 +702,7 @@ describe('matchBotHelper', async () => {
           { sponsor_name: 'sponsor1', enabled: true, expiredAt },
         ],
       });
+      await ExtendedMatchBotFactory.Create({botName:bot1,  enabled: true });
 
       // await MatchBotFactory.Create( { bot_name: bot1, sponsor: sponsor1, enabled: true } );
       // await MatchBotFactory.Create( { bot_name: bot1, sponsor: sponsor2, enabled: true } );
@@ -709,7 +712,12 @@ describe('matchBotHelper', async () => {
     afterEach(() => {
       sinon.restore();
     });
+    it('should disable extended matchBots', async () => {
+      await matchBotHelper.checkDisable({ bot_name: bot1, account_auths: [] });
+      const [extendedBot] = await ExtendedMatchBot.find().lean()
 
+      expect(extendedBot.accounts[0].enabled).to.be.false;
+    });
     it('should disable match bots', async () => {
       await matchBotHelper.checkDisable({ bot_name: bot1, account_auths: [] });
       const matchBots = await MatchBot.findOne({ bot_name: bot1 });
@@ -837,6 +845,301 @@ describe('matchBotHelper', async () => {
 
       describe('not payed history', async () => {
 
+      });
+    });
+  });
+
+  describe('On getMatchBotName', async () => {
+    it('should get correct author bot name', async () => {
+      const expected = 'authorbot';
+      const actual = matchBotHelper.getMatchBotName(MATCH_BOT_TYPES.AUTHOR);
+      expect(actual).to.be.eq(expected);
+    });
+    it('should get correct curatot bot name', async () => {
+      const expected = 'curatorbot';
+      const actual = matchBotHelper.getMatchBotName(MATCH_BOT_TYPES.CURATOR);
+      expect(actual).to.be.eq(expected);
+    });
+    it('when type not supported should return empty string', async () => {
+      const expected = '';
+      const actual = matchBotHelper.getMatchBotName(faker.random.string());
+      expect(actual).to.be.eq(expected);
+    });
+  });
+
+  describe('On getMatchBotType', async () => {
+    it('should get correct author bot name', async () => {
+      const authorBotName = 'authorbot';
+      const actual = matchBotHelper.getMatchBotType(authorBotName);
+      expect(actual).to.be.eq(MATCH_BOT_TYPES.AUTHOR);
+    });
+    it('should get correct curatot bot name', async () => {
+      const curatorBotName = 'curatorbot';
+      const actual = matchBotHelper.getMatchBotType(curatorBotName);
+      expect(actual).to.be.eq(MATCH_BOT_TYPES.CURATOR);
+    });
+    it('when type not supported should return empty string', async () => {
+      const expected = '';
+      const actual = matchBotHelper.getMatchBotType(faker.random.string());
+      expect(actual).to.be.eq(expected);
+    });
+  });
+
+  describe('On isAccountsIncludeBot', async () => {
+    it('should return true if auth accounts include bot', async () => {
+      const name = faker.random.string();
+      const mock = {
+        botName: name,
+        accountAuths: [[name]],
+      };
+      const actual = matchBotHelper.isAccountsIncludeBot(mock);
+      expect(actual).to.be.eq(true);
+    });
+    it('should return false if auth accounts not include bot', async () => {
+      const name = faker.random.string();
+      const mock = {
+        botName: faker.random.string(),
+        accountAuths: [[name]],
+      };
+      const actual = matchBotHelper.isAccountsIncludeBot(mock);
+      expect(actual).to.be.eq(false);
+    });
+  });
+
+  describe('On getExtendedBotsArr', async () => {
+    it('should return valid bot names', async () => {
+      const expected = ['authorbot', 'curatorbot'];
+      const actual = matchBotHelper.getExtendedBotsArr();
+      expect(actual).to.be.deep.eq(expected);
+    });
+  });
+
+  describe('On setBot', async () => {
+    afterEach(() => {
+      sinon.restore();
+    });
+    describe('On Error', async () => {
+      const expected = { result: false };
+      it('should failed when not send type', async () => {
+        const actual = await matchBotHelper.setBot(getSetBotData({ remove: 'type' }));
+        expect(actual).to.be.deep.eq(expected);
+      });
+      it('should failed when not send name', async () => {
+        const actual = await matchBotHelper.setBot(getSetBotData({ remove: 'name' }));
+        expect(actual).to.be.deep.eq(expected);
+      });
+      it('should failed when not send enabled', async () => {
+        const actual = await matchBotHelper.setBot(getSetBotData({ remove: 'enabled' }));
+        expect(actual).to.be.deep.eq(expected);
+      });
+      it('should when type curator and not send voteRatio', async () => {
+        const actual = await matchBotHelper.setBot(
+          getSetBotData({ type: MATCH_BOT_TYPES.CURATOR, remove: 'voteRatio' }),
+        );
+        expect(actual).to.be.deep.eq(expected);
+      });
+      it('should when type author and not send voteWeight', async () => {
+        const actual = await matchBotHelper.setBot(
+          getSetBotData({ type: MATCH_BOT_TYPES.AUTHOR, remove: 'voteWeight' }),
+        );
+        expect(actual).to.be.deep.eq(expected);
+      });
+      it('should failed when dont found bot and follow acc', async () => {
+        sinon.stub(hiveOperations, 'getAccountsInfo').returns(Promise.resolve([]));
+        const actual = await matchBotHelper.setBot(
+          getSetBotData(),
+        );
+        expect(actual).to.be.deep.eq(expected);
+      });
+      it('should failed when dont found  follow acc', async () => {
+        sinon.stub(hiveOperations, 'getAccountsInfo').returns(Promise.resolve([faker.random.string()]));
+        const actual = await matchBotHelper.setBot(
+          getSetBotData(),
+        );
+        expect(actual).to.be.deep.eq(expected);
+      });
+      it('should failed when dont found bot', async () => {
+        sinon.stub(hiveOperations, 'getAccountsInfo').returns(
+          Promise.resolve([undefined, faker.random.string()]),
+        );
+        const actual = await matchBotHelper.setBot(
+          getSetBotData(),
+        );
+        expect(actual).to.be.deep.eq(expected);
+      });
+    });
+    describe('On ok', async () => {
+      it('should not failed on valid params', async () => {
+        sinon.stub(hiveOperations, 'getAccountsInfo').returns(
+          Promise.resolve([faker.random.string(), faker.random.string()]),
+        );
+        const actual = await matchBotHelper.setBot(getSetBotData());
+        expect(actual).to.be.deep.eq({ result: true });
+      });
+    });
+  });
+
+  describe('On unset bot', async () => {
+    afterEach(() => {
+      sinon.restore();
+    });
+    describe('On Ok', async () => {
+      it('should not failed with valid params', async () => {
+        sinon.stub(extendedMatchBotModel, 'unsetMatchBot').returns(Promise.resolve(true));
+        const actual = await matchBotHelper.unsetBot(getSetBotData());
+        expect(actual).to.be.deep.eq({ result: true });
+      });
+    });
+    describe('On Error', async () => {
+      const expected = { result: false };
+      it('should failed when not find bot', async () => {
+        const actual = await matchBotHelper.unsetBot(getSetBotData());
+        expect(actual).to.be.deep.eq(expected);
+      });
+      it('should when missing name', async () => {
+        const actual = await matchBotHelper.unsetBot(getSetBotData({ remove: 'name' }));
+        expect(actual).to.be.deep.eq(expected);
+      });
+      it('should when missing type', async () => {
+        const actual = await matchBotHelper.unsetBot(getSetBotData({ remove: 'type' }));
+        expect(actual).to.be.deep.eq(expected);
+      });
+    });
+  });
+
+  describe('On canVote', async () => {
+    afterEach(() => {
+      sinon.restore();
+    });
+    describe('On Error', async () => {
+      it('should return false when voting power lower than required', async () => {
+        const mock = getCanVoteMock();
+        sinon.stub(hiveOperations, 'calculateVotePower').returns({
+          votePower: mock.minVotingPower - _.random(1, 100),
+          voteValueHBD: mock.minHBD + _.random(1, 100),
+          isPost: true,
+        });
+        const actual = await matchBotHelper.canVote(mock);
+        expect(actual).to.be.eq(false);
+      });
+      it('should return false when voteValueHBD less than required', async () => {
+        const mock = getCanVoteMock();
+        sinon.stub(hiveOperations, 'calculateVotePower').returns({
+          votePower: mock.minVotingPower + _.random(1, 100),
+          voteValueHBD: mock.minHBD - _.random(1, 100),
+          isPost: true,
+        });
+        const actual = await matchBotHelper.canVote(mock);
+        expect(actual).to.be.eq(false);
+      });
+      it('should return false when not a post', async () => {
+        const mock = getCanVoteMock();
+        sinon.stub(hiveOperations, 'calculateVotePower').returns({
+          votePower: mock.minVotingPower + _.random(1, 100),
+          voteValueHBD: mock.minHBD + _.random(1, 100),
+          isPost: false,
+        });
+        const actual = await matchBotHelper.canVote(mock);
+        expect(actual).to.be.eq(false);
+      });
+    });
+    describe('On Ok', async () => {
+      it('should return true on valid params', async () => {
+        const mock = getCanVoteMock();
+        sinon.stub(hiveOperations, 'calculateVotePower').returns({
+          votePower: mock.minVotingPower + _.random(1, 100),
+          voteValueHBD: mock.minHBD + _.random(1, 100),
+          isPost: true,
+        });
+        const actual = await matchBotHelper.canVote(mock);
+        expect(actual).to.be.eq(true);
+      });
+    });
+  });
+  describe('On voteExtendedMatchBots', async () => {
+    let result;
+    afterEach(() => {
+      sinon.restore();
+    });
+    describe('On Error', async () => {
+      const expected = { result: false };
+      describe('On validation error', async () => {
+        beforeEach(async () => {
+          sinon.spy(sentryHelper, 'handleError');
+          const mock = getVoteDataMock({
+            remove: _.sample([
+              'permlink',
+              'author',
+              'voter',
+              'botKey',
+              'minHBD',
+              'minVotingPower',
+              'voteWeight',
+            ]),
+          });
+          result = await matchBotHelper.voteExtendedMatchBots(mock);
+        });
+        it('should return false result', async () => {
+          expect(result).to.be.deep.eq(expected);
+        });
+        it('should call sentry once', async () => {
+          const actual = sentryHelper.handleError.calledOnce;
+          expect(actual).to.be.true;
+        });
+      });
+      describe('When can vote return false', async () => {
+        beforeEach(async () => {
+          const mock = getVoteDataMock();
+          sinon.stub(hiveOperations, 'calculateVotePower').returns({
+            votePower: mock.minVotingPower + _.random(1, 100),
+            voteValueHBD: mock.minHBD + _.random(1, 100),
+            isPost: false,
+          });
+          result = await matchBotHelper.voteExtendedMatchBots(JSON.stringify(mock));
+        });
+        it('should return false result', async () => {
+          expect(result).to.be.deep.eq(expected);
+        });
+      });
+      describe('On like post error', async () => {
+        beforeEach(async () => {
+          const mock = getVoteDataMock();
+          sinon.stub(hiveOperations, 'calculateVotePower').returns({
+            votePower: mock.minVotingPower + _.random(1, 100),
+            voteValueHBD: mock.minHBD + _.random(1, 100),
+            isPost: true,
+          });
+          sinon.stub(hiveOperations, 'likePost').returns({ error: {} });
+          sinon.spy(sentryHelper, 'handleError');
+          result = await matchBotHelper.voteExtendedMatchBots(JSON.stringify(mock));
+        });
+        it('should should return false result', async () => {
+          expect(result).to.be.deep.eq(expected);
+        });
+        it('should call sentry once', async () => {
+          const actual = sentryHelper.handleError.calledOnce;
+          expect(actual).to.be.true;
+        });
+      });
+    });
+    describe('On Ok', async () => {
+      beforeEach(async () => {
+        const mock = getVoteDataMock();
+        sinon.stub(hiveOperations, 'calculateVotePower').returns({
+          votePower: mock.minVotingPower + _.random(1, 100),
+          voteValueHBD: mock.minHBD + _.random(1, 100),
+          isPost: true,
+        });
+        sinon.stub(hiveOperations, 'likePost').returns({ result: {} });
+        sinon.spy(sentryHelper, 'handleError');
+        result = await matchBotHelper.voteExtendedMatchBots(JSON.stringify(mock));
+      });
+      it('should return true result', async () => {
+        expect(result).to.be.deep.eq({ result: true });
+      });
+      it('should not call sentry', async () => {
+        const actual = sentryHelper.handleError.calledOnce;
+        expect(actual).to.be.false;
       });
     });
   });

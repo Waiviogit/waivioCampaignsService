@@ -16,4 +16,5 @@ module.exports = {
   wobjectSubscriptions: require('./wobjectSubscriptionModel'),
   walletExemptionsModel: require('./walletExemptionsModel'),
   currenciesRateModel: require('./currenciesRateModel'),
+  extendedMatchBotModel: require('./extendedMatchBotModel'),
 };

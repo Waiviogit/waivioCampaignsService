@@ -1,4 +1,11 @@
-const nodeUrls = ['https://hive.roelandp.nl', 'https://rpc.esteem.app', 'https://api.openhive.network', 'https://hive-api.arcange.eu'];
+const nodeUrls = [
+  'https://rpc.esteem.app',
+  'https://hive-api.arcange.eu',
+  'https://rpc.ausbit.dev',
+  'https://api.hive.blog',
+  'https://hive.roelandp.nl',
+  'https://hived.emre.sh',
+];
 
 const notificationsApi = {
   production: {
@@ -71,6 +78,8 @@ const orderIds = {
 const MIN_DEBT_TO_SUSPENDED = 2;
 const MIN_TO_PAYED_VALUE = 0.001;
 
+const BLOCK_REQ_MAX_TIME = 1000;
+
 module.exports = {
   telegramApi,
   MIN_DEBT_TO_SUSPENDED,
@@ -80,4 +89,5 @@ module.exports = {
   mailerApi: mailerApi[process.env.NODE_ENV || 'development'],
   orderIds,
   blocktradesApi,
+  BLOCK_REQ_MAX_TIME,
 };

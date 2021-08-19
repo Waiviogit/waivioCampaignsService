@@ -13,6 +13,7 @@ require('./jobs/campaignsRewardConvertJob');
 if (process.env.NODE_ENV === 'production') {
   require('utilities/helpers/createTTLHelper');
   require('./jobs/claimRewardsJob');
+  require('./utilities/redis/queues');
 }
 
 startExpiredListener();

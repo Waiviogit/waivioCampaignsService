@@ -1,13 +1,14 @@
 const _ = require('lodash');
 const { PrivateKey, Asset } = require('@hiveio/dhive');
 const { specialTransferBeneficiaries } = require('constants/constants');
+const { broadcastClient, databaseClient } = require('utilities/hiveApi/hiveClient');
 const { postModel } = require('models');
 
-exports.likePost = async (client, {
+exports.likePost = async ({
   key, voter, author, permlink, weight,
 }) => {
   try {
-    const result = await client.broadcast.vote({
+    const result = await broadcastClient.broadcast.vote({
       voter, author, permlink, weight,
     },
     PrivateKey.fromString(key));
@@ -19,7 +20,6 @@ exports.likePost = async (client, {
 };
 
 /**
- * @param client {object}
  * @param from {string}
  * @param to {string}
  * @param amount {number}
@@ -27,11 +27,11 @@ exports.likePost = async (client, {
  * @param activeKey
  * @returns {Promise<{result: boolean}|{error: any}>}
  */
-exports.transfer = async (client, {
+exports.transfer = async ({
   from, to, amount, memo = '', activeKey,
 }) => {
   try {
-    const data = await client.broadcast.transfer({
+    const data = await broadcastClient.broadcast.transfer({
       from, to, amount: new Asset(amount, 'HIVE'), memo,
     }, PrivateKey.fromString(activeKey));
     return { result: true, data };
@@ -41,26 +41,24 @@ exports.transfer = async (client, {
 };
 
 /**
- * @param client {object}
  * @param names {[string]}
  * @returns {Promise<any>}
  */
-exports.getAccountsInfo = async (client, names) => {
+exports.getAccountsInfo = async (names) => {
   try {
-    return client.database.call('get_accounts', [names]);
+    return databaseClient.database.call('get_accounts', [names]);
   } catch (error) {
     return { error };
   }
 };
 
 /**
- * @param client {object}
  * @param name {string}
  * @returns {Promise<null|*>}
  */
-exports.getAccountInfo = async (client, name) => {
+exports.getAccountInfo = async (name) => {
   try {
-    const accounts = await client.database.call('get_accounts', [[name]]);
+    const accounts = await databaseClient.database.call('get_accounts', [[name]]);
 
     if (!_.isEmpty(accounts)) return accounts[0];
     return null;
@@ -70,28 +68,26 @@ exports.getAccountInfo = async (client, name) => {
 };
 
 /**
- * @param client {object}
  * @param author {string}
  * @param permlink {string}
  * @returns {Promise<any>}
  */
-exports.getPostInfo = async (client, { author, permlink }) => {
+exports.getPostInfo = async ({ author, permlink }) => {
   try {
-    return client.database.call('get_content', [author, permlink]);
+    return databaseClient.database.call('get_content', [author, permlink]);
   } catch (error) {
     return { error };
   }
 };
 
 /**
- * @param client {object}
  * @returns {Promise<{currentPrice: number, rewardFund: any}|{error: any}>}
  */
-exports.getCurrentPriceInfo = async (client) => {
+exports.getCurrentPriceInfo = async () => {
   try {
-    const sbdMedian = await client.database.call('get_current_median_history_price', []);
-    const rewardFund = await client.database.call('get_reward_fund', ['post']);
-    const props = await client.database.getDynamicGlobalProperties();
+    const sbdMedian = await databaseClient.database.call('get_current_median_history_price', []);
+    const rewardFund = await databaseClient.database.call('get_reward_fund', ['post']);
+    const props = await databaseClient.database.getDynamicGlobalProperties();
     return {
       currentPrice: parseToFloat(sbdMedian.base) / parseToFloat(sbdMedian.quote),
       rewardFund,
@@ -102,9 +98,9 @@ exports.getCurrentPriceInfo = async (client) => {
   }
 };
 
-exports.getPostAuthorReward = async (client, { reward_price: rewardPrice }) => {
+exports.getPostAuthorReward = async ({ reward_price: rewardPrice }) => {
   try {
-    const sbdMedian = await client.database.call('get_current_median_history_price', []);
+    const sbdMedian = await databaseClient.database.call('get_current_median_history_price', []);
 
     return parseFloat(rewardPrice) * (parseFloat(sbdMedian.quote) / parseFloat(sbdMedian.base));
   } catch (error) {
@@ -112,10 +108,10 @@ exports.getPostAuthorReward = async (client, { reward_price: rewardPrice }) => {
   }
 };
 
-exports.getPostState = async (client, { author, permlink, category }) => {
+exports.getPostState = async ({ author, permlink, category }) => {
   try {
     return {
-      result: await client.database.call(
+      result: await databaseClient.database.call(
         'get_state',
         [`${category}/@${author}/${permlink}`],
       ),
@@ -125,10 +121,10 @@ exports.getPostState = async (client, { author, permlink, category }) => {
   }
 };
 
-exports.sendOperations = async (client, { operations, key }) => {
+exports.sendOperations = async ({ operations, key }) => {
   try {
     return {
-      result: await client.broadcast.sendOperations(
+      result: await broadcastClient.broadcast.sendOperations(
         [operations], PrivateKey.fromString(key),
       ),
     };
@@ -141,8 +137,8 @@ exports.sendOperations = async (client, { operations, key }) => {
 Calculate vote value after vote, returns -1 if it is downVote
 return 0 if vote weight = 0
  */
-exports.getVoteValue = async (client, vote) => {
-  const post = await this.getPostInfo(client, { author: vote.author, permlink: vote.permlink });
+exports.getVoteValue = async (vote) => {
+  const post = await this.getPostInfo({ author: vote.author, permlink: vote.permlink });
   if (!post.author || parseFloat(post.pending_payout_value) === 0 || +post.net_rshares === 0) {
     return { weight: 0, voteValue: 0 };
   }
@@ -162,7 +158,7 @@ exports.getVoteValue = async (client, vote) => {
 
   const voteHDBWeight = +currentVote.rshares
     / (+post.net_rshares / parseFloat(post.pending_payout_value));
-  const { currentPrice } = await this.getCurrentPriceInfo(client);
+  const { currentPrice } = await this.getCurrentPriceInfo();
 
   return {
     weight: currentVote.percent,
@@ -175,11 +171,11 @@ exports.getVoteValue = async (client, vote) => {
  It really works!Calculates the vote value in HIVE,
  if you need to calculate the value in HBD, add price in final calculation
 */
-exports.calculateVotePower = async (client, {
+exports.calculateVotePower = async ({
   name, voteWeight, author, permlink,
 }) => {
-  const account = await this.getAccountInfo(client, name);
-  const { rewardFund, currentPrice: price } = await this.getCurrentPriceInfo(client);
+  const account = await this.getAccountInfo(name);
+  const { rewardFund, currentPrice: price } = await this.getCurrentPriceInfo();
   const vests = parseFloat(account.vesting_shares)
     + parseFloat(account.received_vesting_shares) - parseFloat(account.delegated_vesting_shares);
 
@@ -191,29 +187,28 @@ exports.calculateVotePower = async (client, {
   const power = (((accountVotingPower / 100) * voteWeight)) / 50;
   const rShares = (vests * power * 100) - 50000000;
 
-  const postVoteRhares = await getPostVoteRhares(client, { author, permlink });
+  const { postVoteRhares, isPost } = await getPostVoteRhares({ author, permlink });
 
   const tRShares = postVoteRhares + rShares;
 
-  const s = parseFloat(rewardFund.content_constant);
-  const tClaims = (tRShares * (tRShares + (2 * s))) / (tRShares + (4 * s));
-
   const rewards = parseFloat(rewardFund.reward_balance) / parseFloat(rewardFund.recent_claims);
-  const postValue = tClaims * rewards; // *price - to calculate in HBD
+  const postValue = tRShares * rewards; // *price - to calculate in HBD
   const voteValue = postValue * (rShares / tRShares);
-  return { voteValue };
+  return {
+    voteValue, voteValueHBD: voteValue * price, votePower: accountVotingPower, isPost,
+  };
 };
 
-exports.getVotingInfo = async (client, {
+exports.getVotingInfo = async ({
   accountName, weight = 100, postAuthor, postPermlink,
 }) => {
-  const acc = await this.getAccountInfo(client, accountName);
+  const acc = await this.getAccountInfo(accountName);
 
   if (acc) {
     const secondsAgo = (new Date().getTime() - new Date(`${acc.last_vote_time}Z`).getTime()) / 1000;
     const accountVotingPower = Math.min(10000, acc.voting_power + (10000 * secondsAgo) / 432000);
     // eslint-disable-next-line max-len
-    const { voteValue } = await this.calculateVotePower(client, {
+    const { voteValue } = await this.calculateVotePower({
       name: accountName,
       voteWeight: weight,
       author: postAuthor,
@@ -227,8 +222,8 @@ exports.getVotingInfo = async (client, {
   return { voteWeight: null, currentVotePower: null };
 };
 
-exports.claimRewards = async (client, account) => {
-  const accountInfo = await this.getAccountInfo(client, account.name);
+exports.claimRewards = async (account) => {
+  const accountInfo = await this.getAccountInfo(account.name);
   if (accountInfo.error) return;
   const operations = [
     'claim_reward_balance',
@@ -239,15 +234,15 @@ exports.claimRewards = async (client, account) => {
       reward_vests: `${accountInfo.reward_vesting_balance.split(' ')[0]} VESTS`,
     },
   ];
-  return this.sendOperations(client, { operations, key: account.key });
+  return this.sendOperations({ operations, key: account.key });
 };
 
-exports.makeSpecialTransfers = async (client, account) => {
-  const accountInfo = await this.getAccountInfo(client, account.name);
+exports.makeSpecialTransfers = async (account) => {
+  const accountInfo = await this.getAccountInfo(account.name);
   const amount = parseFloat(accountInfo.balance) / specialTransferBeneficiaries.length;
   if (!amount) return;
   for (const acc of specialTransferBeneficiaries) {
-    await this.transfer(client, {
+    await this.transfer({
       from: account.name, amount: _.floor(amount, 2), to: acc, activeKey: account.key,
     });
   }
@@ -255,12 +250,14 @@ exports.makeSpecialTransfers = async (client, account) => {
 
 const parseToFloat = (balance) => parseFloat(balance.match(/.\d*.\d*/)[0]);
 
-const getPostVoteRhares = async (client, { author, permlink }) => {
+const getPostVoteRhares = async ({ author, permlink }) => {
   let { post } = await postModel.getOne({ author, permlink });
   if (!post) {
-    post = await this.getPostInfo(client, { author, permlink });
+    post = await this.getPostInfo({ author, permlink });
   }
-  return _.get(post, 'vote_rshares')
+  const postVoteRhares = _.get(post, 'vote_rshares')
     ? parseFloat(post.vote_rshares)
     : 0;
+  const isPost = !post.parent_author;
+  return { postVoteRhares, isPost };
 };

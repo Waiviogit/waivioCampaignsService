@@ -15,4 +15,5 @@ module.exports = {
   detectFraudHelper: require('./detectFraudHelper'),
   jsonHelper: require('./jsonHelper'),
   calcHelper: require('./calcHelper'),
+  sentryHelper: require('./sentryHelper'),
 };

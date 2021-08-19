@@ -1,6 +1,6 @@
 const { faker, _ } = require('test/testHelper');
 
-const getMocksData = async (data) => {
+const getMocksData = async (data = {}) => {
   const operation = {
     parent_author: !_.isNull(data.parent_author)
       ? data.parent_author

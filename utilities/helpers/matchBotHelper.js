@@ -1,11 +1,15 @@
 /* eslint-disable camelcase */
-const _ = require('lodash');
-const moment = require('moment');
 const {
-  botUpvoteModel, postModel, matchBotModel, paymentHistoryModel, campaignModel,
+  botUpvoteModel, postModel, matchBotModel, paymentHistoryModel, campaignModel, extendedMatchBotModel,
 } = require('models');
+const { hiveOperations } = require('utilities/hiveApi');
+const sentryHelper = require('utilities/helpers/sentryHelper');
+const { MATCH_BOT_TYPES } = require('constants/matchBotsData');
 const { voteCoefficients } = require('constants/constants');
-const { hiveClient, hiveOperations } = require('utilities/hiveApi');
+const jsonHelper = require('utilities/helpers/jsonHelper');
+const validators = require('controllers/validators');
+const moment = require('moment');
+const _ = require('lodash');
 
 /**
  * Find all expired match bot upvotes and recount sponsors debt to the contractors
@@ -15,8 +19,7 @@ const executeRecount = async () => {
   const upvotes = await botUpvoteModel.getExpiredUpvotes();
 
   for (const upvote of upvotes) {
-    const { active_votes: activeVotes } = await hiveClient.execute(
-      hiveOperations.getPostInfo,
+    const { active_votes: activeVotes } = await hiveOperations.getPostInfo(
       { author: upvote.author, permlink: upvote.permlink },
     );
 
@@ -64,8 +67,7 @@ const executeUpvotes = async () => {
 
   for (const upvote of upvotes) {
     let weight = 1;
-    let { currentVotePower, voteWeight } = await hiveClient.execute(
-      hiveOperations.getVotingInfo,
+    let { currentVotePower, voteWeight } = await hiveOperations.getVotingInfo(
       {
         accountName: upvote.bot_name,
         weight: 100,
@@ -80,8 +82,7 @@ const executeUpvotes = async () => {
     } if (currentVotePower >= upvote.min_voting_power) {
       try {
         ({ votePower: weight, voteWeight } = await getNeededVoteWeight(voteWeight, upvote));
-        const { result: vote } = await hiveClient.execute(
-          hiveOperations.likePost,
+        const { result: vote } = await hiveOperations.likePost(
           {
             voter: upvote.bot_name,
             author: upvote.author,
@@ -112,8 +113,7 @@ const getNeededVoteWeight = async (totalAmount, upvote) => {
     const realVote = totalAmount * idealCoef * realFault;
     if (!needVotePower)needVotePower = idealCoef + (((totalAmount * idealCoef) - realVote) / totalAmount);
     else needVotePower *= idealCoef > 1 ? idealCoef : (idealCoef * realFault);
-    ({ voteWeight: totalAmount } = await hiveClient.execute(
-      hiveOperations.getVotingInfo,
+    ({ voteWeight: totalAmount } = await hiveOperations.getVotingInfo(
       {
         accountName: upvote.bot_name,
         weight: _.round(needVotePower, 3) * 100,
@@ -192,11 +192,9 @@ const updateDataAfterVote = async ({ upvote, voteWeight, weight }) => {
  * @returns {Promise<{result: boolean}>}
  */
 const setRule = async ({
-
   bot_name, sponsor, voting_percent, note, enabled, expiredAt,
 }) => {
-  const [botAcc, sponsorAcc] = await hiveClient.execute(
-    hiveOperations.getAccountsInfo,
+  const [botAcc, sponsorAcc] = await hiveOperations.getAccountsInfo(
     [bot_name, sponsor],
   );
 
@@ -212,20 +210,33 @@ const setRule = async ({
 };
 
 const checkDisable = async ({ bot_name: botName, account_auths: accountAuths }) => {
-  if (!_.flattenDepth(accountAuths).includes(process.env.UPVOTE_BOT_NAME)) {
+  if (!isAccountsIncludeBot({ accountAuths, botName: process.env.UPVOTE_BOT_NAME })) {
     const bots = await matchBotModel.getMatchBots({ bot_name: botName, limit: 1 });
 
     if (!_.isEmpty(bots.results)) {
       await matchBotModel.updateStatus({ bot_name: botName, enabled: false });
     }
   }
+  for (const extendedBot of getExtendedBotsArr()) {
+    if (isAccountsIncludeBot({ accountAuths, botName: extendedBot })) continue;
+    const { result } = await extendedMatchBotModel
+      .find({ botName, type: getMatchBotType(extendedBot) });
+    if (!_.isEmpty(result)) {
+      await extendedMatchBotModel
+        .updateStatus({ botName, type: getMatchBotType(extendedBot), enabled: false });
+    }
+  }
 };
+
+const getExtendedBotsArr = () => [process.env.AUTHOR_BOT_NAME, process.env.CURATOR_BOT_NAME];
+
+const isAccountsIncludeBot = ({ botName, accountAuths }) => (
+  _.flattenDepth(accountAuths).includes(botName));
 
 const removeVote = async ({ botName, author, permlink }) => {
   const enabled = await checkForEnable(botName);
   if (!enabled) return true;
-  await hiveClient.execute(
-    hiveOperations.likePost,
+  await hiveOperations.likePost(
     {
       key: process.env.UPVOTE_BOT_KEY, weight: 0, permlink, author, voter: botName,
     },
@@ -257,10 +268,7 @@ const lookForDownVotes = async (post, bots, voteWeight) => {
 };
 
 const checkForEnable = async (botName) => {
-  const [botAcc] = await hiveClient.execute(
-    hiveOperations.getAccountsInfo,
-    [botName],
-  );
+  const [botAcc] = await hiveOperations.getAccountsInfo([botName]);
   if (!botAcc) return false;
   return !!_.flattenDepth(botAcc.posting.account_auths).includes(process.env.UPVOTE_BOT_NAME);
 };
@@ -273,8 +281,7 @@ const removeVotes = async (user, reservationPermlink) => {
   if (!paymentHistories || !paymentHistories.length) return false;
 
   const upvotes = await botUpvoteModel.getExpiredUpvotes(user.postPermlink);
-  const post = await hiveClient.execute(
-    hiveOperations.getPostInfo,
+  const post = await hiveOperations.getPostInfo(
     { author: user.rootAuthor, permlink: user.postPermlink },
   );
   const reviewHistories = _.filter(paymentHistories, (history) => _.includes(['review', 'beneficiary_fee'], history.type));
@@ -508,8 +515,7 @@ const recountMatchBotVotes = async ({ user, reward, amount }) => {
 
 const reVoteOnReview = async (upvote, newAmountToVote) => {
   let weight;
-  let { voteWeight } = await hiveClient.execute(
-    hiveOperations.getVotingInfo,
+  let { voteWeight } = await hiveOperations.getVotingInfo(
     {
       accountName: upvote.bot_name,
       weight: 100,
@@ -522,8 +528,7 @@ const reVoteOnReview = async (upvote, newAmountToVote) => {
 
   ({ votePower: weight, voteWeight } = await getNeededVoteWeight(voteWeight, upvote));
   try {
-    const { result: vote } = await hiveClient.execute(
-      hiveOperations.likePost,
+    const { result: vote } = await hiveOperations.likePost(
       {
         voter: upvote.bot_name,
         author: upvote.author,
@@ -561,19 +566,122 @@ const checkForGuest = (author, metadata) => {
   }
 };
 
+const voteExtendedMatchBots = async (voteData) => {
+  const { params, validationError } = validators
+    .validate(jsonHelper.parseJson(voteData), validators.matchBots.matchBotVoteSchema);
+  if (validationError) {
+    await sentryHelper.handleError(validationError);
+    return { result: false };
+  }
+  const {
+    voter, author, permlink, voteWeight, minVotingPower, minHBD, botKey, voteComments,
+  } = params;
+  const validVote = await canVote({
+    voteWeight: Math.abs(voteWeight / 100),
+    minVotingPower,
+    voteComments,
+    name: voter,
+    permlink,
+    minHBD,
+    author,
+  });
+  if (!validVote) return { result: false };
+  const { result: vote, error: votingError } = await hiveOperations.likePost(
+    {
+      key: process.env[botKey],
+      weight: voteWeight,
+      permlink,
+      author,
+      voter,
+    },
+  );
+  if (votingError) {
+    await sentryHelper.handleError(votingError);
+    return { result: false };
+  }
+  return { result: !!vote };
+};
+
+const canVote = async ({
+  name, voteWeight, author, permlink, minVotingPower, minHBD, voteComments,
+}) => {
+  const { voteValueHBD, votePower, isPost } = await hiveOperations.calculateVotePower(
+    {
+      name, voteWeight, author, permlink,
+    },
+  );
+  if (votePower < minVotingPower) return false;
+  if (voteValueHBD < minHBD) return false;
+  if (!isPost && !voteComments) return false;
+
+  return true;
+};
+
+const setBot = async ({ botName, json }) => {
+  const { params, validationError } = validators
+    .validate({ botName, ...json }, validators.matchBots.matchBotSetSchema);
+  if (validationError) return { result: false };
+  const [botAcc, watchAcc] = await hiveOperations.getAccountsInfo(
+    [params.botName, params.name],
+  );
+  if (!botAcc || !watchAcc) return { result: false };
+  params.enabled = params.enabled
+    && _.flattenDepth(botAcc.posting.account_auths).includes(getMatchBotName(params.type));
+
+  return {
+    result: await extendedMatchBotModel.setMatchBot(params),
+  };
+};
+
+const unsetBot = async ({ botName, json }) => {
+  const { params, validationError } = validators
+    .validate({ botName, ...json }, validators.matchBots.matchBotUnsetSchema);
+  if (validationError) return { result: false };
+
+  return {
+    result: await extendedMatchBotModel.unsetMatchBot(params),
+  };
+};
+
+const getMatchBotName = (type) => {
+  const botName = {
+    [MATCH_BOT_TYPES.AUTHOR]: () => process.env.AUTHOR_BOT_NAME,
+    [MATCH_BOT_TYPES.CURATOR]: () => process.env.CURATOR_BOT_NAME,
+    default: () => '',
+  };
+  return (botName[type] || botName.default)();
+};
+
+const getMatchBotType = (botName) => {
+  const botType = {
+    [process.env.AUTHOR_BOT_NAME]: () => MATCH_BOT_TYPES.AUTHOR,
+    [process.env.CURATOR_BOT_NAME]: () => MATCH_BOT_TYPES.CURATOR,
+    default: () => '',
+  };
+  return (botType[botName] || botType.default)();
+};
+
 module.exports = {
+  checkAndRemoveHistories,
   removePaymentHistories,
   updatePaymentHistories,
-  removeVotes,
-  checkDisable,
+  voteExtendedMatchBots,
+  updateCompensationFee,
+  recountMatchBotVotes,
+  updateUpvotedRecord,
+  isAccountsIncludeBot,
   getNeededVoteWeight,
-  setRule,
+  getExtendedBotsArr,
+  getMatchBotName,
+  getMatchBotType,
+  executeUpvotes,
   executeRecount,
   checkForGuest,
-  executeUpvotes,
-  updateUpvotedRecord,
-  updateCompensationFee,
   checkForPayed,
-  recountMatchBotVotes,
-  checkAndRemoveHistories,
+  checkDisable,
+  removeVotes,
+  unsetBot,
+  setRule,
+  canVote,
+  setBot,
 };

@@ -1,29 +1,28 @@
-const { nodeUrls } = require('constants/appData');
-const steem = require('steem');
-const _ = require('lodash');
-const axios = require('axios');
 const { parseSwitcher, parseOrders } = require('parsers/mainParser');
-const bluebird = require('bluebird');
 const redisSetter = require('utilities/redis/redisSetter');
 const redisGetter = require('utilities/redis/redisGetter');
+const { nodeUrls } = require('constants/appData');
+const { Client } = require('@hiveio/dhive');
+const axios = require('axios');
+const _ = require('lodash');
 
-bluebird.promisifyAll(steem.api);
-steem.api.setOptions({ url: nodeUrls[0] });
+const hive = new Client(nodeUrls[0]);
+let CURRENT_NODE_URL = nodeUrls[0];
 
 const getBlockNumberStream = async ({
   startFromBlock, startFromCurrent, loadBlock, redisTitle,
 }) => {
   if (startFromCurrent) {
-    loadNextBlock({
+    await loadNextBlock({
       startBlock: (
-        await steem.api.getDynamicGlobalPropertiesAsync()).last_irreversible_block_num,
+        await hive.database.getDynamicGlobalProperties()).last_irreversible_block_num,
       loadBlock,
       redisTitle,
     });
   } else if (startFromBlock && Number.isInteger(startFromBlock)) {
-    loadNextBlock({ startBlock: startFromBlock, loadBlock, redisTitle });
+    await loadNextBlock({ startBlock: startFromBlock, loadBlock, redisTitle });
   } else {
-    loadNextBlock({ loadBlock, redisTitle });
+    await loadNextBlock({ loadBlock, redisTitle });
   }
   return true;
 };
@@ -47,18 +46,18 @@ const loadNextBlock = async ({ startBlock, loadBlock, redisTitle }) => {
   }
 };
 
-const loadBlock = async (block_num) => {
+const loadBlock = async (blockNum) => {
   let block;
 
   try {
-    block = await steem.api.getBlockAsync(block_num);
+    block = await hive.database.getBlock(blockNum);
   } catch (error) {
     console.error(error);
     changeNodeUrl();
     return false;
   }
   if (block && (!block.transactions || !block.transactions[0])) {
-    console.error(`EMPTY BLOCK: ${block_num}`);
+    console.error(`EMPTY BLOCK: ${blockNum}`);
     return true;
   }
   if (block && block.transactions && block.transactions[0]) {
@@ -69,23 +68,29 @@ const loadBlock = async (block_num) => {
   } return false;
 };
 
-const loadBlockRest = async (block_num) => { // return true if block exist and parsed, else - false
+const loadBlockRest = async (blockNum) => { // return true if block exist and parsed, else - false
   const block = [];
   try {
-    const currentBlock = await steem.api.getDynamicGlobalPropertiesAsync();
-    if (block_num > currentBlock.last_irreversible_block_num) return false;
-    const result = await axios.post(nodeUrls[0], getOpsInBlockReqData(block_num));
+    const currentBlock = await hive.database.getDynamicGlobalProperties();
+    if (blockNum > currentBlock.last_irreversible_block_num) return false;
+    const instance = axios.create();
+    const result = await instance.post(
+      CURRENT_NODE_URL,
+      getOpsInBlockReqData(blockNum),
+      { timeout: 8000 },
+    );
 
     if (!_.get(result, 'data.result.ops')) throw ({ message: 'No result from request' });
     const groupedOperations = _.groupBy(result.data.result.ops, 'trx_id');
     _.forEach(Object.keys(groupedOperations), (id) => block.push(groupedOperations[id]));
   } catch (error) {
     console.error(error.message);
+    changeRestNodeUrl();
     await loadBlockRest();
     return false;
   }
   if (!block.length) {
-    console.error(`NO DATA FROM BLOCK BY REST: ${block_num}`);
+    console.error(`NO DATA FROM BLOCK BY REST: ${blockNum}`);
     return true;
   }
   await parseOrders(block);
@@ -93,10 +98,17 @@ const loadBlockRest = async (block_num) => { // return true if block exist and p
 };
 
 const changeNodeUrl = () => {
-  const index = nodeUrls.indexOf(steem.config.url);
+  const index = nodeUrls.indexOf(hive.address);
 
-  steem.config.url = index === nodeUrls.length - 1 ? nodeUrls[0] : nodeUrls[index + 1];
-  console.error(`Node URL was changed to ${steem.config.url}`);
+  hive.address = index === nodeUrls.length - 1 ? nodeUrls[0] : nodeUrls[index + 1];
+  console.error(`Node URL was changed to ${hive.address}`);
+};
+
+const changeRestNodeUrl = () => {
+  const index = nodeUrls.indexOf(CURRENT_NODE_URL);
+
+  CURRENT_NODE_URL = index === nodeUrls.length - 1 ? nodeUrls[0] : nodeUrls[index + 1];
+  console.error(`REST Node URL was changed to ${CURRENT_NODE_URL}`);
 };
 
 const getOpsInBlockReqData = (blockNum) => ({

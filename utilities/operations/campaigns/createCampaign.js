@@ -1,7 +1,7 @@
 const _ = require('lodash');
 const { campaignModel, userModel } = require('models');
 const { setExpireCampaign } = require('utilities/redis/redisSetter');
-const { hiveClient, hiveOperations } = require('utilities/hiveApi');
+const { hiveOperations } = require('utilities/hiveApi');
 const { getRewardUSD } = require('utilities/helpers/paymentsHelper');
 
 module.exports = async (data) => {
@@ -9,7 +9,7 @@ module.exports = async (data) => {
   if (_.get(user, 'auth.provider')) return { error: { status: 422, message: 'Guests cannot create campaigns' } };
 
   if (data.app) {
-    data.app = await hiveClient.execute(hiveOperations.getAccountInfo, data.app) ? data.app : null;
+    data.app = await hiveOperations.getAccountInfo(data.app) ? data.app : null;
   }
   if (data.id) {
     const { result: _id, error: idError } = campaignModel.getCampaignId(data.id);

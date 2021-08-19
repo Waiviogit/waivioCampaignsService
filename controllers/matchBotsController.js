@@ -1,11 +1,12 @@
-const validators = require('controllers/validators');
-const { getMatchBots } = require('models/matchBotModel');
 const { renderSuccess, renderError } = require('concerns/renderConcern');
+const getBots = require('utilities/operations/matchBots/getBots');
+const { getMatchBots } = require('models/matchBotModel');
+const validators = require('controllers/validators');
 
 /**
  * Found all allowed sponsors for match bot which sent in request
  */
-const sponsorMatchBots = async (req, res) => {
+exports.sponsorMatchBots = async (req, res) => {
   const {
     params,
     validationError,
@@ -18,6 +19,14 @@ const sponsorMatchBots = async (req, res) => {
   else renderSuccess(res, { results, votingPower });
 };
 
-module.exports = {
-  sponsorMatchBots,
+exports.getMatchBots = async (req, res) => {
+  const {
+    params,
+    validationError,
+  } = validators.validate({ ...req.query, ...req.params }, validators.matchBots.getMatchBotsSchema);
+  if (validationError) return renderError(res, validationError);
+  const { bots, error } = await getBots.getBotByType(params);
+
+  if (error) renderError(res, { error });
+  else renderSuccess(res, bots);
 };

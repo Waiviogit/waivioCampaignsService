@@ -23,5 +23,6 @@ module.exports = {
     ObjectType: require('./schemas/ObjectTypeSchema'),
     WobjectSubscriptions: require('./schemas/WobjectSubscriptionSchema'),
     WalletExemptions: require('./schemas/WalletExemptions'),
+    ExtendedMatchBot: require('./schemas/ExtendedMatchBotSchema'),
   },
 };

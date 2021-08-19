@@ -177,7 +177,7 @@ const getPowerDepositWithdraws = (op, userName) => {
 const multiAccountFilter = ({ record, filterAccounts, userName }) => {
   filterAccounts = _.filter(filterAccounts, (el) => el !== userName);
 
-  if (!_.includes(ACCOUNT_FILTER_TYPES, record.type) || _.isEmpty(filterAccounts)) return false;
+  if (!_.includes(ACCOUNT_FILTER_TYPES, record.type)) return false;
   switch (record.type) {
     case HIVE_OPERATIONS_TYPES.TRANSFER:
       return filterTypeTransfer({
@@ -206,6 +206,7 @@ const filterTypeTransfer = ({ record, memo, filterAccounts }) => {
   if (record.from === process.env.WALLET_ACC_NAME) {
     return memo.id === 'waivio_guest_transfer' && _.includes(filterAccounts, memo.from);
   }
+  if (record.to === record.from) return true;
   return filterFromTo(filterAccounts, [record.to, record.from]);
 };
 
