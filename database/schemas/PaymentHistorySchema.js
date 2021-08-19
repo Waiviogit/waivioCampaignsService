@@ -1,9 +1,23 @@
 const mongoose = require('mongoose');
-const Float = require('mongoose-float').loadType(mongoose, 4);
 const db = require('database/db_Connection');
 const { PAYMENT_HISTORIES_TYPES } = require('constants/constants');
+const { Decimal128 } = require('bson');
 
 const { Schema } = mongoose;
+
+const DetailsSchema = new Schema({
+  main_object: { type: String },
+  review_object: { type: String },
+  review_permlink: { type: String },
+  reservation_permlink: { type: String },
+  transfer_permlink: { type: String },
+  votesAmount: { type: Decimal128 },
+  hiveCurrency: { type: Decimal128 },
+  beneficiaries: { type: Object },
+  commissionWeight: { type: Decimal128 },
+  payableInDollars: { type: Decimal128 },
+  remaining: { type: Decimal128 },
+});
 
 const paymentHistorySchema = new Schema({
   userName: { type: String, required: true, index: true },
@@ -12,10 +26,10 @@ const paymentHistorySchema = new Schema({
   app: { type: String },
   payed: { type: Boolean, default: false },
   withdraw: { type: String, default: null },
-  amount: { type: Float, required: true },
+  amount: { type: Decimal128, required: true },
   is_demo_account: { type: Boolean, default: false },
   recounted: { type: Boolean, default: false },
-  details: { type: Object },
+  details: { type: DetailsSchema },
   memo: { type: String, default: '' },
 }, {
   timestamps: true,
