@@ -8,7 +8,7 @@ const { extendedMatchBotModel } = require('models');
 const _ = require('lodash');
 
 exports.processCuratorsMatchBot = async (vote) => {
-  // if (_.includes(WORK_BOTS_ENV, process.env.NODE_ENV)) return;
+  if (_.includes(WORK_BOTS_ENV, process.env.NODE_ENV)) return;
   const accountsCondition = { accounts: { $elemMatch: { name: vote.voter, enabled: true } } };
   const { result: bots } = await extendedMatchBotModel.find(
     { $and: [accountsCondition, { type: MATCH_BOT_TYPES.CURATOR }] },
