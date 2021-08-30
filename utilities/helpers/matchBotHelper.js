@@ -664,12 +664,6 @@ const getMatchBotType = (botName) => {
   return (botType[botName] || botType.default)();
 };
 
-(async () => {
-  const yo = RPC_MESSAGES.SAME_VOTE.test('');
-
-  console.log('yo');
-})();
-
 module.exports = {
   checkAndRemoveHistories,
   removePaymentHistories,
