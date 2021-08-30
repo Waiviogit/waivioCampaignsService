@@ -7,6 +7,7 @@ const sentryHelper = require('utilities/helpers/sentryHelper');
 const { MATCH_BOT_TYPES } = require('constants/matchBotsData');
 const { voteCoefficients } = require('constants/constants');
 const jsonHelper = require('utilities/helpers/jsonHelper');
+const { RPC_MESSAGES } = require('constants/regExp');
 const validators = require('controllers/validators');
 const moment = require('moment');
 const _ = require('lodash');
@@ -596,7 +597,9 @@ const voteExtendedMatchBots = async (voteData) => {
     },
   );
   if (votingError) {
-    await sentryHelper.handleError(votingError);
+    if (!RPC_MESSAGES.SAME_VOTE.test(_.get(votingError, 'message', ''))) {
+      await sentryHelper.handleError(votingError);
+    }
     return { result: false };
   }
   return { result: !!vote };
@@ -660,6 +663,12 @@ const getMatchBotType = (botName) => {
   };
   return (botType[botName] || botType.default)();
 };
+
+(async () => {
+  const yo = RPC_MESSAGES.SAME_VOTE.test('');
+
+  console.log('yo');
+})();
 
 module.exports = {
   checkAndRemoveHistories,
