@@ -188,7 +188,6 @@ const find = async (condition) => {
   }
 };
 
-
 module.exports = {
   create,
   update,

@@ -1,10 +1,15 @@
 /* eslint-disable camelcase */
 const {
-  botUpvoteModel, postModel, matchBotModel, paymentHistoryModel, campaignModel, extendedMatchBotModel,
+  extendedMatchBotModel,
+  paymentHistoryModel,
+  botUpvoteModel,
+  matchBotModel,
+  campaignModel,
+  postModel,
 } = require('models');
 const { hiveOperations } = require('utilities/hiveApi');
 const sentryHelper = require('utilities/helpers/sentryHelper');
-const { MATCH_BOT_TYPES } = require('constants/matchBotsData');
+const { MATCH_BOT_TYPES, BOT_ENV_KEY } = require('constants/matchBotsData');
 const { voteCoefficients } = require('constants/constants');
 const jsonHelper = require('utilities/helpers/jsonHelper');
 const { RPC_MESSAGES } = require('constants/regExp');
@@ -585,6 +590,7 @@ const voteExtendedMatchBots = async (voteData) => {
     permlink,
     minHBD,
     author,
+    botKey,
   });
   if (!validVote) return { result: false };
   const { result: vote, error: votingError } = await hiveOperations.likePost(
@@ -597,22 +603,34 @@ const voteExtendedMatchBots = async (voteData) => {
     },
   );
   if (votingError) {
-    if (!RPC_MESSAGES.SAME_VOTE.test(_.get(votingError, 'message', ''))) {
-      await sentryHelper.handleError(votingError);
-    }
+    const testRegularErr = _.get(votingError, 'message', '').match(RPC_MESSAGES.IGNORED_VOTE_ERRORS);
+    if (_.isNil(testRegularErr)) await sentryHelper.handleError(votingError);
     return { result: false };
   }
   return { result: !!vote };
 };
 
 const canVote = async ({
-  name, voteWeight, author, permlink, minVotingPower, minHBD, voteComments,
+  name, voteWeight, author, permlink, minVotingPower, minHBD, voteComments, botKey,
 }) => {
+  const { result: sponsorsVote } = await botUpvoteModel.findOne(
+    { botName: name, author, permlink },
+  );
+  if (sponsorsVote) return false;
+
+  if (botKey === BOT_ENV_KEY.CURATOR) {
+    const { result: authorsBot } = await extendedMatchBotModel.findOne(
+      { botName: name, 'accounts.name': author, type: MATCH_BOT_TYPES.AUTHOR },
+    );
+    if (authorsBot) return false;
+  }
+
   const { voteValueHBD, votePower, isPost } = await hiveOperations.calculateVotePower(
     {
       name, voteWeight, author, permlink,
     },
   );
+
   if (votePower < minVotingPower) return false;
   if (voteValueHBD < minHBD) return false;
   if (!isPost && !voteComments) return false;
