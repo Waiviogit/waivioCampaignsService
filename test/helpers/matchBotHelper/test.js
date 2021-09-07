@@ -5,7 +5,7 @@ const {
 const {
   MatchBotFactory, BotUpvoteFactory, PostFactory, PaymentHistoryFactory, CampaignFactory, ExtendedMatchBotFactory,
 } = require('test/factories');
-const { MATCH_BOT_TYPES } = require('constants/matchBotsData');
+const { MATCH_BOT_TYPES, BOT_ENV_KEY } = require('constants/matchBotsData');
 const { getSetBotData, getCanVoteMock, getVoteDataMock } = require('test/mockData/matchBots');
 
 describe('matchBotHelper', async () => {
@@ -702,7 +702,7 @@ describe('matchBotHelper', async () => {
           { sponsor_name: 'sponsor1', enabled: true, expiredAt },
         ],
       });
-      await ExtendedMatchBotFactory.Create({botName:bot1,  enabled: true });
+      await ExtendedMatchBotFactory.Create({ botName: bot1, enabled: true });
 
       // await MatchBotFactory.Create( { bot_name: bot1, sponsor: sponsor1, enabled: true } );
       // await MatchBotFactory.Create( { bot_name: bot1, sponsor: sponsor2, enabled: true } );
@@ -714,7 +714,7 @@ describe('matchBotHelper', async () => {
     });
     it('should disable extended matchBots', async () => {
       await matchBotHelper.checkDisable({ bot_name: bot1, account_auths: [] });
-      const [extendedBot] = await ExtendedMatchBot.find().lean()
+      const [extendedBot] = await ExtendedMatchBot.find().lean();
 
       expect(extendedBot.accounts[0].enabled).to.be.false;
     });
@@ -1008,6 +1008,9 @@ describe('matchBotHelper', async () => {
   });
 
   describe('On canVote', async () => {
+    beforeEach(async () => {
+      await dropDatabase();
+    });
     afterEach(() => {
       sinon.restore();
     });
@@ -1040,6 +1043,32 @@ describe('matchBotHelper', async () => {
           isPost: false,
         });
         const actual = await matchBotHelper.canVote(mock);
+        expect(actual).to.be.eq(false);
+      });
+      it('should return false when sponsors bot upvote on post', async () => {
+        const mock = getCanVoteMock();
+        await BotUpvoteFactory.Create(
+          { author: mock.author, permlink: mock.permlink, bot_name: mock.name },
+        );
+        sinon.stub(hiveOperations, 'calculateVotePower').returns({
+          votePower: mock.minVotingPower + _.random(1, 100),
+          voteValueHBD: mock.minHBD + _.random(1, 100),
+          isPost: true,
+        });
+        const actual = await matchBotHelper.canVote(mock);
+        expect(actual).to.be.eq(false);
+      });
+      it('should return false when vote curators bot, but authors already setup', async () => {
+        const mock = getCanVoteMock();
+        await ExtendedMatchBotFactory.Create(
+          { name: mock.author, type: MATCH_BOT_TYPES.AUTHOR, botName: mock.name },
+        );
+        sinon.stub(hiveOperations, 'calculateVotePower').returns({
+          votePower: mock.minVotingPower + _.random(1, 100),
+          voteValueHBD: mock.minHBD + _.random(1, 100),
+          isPost: true,
+        });
+        const actual = await matchBotHelper.canVote({ ...mock, botKey: BOT_ENV_KEY.CURATOR });
         expect(actual).to.be.eq(false);
       });
     });
