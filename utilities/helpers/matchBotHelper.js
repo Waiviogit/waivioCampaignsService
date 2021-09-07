@@ -1,6 +1,11 @@
 /* eslint-disable camelcase */
 const {
-  botUpvoteModel, postModel, matchBotModel, paymentHistoryModel, campaignModel, extendedMatchBotModel,
+  extendedMatchBotModel,
+  paymentHistoryModel,
+  botUpvoteModel,
+  matchBotModel,
+  campaignModel,
+  postModel,
 } = require('models');
 const { hiveOperations } = require('utilities/hiveApi');
 const sentryHelper = require('utilities/helpers/sentryHelper');
@@ -597,9 +602,8 @@ const voteExtendedMatchBots = async (voteData) => {
     },
   );
   if (votingError) {
-    if (!RPC_MESSAGES.SAME_VOTE.test(_.get(votingError, 'message', ''))) {
-      await sentryHelper.handleError(votingError);
-    }
+    const testRegularErr = _.get(votingError, 'message', '').match(RPC_MESSAGES.IGNORED_VOTE_ERRORS);
+    if (_.isNil(testRegularErr)) await sentryHelper.handleError(votingError);
     return { result: false };
   }
   return { result: !!vote };
@@ -613,6 +617,10 @@ const canVote = async ({
       name, voteWeight, author, permlink,
     },
   );
+  const { result: sponsorsVote } = await botUpvoteModel.findOne(
+    { botName: name, author, permlink },
+  );
+  if (sponsorsVote) return false;
   if (votePower < minVotingPower) return false;
   if (voteValueHBD < minHBD) return false;
   if (!isPost && !voteComments) return false;
