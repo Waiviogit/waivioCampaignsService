@@ -288,7 +288,9 @@ const withWrapperPayables = async ({
 
 const filterPipe = (payable, date) => {
   const pipe = { $match: {} };
-  date ? pipe.$match = { lastCreatedAt: { $lte: date }, payed: false } : null;
+  date
+    ? pipe.$match = { 'lastNotPayedReview.createdAt': { $lte: date } }
+    : null;
   payable ? pipe.$match.payable = { $gte: payable } : null;
   return pipe;
 };
