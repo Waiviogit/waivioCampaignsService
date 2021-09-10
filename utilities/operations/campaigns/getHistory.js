@@ -141,7 +141,7 @@ const fillCampaign = async (campaign, conversations) => {
 
 const getHistory = async ({
   skip, limit, sort, caseStatus, campaigns,
-  onlyWithMessages, locale, appName,
+  onlyWithMessages, locale, appName, guideName,
 }) => {
   /** get conversations by all campaigns from hive */
   const { conversations } = await getConversationsFromHive(campaigns);
@@ -149,7 +149,7 @@ const getHistory = async ({
   campaigns.map(async (campaign) => fillCampaign(campaign, conversations));
 
   ({ campaigns } = await campaignHelper.getSecondaryCampaigns({
-    allCampaigns: campaigns, skip: 0, limit: campaigns.length, sort, locale, appName,
+    allCampaigns: campaigns, skip: 0, limit: campaigns.length, sort, locale, appName, guideName,
   }));
   /** We get the real amount of reward by dividing
    * by the course and subtracting / adding extra rewards from the guide,
@@ -205,6 +205,7 @@ module.exports = async ({
     onlyWithMessages,
     caseStatus,
     campaigns,
+    guideName,
     appName,
     locale,
     limit,
