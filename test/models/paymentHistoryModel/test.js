@@ -405,9 +405,9 @@ describe('get payables history', async () => {
         sponsor: 'sponsor1', days: 9, skip: 0, limit: 30, payable: 0,
       });
 
-      expect(histories.length).to.be.eq(1);
+      expect(histories.length).to.be.eq(2);
       expect(_.omit(histories[0], ['lastCreatedAt', 'payed', 'notPayedPeriod'])).to.be.eql({ payable: 4, userName: 'user2' });
-      expect(payable).to.be.eq(4);
+      expect(payable).to.be.eq(6);
     });
 
     it('check filter by date with negative value', async () => {
@@ -415,8 +415,8 @@ describe('get payables history', async () => {
         sponsor: 'sponsor1', days: -3, skip: 0, limit: 30, payable: 0,
       });
 
-      expect(histories.length).to.be.eq(4);
-      expect(payable).to.be.eq(134.8);
+      expect(histories.length).to.be.eq(3);
+      expect(payable).to.be.eq(166);
     });
 
     it('check filter by date and payable', async () => {

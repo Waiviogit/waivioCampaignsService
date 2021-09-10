@@ -8,7 +8,7 @@ const { extendedMatchBotModel } = require('models');
 const _ = require('lodash');
 
 exports.processAuthorsMatchBot = async (post) => {
-  // if (_.includes(WORK_BOTS_ENV, process.env.NODE_ENV)) return;
+  if (!_.includes(WORK_BOTS_ENV, process.env.NODE_ENV)) return;
   if (post.parent_author) return { result: false };
   const accountsCondition = { accounts: { $elemMatch: { name: post.author, enabled: true } } };
   const { result: bots } = await extendedMatchBotModel.find(
