@@ -90,11 +90,6 @@ const deactivateCampaign = async (campaignId) => {
     },
   };
   await sendNotification(operation);
-  await sendBellNotification({
-    objects: campaign.objects,
-    primaryObject: campaign.requiredObject,
-    guideName: campaign.guideName,
-  });
 };
 
 const sendBellNotification = async ({ objects, primaryObject, guideName }) => {
