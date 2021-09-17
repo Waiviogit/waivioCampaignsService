@@ -38,7 +38,7 @@ const custom = async (type, data) => {
   await sendNotification(operation);
 };
 
-const activateCampaign = async (campaignId) => {
+const getCampaignWithFollowers = async (campaignId) => {
   const { result: id, error } = await campaignModel.getCampaignId(campaignId);
   if (error) return;
   const { result: campaign, error: campaignError } = await campaignModel.findOne({ _id: id });
@@ -54,12 +54,37 @@ const activateCampaign = async (campaignId) => {
   names = _.concat(names, guideFollowings);
   const { objectName, error: wobjError } = await getWobjectName(campaign.requiredObject);
   if (wobjError) return;
+  return { campaign, followers: names, objectName };
+};
+
+const activateCampaign = async (campaignId) => {
+  const { campaign, followers, objectName } = await getCampaignWithFollowers(campaignId);
 
   const operation = {
     id: NOTIFICATIONS_ID.ACTIVATION_CAMPAIGN,
     data: {
       guide: campaign.guideName,
-      users: [...new Set(names)],
+      users: [...new Set(followers)],
+      author_permlink: campaign.requiredObject,
+      object_name: objectName,
+    },
+  };
+  await sendNotification(operation);
+  await sendBellNotification({
+    objects: campaign.objects,
+    primaryObject: campaign.requiredObject,
+    guideName: campaign.guideName,
+  });
+};
+
+const deactivateCampaign = async (campaignId) => {
+  const { campaign, followers, objectName } = await getCampaignWithFollowers(campaignId);
+
+  const operation = {
+    id: NOTIFICATIONS_ID.DEACTIVATION_CAMPAIGN,
+    data: {
+      guide: campaign.guideName,
+      users: [...new Set(followers)],
       author_permlink: campaign.requiredObject,
       object_name: objectName,
     },
@@ -91,4 +116,4 @@ const sendBellNotification = async ({ objects, primaryObject, guideName }) => {
   }
 };
 
-module.exports = { custom, activateCampaign };
+module.exports = { custom, activateCampaign, deactivateCampaign };
