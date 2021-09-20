@@ -178,6 +178,7 @@ const SORT_TYPES = {
 };
 const NOTIFICATIONS_ID = {
   ACTIVATION_CAMPAIGN: 'activationCampaign',
+  DEACTIVATION_CAMPAIGN: 'deactivationCampaign',
   BELL_WOBJ_REWARDS: 'bellWobjectRewards',
 };
 

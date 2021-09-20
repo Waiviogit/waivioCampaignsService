@@ -161,6 +161,7 @@ const parseActions = async (post, metadata, app) => {
         guide_name: postAuthor,
         permlink: post.permlink,
       });
+      await notificationsRequest.deactivateCampaign(metadata.waivioRewards.campaign_id);
       break;
   }
 };
