@@ -46,7 +46,7 @@ exports.inactivate = async (data) => {
     guideName: data.guide_name,
     status: { $in: activeCampaignStatuses },
   },
-  { status, deactivation_permlink: data.permlink });
+  { status, deactivation_permlink: data.permlink, stoppedAt: data.stoppedAt });
 
   if (result) {
     await wobjectModel.updateCampaignsCount({

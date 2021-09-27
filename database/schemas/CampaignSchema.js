@@ -101,6 +101,7 @@ const campaignSchema = new Schema({
   },
   app: { type: String, default: null },
   expired_at: { type: Date },
+  stoppedAt: { type: Date },
   currency: {
     type: String,
     enum: Object.values(SUPPORTED_CURRENCIES),
