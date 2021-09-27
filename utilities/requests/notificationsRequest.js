@@ -38,27 +38,26 @@ const custom = async (type, data) => {
   await sendNotification(operation);
 };
 
-const getCampaignWithFollowers = async (campaignId) => {
+const campaignWithWobjFollowers = async (campaignId) => {
   const { result: id, error } = await campaignModel.getCampaignId(campaignId);
   if (error) return;
   const { result: campaign, error: campaignError } = await campaignModel.findOne({ _id: id });
   if (campaignError || !campaign) return;
   const { wobjFollowers = [] } = await wobjectSubscriptions
     .getFollowers({ following: campaign.requiredObject });
-  const { users } = await userModel.find({ name: { $in: wobjFollowers } });
-  const { subscriptionData } = await Subscriptions
-    .find({ condition: { following: campaign.guideName } });
-  if (!users || !users.length) return;
-  let names = _.map(users, 'name');
-  const guideFollowings = _.map(subscriptionData, 'follower');
-  names = _.concat(names, guideFollowings);
-  const { objectName, error: wobjError } = await getWobjectName(campaign.requiredObject);
-  if (wobjError) return;
-  return { campaign, followers: names, objectName };
+  return { campaign, users: (await userModel.find({ name: { $in: wobjFollowers } })).users };
 };
 
 const activateCampaign = async (campaignId) => {
-  const { campaign, followers, objectName } = await getCampaignWithFollowers(campaignId);
+  const { campaign, users } = await campaignWithWobjFollowers(campaignId);
+  if (!users || !users.length) return;
+  const { subscriptionData } = await Subscriptions
+    .find({ condition: { following: campaign.guideName } });
+  let followers = _.map(users, 'name');
+  const guideFollowers = _.map(subscriptionData, 'follower');
+  followers = _.concat(followers, guideFollowers);
+  const { objectName, error: wobjError } = await getWobjectName(campaign.requiredObject);
+  if (wobjError) return;
 
   const operation = {
     id: NOTIFICATIONS_ID.ACTIVATION_CAMPAIGN,
@@ -78,7 +77,11 @@ const activateCampaign = async (campaignId) => {
 };
 
 const deactivateCampaign = async (campaignId) => {
-  const { campaign, followers, objectName } = await getCampaignWithFollowers(campaignId);
+  const { campaign, users } = await campaignWithWobjFollowers(campaignId);
+  if (!users || !users.length) return;
+  const { objectName, error: wobjError } = await getWobjectName(campaign.requiredObject);
+  if (wobjError) return;
+  const followers = _.concat(_.map(users, 'name'), campaign.guideName);
 
   const operation = {
     id: NOTIFICATIONS_ID.DEACTIVATION_CAMPAIGN,
