@@ -40,17 +40,19 @@ const custom = async (type, data) => {
 
 const campaignWithWobjFollowers = async (campaignId) => {
   const { result: id, error } = await campaignModel.getCampaignId(campaignId);
-  if (error) return;
+  if (error) return { error: { message: 'Campaign id not found' } };
   const { result: campaign, error: campaignError } = await campaignModel.findOne({ _id: id });
-  if (campaignError || !campaign) return;
+  if (campaignError || !campaign) return { error: { message: 'Campaign not found' } };
   const { wobjFollowers = [] } = await wobjectSubscriptions
     .getFollowers({ following: campaign.requiredObject });
-  return { campaign, users: (await userModel.find({ name: { $in: wobjFollowers } })).users };
+  const { users } = await userModel.find({ name: { $in: wobjFollowers } });
+  if (!users || !users.length) return { error: { message: 'Users not found' } };
+  return { campaign, users, error };
 };
 
 const activateCampaign = async (campaignId) => {
-  const { campaign, users } = await campaignWithWobjFollowers(campaignId);
-  if (!users || !users.length) return;
+  const { campaign, users, error } = await campaignWithWobjFollowers(campaignId);
+  if (error) return;
   const { subscriptionData } = await Subscriptions
     .find({ condition: { following: campaign.guideName } });
   let followers = _.map(users, 'name');
@@ -77,8 +79,8 @@ const activateCampaign = async (campaignId) => {
 };
 
 const deactivateCampaign = async (campaignId) => {
-  const { campaign, users } = await campaignWithWobjFollowers(campaignId);
-  if (!users || !users.length) return;
+  const { campaign, users, error } = await campaignWithWobjFollowers(campaignId);
+  if (error) return;
   const { objectName, error: wobjError } = await getWobjectName(campaign.requiredObject);
   if (wobjError) return;
   const followers = _.concat(_.map(users, 'name'), campaign.guideName);
