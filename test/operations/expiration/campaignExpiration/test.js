@@ -4,6 +4,7 @@ const {
   PaymentHistory, faker, _, Campaign, redisSetter,
 } = require('test/testHelper');
 const { CampaignFactory, PaymentHistoryFactory } = require('test/factories');
+const { paymentHistoryModel } = require('models');
 
 describe('On campaign expiration', async () => {
   describe('expire campaign payment data', async () => {
@@ -69,7 +70,7 @@ describe('On campaign expiration', async () => {
     });
     it('check payment details', async () => {
       await paymentsExpiration.expireDemoPost({ author, permlink });
-      const paymentHistories = await PaymentHistory.find();
+      const { result: paymentHistories } = await paymentHistoryModel.find();
       expect(paymentHistories[0].details.post_permlink).to.be.eq('permlink');
     });
 

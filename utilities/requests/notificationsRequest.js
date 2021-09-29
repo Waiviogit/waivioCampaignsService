@@ -40,26 +40,28 @@ const custom = async (type, data) => {
 
 const getCampaignWithFollowers = async (campaignId) => {
   const { result: id, error } = await campaignModel.getCampaignId(campaignId);
-  if (error) return;
+  if (error) return { error: { message: 'Campaign id not found' } };
   const { result: campaign, error: campaignError } = await campaignModel.findOne({ _id: id });
-  if (campaignError || !campaign) return;
+  if (campaignError || !campaign) return { error: { message: 'Campaign not found' } };
   const { wobjFollowers = [] } = await wobjectSubscriptions
     .getFollowers({ following: campaign.requiredObject });
   const { users } = await userModel.find({ name: { $in: wobjFollowers } });
   const { subscriptionData } = await Subscriptions
     .find({ condition: { following: campaign.guideName } });
-  if (!users || !users.length) return;
+  if (!users || !users.length) return { error: { message: 'User not found' } };
   let names = _.map(users, 'name');
   const guideFollowings = _.map(subscriptionData, 'follower');
   names = _.concat(names, guideFollowings);
   const { objectName, error: wobjError } = await getWobjectName(campaign.requiredObject);
-  if (wobjError) return;
+  if (wobjError) return { error: { message: 'wobjError not found' } };
   return { campaign, followers: names, objectName };
 };
 
 const activateCampaign = async (campaignId) => {
-  const { campaign, followers, objectName } = await getCampaignWithFollowers(campaignId);
-
+  const {
+    campaign, followers, objectName, error,
+  } = await getCampaignWithFollowers(campaignId);
+  if (error) return;
   const operation = {
     id: NOTIFICATIONS_ID.ACTIVATION_CAMPAIGN,
     data: {
@@ -78,7 +80,10 @@ const activateCampaign = async (campaignId) => {
 };
 
 const deactivateCampaign = async (campaignId) => {
-  const { campaign, followers, objectName } = await getCampaignWithFollowers(campaignId);
+  const {
+    campaign, followers, objectName, error,
+  } = await getCampaignWithFollowers(campaignId);
+  if (error) return;
 
   const operation = {
     id: NOTIFICATIONS_ID.DEACTIVATION_CAMPAIGN,

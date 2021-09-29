@@ -1,8 +1,11 @@
-const _ = require('lodash');
+const {
+  divide, add, multiply, subtract,
+} = require('utilities/helpers/calcHelper');
+const { CAMPAIGN_STATUSES, PAYMENT_HISTORIES_TYPES, TRANSFER_TYPES } = require('constants/constants');
 const { campaignModel, paymentHistoryModel } = require('models');
 const mathBotHelper = require('utilities/helpers/matchBotHelper');
-const { CAMPAIGN_STATUSES, PAYMENT_HISTORIES_TYPES, TRANSFER_TYPES } = require('constants/constants');
 const { hiveOperations } = require('utilities/hiveApi');
+const _ = require('lodash');
 
 module.exports = async (author, permlink) => {
   const post = await hiveOperations.getPostInfo({ author, permlink });
@@ -20,8 +23,8 @@ module.exports = async (author, permlink) => {
   const authorPayout = parseFloat(post.total_payout_value);
   const curatorPayout = parseFloat(post.curator_payout_value);
   const totalPayout = payoutPercent
-    ? curatorPayout + (authorPayout / (payoutPercent / 10000))
-    : curatorPayout * 2;
+    ? add(curatorPayout, divide(authorPayout, divide(payoutPercent, 10000)))
+    : multiply(curatorPayout, 2);
 
   if (totalPayout === 0) {
     return removeVoteDebt(author, permlink, campaign);
@@ -114,7 +117,7 @@ const removeVoteDebt = async (author, permlink, campaign) => {
 
     await paymentHistoryModel.updateOne(condition, {
       payed: result ? votesAmount === remaining : false,
-      'details.remaining': votesAmount > remaining ? newRemaining : remaining - votesAmount,
+      'details.remaining': votesAmount > remaining ? newRemaining : subtract(remaining, votesAmount),
     });
   }
 };

@@ -3,6 +3,7 @@ const {
 } = require('test/testHelper');
 const { UserFactory } = require('test/factories');
 const { getMocksData } = require('./mocks');
+const BigNumber = require('bignumber.js');
 
 describe('transfer Parser', async () => {
   let spy;
@@ -129,7 +130,7 @@ describe('transfer Parser', async () => {
         expect(records.length).to.be.eq(1);
         expect(records[0].userName).to.be.eq('demoUser');
         expect(records[0].is_demo_account).to.be.true;
-        expect(records[0].amount).to.be.eq(0.25);
+        expect(new BigNumber(records[0].amount).toNumber()).to.be.eq(0.25);
         expect(records[0].type).to.be.eq('demo_debt');
       });
 
@@ -218,7 +219,7 @@ describe('transfer Parser', async () => {
         expect(records.length).to.be.eq(1);
         expect(records[0].userName).to.be.eq('demoUser');
         expect(records[0].is_demo_account).to.be.true;
-        expect(records[0].amount).to.be.eq(5);
+        expect(new BigNumber(records[0].amount).toNumber()).to.be.eq(5);
         expect(records[0].type).to.be.eq('user_to_guest_transfer');
       });
 

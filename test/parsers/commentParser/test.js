@@ -10,8 +10,11 @@ const {
   CampaignFactory, WobjectFactory, UserFactory,
   PaymentHistoryFactory, BotUpvoteFactory, MatchBotFactory,
 } = require('test/factories');
-const { campaignsForPayments } = require('test/mockData/campaigns');
+const {
+  sumBy, subtract, multiply, divide,
+} = require('utilities/helpers/calcHelper');
 const authorsBot = require('utilities/operations/matchBots/authorsBot');
+const { campaignsForPayments } = require('test/mockData/campaigns');
 const { getMocksData } = require('./mocks');
 
 describe('comment Parser', async () => {
@@ -1766,7 +1769,7 @@ describe('Reduce review by user', async () => {
         paymentAmount = 15;
         for (const type of types) {
           await PaymentHistoryFactory.Create({
-            amount: type === 'review' ? paymentAmount * 0.97 : paymentAmount * 0.03,
+            amount: type === 'review' ? multiply(paymentAmount, 0.97) : multiply(paymentAmount, 0.03),
             type,
             permlink: campaign.users[0].permlink,
             sponsor: campaign.guideName,
@@ -1778,11 +1781,11 @@ describe('Reduce review by user', async () => {
         await commentParser.parse(mock.operation);
       });
       it('should recount review debt with right amount', async () => {
-        const result = await PaymentHistory.findOne({ type: 'review' });
-        expect(result.amount).to.be.eq((paymentAmount - amount) * 0.97);
+        const result = (await PaymentHistory.findOne({ type: 'review' })).toJSON();
+        expect(result.amount).to.be.eq(multiply(subtract(paymentAmount, amount), 0.97));
       });
       it('should not update votesAmount field', async () => {
-        const result = await PaymentHistory.findOne({ type: 'review' });
+        const result = (await PaymentHistory.findOne({ type: 'review' })).toJSON();
         expect(result.details.votesAmount).to.be.eq(0);
       });
     });
@@ -1911,19 +1914,23 @@ describe('Restore reservation', async () => {
     });
     it('should create beneficiary debt', async () => {
       await commentParser.parse(mock);
-      const amount = _.round((campaign.reward / campaign.users[0].hiveCurrency) * (weight / 10000), 3);
-      const result = await PaymentHistory.findOne({ userName: beneficiary }).lean();
-      expect(_.round(result.amount, 3)).to.be.eq(amount);
+      const amount = multiply(
+        divide(campaign.reward, campaign.users[0].hiveCurrency),
+        divide(weight, 10000),
+      );
+      const result = (await PaymentHistory.findOne({ userName: beneficiary })).toJSON();
+      expect(result.amount).to.be.eq(amount);
     });
     it('should create index, campaign, referral debt', async () => {
       await commentParser.parse(mock);
-      const amount = _.floor((campaign.reward / campaign.users[0].hiveCurrency) * 0.05, 3);
+      const amount = multiply(divide(campaign.reward, campaign.users[0].hiveCurrency), 0.05);
       const result = await PaymentHistory.find({
         type: {
-          $in: [PAYMENT_HISTORIES_TYPES.REFERRAL_SERVER_FEE, PAYMENT_HISTORIES_TYPES.CAMPAIGNS_SERVER_FEE, PAYMENT_HISTORIES_TYPES.INDEX_FEE],
+          $in: [PAYMENT_HISTORIES_TYPES.REFERRAL_SERVER_FEE,
+            PAYMENT_HISTORIES_TYPES.CAMPAIGNS_SERVER_FEE, PAYMENT_HISTORIES_TYPES.INDEX_FEE],
         },
-      }).lean();
-      expect(_.round(_.sumBy(result, 'amount'), 3)).to.be.eq(amount);
+      });
+      expect(sumBy(result, (payment) => payment.amount)).to.be.eq(amount);
     });
   });
 });

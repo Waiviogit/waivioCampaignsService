@@ -29,7 +29,7 @@ const Create = async (data = {}) => {
   } catch (e) {}
 
   await paymentHistory.save();
-  return paymentHistory.toObject();
+  return paymentHistory.toJSON();
 };
 
 module.exports = { Create };

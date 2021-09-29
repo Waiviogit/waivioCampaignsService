@@ -1,4 +1,5 @@
 const paymentHistory = require('utilities/operations/paymentHistory');
+const { multiply, add } = require('utilities/helpers/calcHelper');
 const { hiveOperations } = require('utilities/hiveApi');
 const { SUPPORTED_CURRENCIES } = require('constants/constants');
 const { divide } = require('utilities/helpers/calcHelper');
@@ -72,8 +73,10 @@ module.exports = async (data) => {
     sum_payable: payable,
     sum_reserved: _.sumBy(dashboard, (campaign) => {
       if (campaign.reserved) {
-        return (campaign.reserved * campaign.reward)
-          + (campaign.reserved * campaign.reward) * campaign.commissionAgreement;
+        return add(
+          multiply(campaign.reserved, campaign.reward),
+          multiply(multiply(campaign.reserved, campaign.reward), campaign.commissionAgreement),
+        );
       }
       return 0;
     }),

@@ -54,7 +54,7 @@ describe('On paymentsExpiration', async () => {
       expect(paymentHistories.length).to.be.eq(1);
     });
     it('should create correct debt for guest user', async () => {
-      const paymentHistories = await PaymentHistory.findOne({ userName: user }).lean();
+      const paymentHistories = (await PaymentHistory.findOne({ userName: user })).toJSON();
       expect(paymentHistories.amount).to.be.eq(0.5);
     });
   });
@@ -80,7 +80,7 @@ describe('On paymentsExpiration', async () => {
       sinon.restore();
     });
     it('should create correct debt for guest user with hPower acc', async () => {
-      const paymentHistories = await PaymentHistory.findOne({ userName: user }).lean();
+      const paymentHistories = (await PaymentHistory.findOne({ userName: user })).toJSON();
       expect(paymentHistories.amount).to.be.eq(0.8);
     });
     it('should create debt without realHive account', async () => {

@@ -5,12 +5,13 @@ const paymentsHelper = rewire('utilities/helpers/paymentsHelper');
 const distributeReward = paymentsHelper.__get__('distributeReward');
 const {
   expect, dropDatabase, paymentHistoryModel, moment, _, sinon, currencyRequest,
-  faker, PaymentHistory, BotUpvote, Campaign, redis, ObjectID,
+  faker, PaymentHistory, BotUpvote, Campaign, ObjectID,
 } = require('test/testHelper');
 const {
   CampaignFactory, MatchBotFactory, AppFactory, PaymentHistoryFactory, UserFactory,
 } = require('test/factories');
 const { campaignsForPayments } = require('test/mockData/campaigns');
+const { sumBy } = require('utilities/helpers/calcHelper');
 
 describe('PaymentsHelper', async () => {
   beforeEach(async () => {
@@ -437,7 +438,7 @@ describe('PaymentsHelper', async () => {
               expect(payment.payed).to.be.true;
             });
             it('should update transfer remaining to 0', async () => {
-              const payment = await PaymentHistory.findOne({ _id: transfer._id }).lean();
+              const payment = (await PaymentHistory.findOne({ _id: transfer._id })).toJSON();
               expect(payment.details.remaining).to.be.eq(0);
             });
           });
@@ -459,15 +460,15 @@ describe('PaymentsHelper', async () => {
               });
             });
             it('should create payment with payed false', async () => {
-              const payment = await PaymentHistory.findOne({ type: 'review' }).lean();
+              const payment = (await PaymentHistory.findOne({ type: 'review' })).toJSON();
               expect(payment.payed).to.be.false;
             });
             it('should not update transfer with status payed', async () => {
-              const payment = await PaymentHistory.findOne({ _id: transfer._id }).lean();
+              const payment = (await PaymentHistory.findOne({ _id: transfer._id })).toJSON();
               expect(payment.payed).to.be.false;
             });
             it('should not update transfer remaining to 0', async () => {
-              const payment = await PaymentHistory.findOne({ _id: transfer._id }).lean();
+              const payment = (await PaymentHistory.findOne({ _id: transfer._id })).toJSON();
               expect(payment.details.remaining).to.be.eq(remaining);
             });
           });
@@ -701,7 +702,7 @@ describe('PaymentsHelper', async () => {
               title: 'title',
               app: 'app',
             });
-            const histories = await PaymentHistory.find({ type: { $in: ['campaign_server_fee', 'referral_server_fee'] } }).lean();
+            const histories = _.map(await PaymentHistory.find({ type: { $in: ['campaign_server_fee', 'referral_server_fee'] } }), (payment) => payment.toJSON());
 
             expect(histories.length).to.be.eq(4);
             expect(histories[0].amount).to.be.eq(0.158);
@@ -732,8 +733,8 @@ describe('PaymentsHelper', async () => {
           });
           const beneficiaryHistories = await PaymentHistory.find({ type: 'beneficiary_fee' });
           const reviewHistories = await PaymentHistory.find({ type: 'review' });
-          const beneficiarySum = _.round(_.sumBy(beneficiaryHistories, 'amount'), 2);
-          const reviewerSum = _.round(_.sumBy(reviewHistories, 'amount'), 2);
+          const beneficiarySum = sumBy(beneficiaryHistories, (history) => history.amount);
+          const reviewerSum = sumBy(reviewHistories, (history) => history.amount);
           expect(reviewHistories.length).to.be.eq(2);
           expect(beneficiarySum).to.be.eq(3.78);
           expect(reviewerSum).to.be.eq(17.22);
@@ -752,7 +753,7 @@ describe('PaymentsHelper', async () => {
               app: 'app',
             },
           );
-          const histories = await PaymentHistory.find({ type: 'review' });
+          const histories = _.map(await PaymentHistory.find({ type: 'review' }), (payment) => payment.toJSON());
           expect(histories.length).to.be.eq(2);
           expect(histories[0].amount).to.be.eq(10.5);
           expect(histories[0].userName).to.be.eq('user1');
@@ -769,7 +770,7 @@ describe('PaymentsHelper', async () => {
             title: 'title',
             app: 'app',
           });
-          const histories = await PaymentHistory.find().lean();
+          const histories = _.map(await PaymentHistory.find(), (payment) => payment.toJSON());
           expect(histories.length).to.be.eq(8);
           expect(histories[0].userName).to.be.eq('user1');
           expect(histories[0].amount).to.be.eq(10.5);
@@ -793,7 +794,7 @@ describe('PaymentsHelper', async () => {
             title: 'title',
             app: 'app',
           });
-          const histories = await PaymentHistory.find({ type: 'index_fee' });
+          const histories = _.map(await PaymentHistory.find({ type: 'index_fee' }), (payment) => payment.toJSON());
           expect(histories.length).to.be.eq(2);
           expect(histories[0].amount).to.be.eq(0.073);
           expect(histories[0].userName).to.be.eq(waivio);
@@ -814,7 +815,7 @@ describe('PaymentsHelper', async () => {
               { account: 'b2', weight: 1400 },
             ],
           });
-          const histories = await PaymentHistory.find({ type: 'beneficiary_fee' });
+          const histories = _.map(await PaymentHistory.find({ type: 'beneficiary_fee' }), (payment) => payment.toJSON());
           expect(histories.length).to.be.eq(4);
           expect(histories[0].amount).to.be.eq(0.42);
           expect(histories[1].amount).to.be.eq(1.47);
@@ -836,7 +837,7 @@ describe('PaymentsHelper', async () => {
               { account: 'b2', weight: 1400 },
             ],
           });
-          const histories = await PaymentHistory.find({ type: 'beneficiary_fee' });
+          const histories = _.map(await PaymentHistory.find({ type: 'beneficiary_fee' }), (payment) => payment.toJSON());
           expect(histories.length).to.be.eq(4);
           expect(histories[0].amount).to.be.eq(0.42);
           expect(histories[1].amount).to.be.eq(1.47);
@@ -921,7 +922,7 @@ describe('PaymentsHelper', async () => {
         await paymentsHelper.transfer({
           permlink: 'permlink', userName: 'user1', sponsor: 'guide1', amount: '13.2 SBD',
         });
-        const history = await PaymentHistory.find();
+        const history = _.map(await PaymentHistory.find(), (payment) => payment.toJSON());
         expect(history.length).to.be.eq(1);
         expect(history[0].amount).to.be.eq(13.2);
         expect(history[0].userName).to.be.eq('user1');

@@ -513,9 +513,9 @@ describe('updateAmount', async () => {
       amount: 1.2,
       reservationPermlink: payment.details.reservation_permlink,
     });
-    const history = await PaymentHistory.findOne(
+    const history = (await PaymentHistory.findOne(
       { userName: payment.userName, sponsor: payment.sponsor },
-    );
+    )).toJSON();
     expect(history.amount).to.be.eq(0.8);
     expect(history.recounted).to.be.eq(true);
   });
@@ -527,9 +527,9 @@ describe('updateAmount', async () => {
       sponsor: payment.sponsor,
       reservationPermlink: payment.details.reservation_permlink,
     });
-    const history = await PaymentHistory.findOne(
+    const history = (await PaymentHistory.findOne(
       { userName: payment.userName, sponsor: payment.sponsor },
-    );
+    )).toJSON();
 
     expect(history.amount).to.be.eq(2);
     expect(history.recounted).to.be.eq(true);
@@ -537,9 +537,9 @@ describe('updateAmount', async () => {
 
   it('should not update with invalid status', async () => {
     await paymentHistoryModel.updateAmount({ type: 'aaa', author: 'user1', sponsor: 'sponsor1' });
-    const history = await PaymentHistory.findOne(
+    const history = (await PaymentHistory.findOne(
       { userName: payment.userName, sponsor: payment.sponsor },
-    );
+    )).toJSON();
 
     expect(history.amount).to.be.eq(2);
     expect(history.recounted).to.be.eq(false);
@@ -547,9 +547,9 @@ describe('updateAmount', async () => {
 
   it('should not update with invalid user', async () => {
     await paymentHistoryModel.updateAmount({ type: 'review', author: 'aaa', sponsor: 'sponsor1' });
-    const history = await PaymentHistory.findOne(
+    const history = (await PaymentHistory.findOne(
       { userName: payment.userName, sponsor: payment.sponsor },
-    );
+    )).toJSON();
 
     expect(history.amount).to.be.eq(2);
     expect(history.recounted).to.be.eq(false);
@@ -557,9 +557,9 @@ describe('updateAmount', async () => {
 
   it('should not update with invalid sponsor', async () => {
     await paymentHistoryModel.updateAmount({ type: 'review', author: 'user1', sponsor: 'aaa' });
-    const history = await PaymentHistory.findOne(
+    const history = (await PaymentHistory.findOne(
       { userName: payment.userName, sponsor: payment.sponsor },
-    );
+    )).toJSON();
 
     expect(history.amount).to.be.eq(2);
     expect(history.recounted).to.be.eq(false);

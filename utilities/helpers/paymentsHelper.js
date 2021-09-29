@@ -18,6 +18,7 @@ const { checkOnHoldStatus } = require('utilities/helpers/campaignsHelper');
 const {
   divide, multiply, add, sumBy, subtract,
 } = require('utilities/helpers/calcHelper');
+const BigNumber = require('bignumber.js');
 
 /**
  * Initially, all records about the sponsor's debts are generated,
@@ -88,7 +89,7 @@ const createReview = async ({
         type: payable.type,
         payed: !(payable.amount - debt > 0.001),
         commission: payable.commission || null,
-        payable: _.round(payable.amount, 3),
+        payable: new BigNumber(payable.amount),
         review_permlink: permlink,
         beneficiaries: updBeneficiaries,
         object_permlink: objectPermlink,
@@ -276,7 +277,7 @@ const distributeReward = async ({
   const beneficiariesData = _.map(beneficiaries,
     (bnf) => ({
       account: bnf.account,
-      amount: multiply(divide(bnf.weight, 10000), reward, 4),
+      amount: multiply(divide(bnf.weight, 10000), reward),
       weight: bnf.weight,
     }));
 

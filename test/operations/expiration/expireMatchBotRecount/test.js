@@ -300,9 +300,9 @@ describe('expireMatchBotRecount', async () => {
         sinon.stub(hiveOperations, 'getVoteValue').returns(Promise.resolve({ weight: percent, voteValue: vote }));
         await expireMatchBotRecount(reqData);
         result = await BotUpvote.findOne({ status: 'upvoted', author: user, permlink: paymentData.reviewPermlink });
-        reviewHistory = await PaymentHistory.findOne({ _id: reviewPayment._id });
-        benefHistory = await PaymentHistory.findOne({ _id: benefPayment._id });
-        compensationHistory = await PaymentHistory.findOne({ _id: compensation._id });
+        reviewHistory = (await PaymentHistory.findOne({ _id: reviewPayment._id })).toJSON();
+        benefHistory = (await PaymentHistory.findOne({ _id: benefPayment._id })).toJSON();
+        compensationHistory = (await PaymentHistory.findOne({ _id: compensation._id })).toJSON();
       });
       it('should update botUpvote record', async () => {
         expect(result.currentVote).to.be.eq(vote);
@@ -329,8 +329,8 @@ describe('expireMatchBotRecount', async () => {
         sinon.stub(hiveOperations, 'getVoteValue').returns(Promise.resolve({ weight: -1000, voteValue: -1 }));
         await expireMatchBotRecount(reqData);
         result = await BotUpvote.findOne({ status: 'upvoted', author: user, permlink: paymentData.reviewPermlink });
-        reviewHistory = await PaymentHistory.findOne({ _id: reviewPayment._id });
-        benefHistory = await PaymentHistory.findOne({ _id: benefPayment._id });
+        reviewHistory = (await PaymentHistory.findOne({ _id: reviewPayment._id })).toJSON();
+        benefHistory = (await PaymentHistory.findOne({ _id: benefPayment._id })).toJSON();
         compensationHistory = await PaymentHistory.findOne({ _id: compensation._id });
       });
       it('should delete compensation payment', async () => {

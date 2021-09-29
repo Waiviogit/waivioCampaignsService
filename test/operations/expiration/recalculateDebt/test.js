@@ -2,9 +2,8 @@ const {
   expect, sinon, dropDatabase, ObjectID, _,
   PaymentHistory, faker, recalculateDebt, hiveOperations,
 } = require('test/testHelper');
-const {
-  CampaignFactory, PaymentHistoryFactory,
-} = require('test/factories');
+const { CampaignFactory, PaymentHistoryFactory } = require('test/factories');
+const { add, subtract } = require('utilities/helpers/calcHelper');
 
 describe('On recalculateDebt', async () => {
   let author, permlink, reward, reviewPmnt, benenifiaryFee, compensationFee, transfer, bot;
@@ -91,7 +90,7 @@ describe('On recalculateDebt', async () => {
       });
       it('should remove votes amount from review payment', async () => {
         await recalculateDebt(author, permlink);
-        const result = await PaymentHistory.findOne({ _id: reviewPmnt._id });
+        const result = (await PaymentHistory.findOne({ _id: reviewPmnt._id })).toJSON();
         expect(result.details.votesAmount).to.be.eq(0);
       });
       it('should add debt from votesAmount to amount at review payment', async () => {
@@ -102,9 +101,9 @@ describe('On recalculateDebt', async () => {
       });
       it('should change remaining at transfer payment', async () => {
         await recalculateDebt(author, permlink);
-        const result = await PaymentHistory.findOne({ _id: transfer._id });
-        expect(_.round(result.details.remaining, 3))
-          .to.be.eq(_.round(transfer.details.remaining - reviewPmnt.details.votesAmount, 3));
+        const result = (await PaymentHistory.findOne({ _id: transfer._id })).toJSON();
+        expect(result.details.remaining)
+          .to.be.eq(subtract(transfer.details.remaining, reviewPmnt.details.votesAmount));
       });
       it('should change status (payed) at beneficiary debt if it was payed and no transfer remaining', async () => {
         await recalculateDebt(author, permlink);
@@ -125,8 +124,8 @@ describe('On recalculateDebt', async () => {
       it('should not change remaining if transfer remaining < votesAmount', async () => {
         await PaymentHistory.updateOne({ _id: transfer._id }, { 'details.remaining': 0.1 });
         await recalculateDebt(author, permlink);
-        const result = await PaymentHistory.findOne({ _id: transfer._id });
-        expect(result.details.remaining).to.be.eq(0.1 + reviewPmnt.amount);
+        const result = (await PaymentHistory.findOne({ _id: transfer._id })).toJSON();
+        expect(result.details.remaining).to.be.eq(add(0.1, reviewPmnt.amount));
       });
       it('should change status of transfer if remaining eq votesAmount', async () => {
         await PaymentHistory.updateOne({ _id: transfer._id }, { 'details.remaining': 0.97 });
@@ -138,7 +137,7 @@ describe('On recalculateDebt', async () => {
         await PaymentHistory.updateOne({ _id: compensationFee._id }, { payed: true });
         const payment = await PaymentHistoryFactory.Create({ userName: compensationFee.userName, sponsor: compensationFee.sponsor, type: 'transfer' });
         await recalculateDebt(author, permlink);
-        const result = await PaymentHistory.findOne({ _id: payment._id });
+        const result = (await PaymentHistory.findOne({ _id: payment._id })).toJSON();
         expect(result.details.remaining).to.be.eq(compensationFee.amount);
       });
       it('should recount transfer remaining if compensation fee is payed (payed transfer)', async () => {
@@ -147,7 +146,7 @@ describe('On recalculateDebt', async () => {
           userName: compensationFee.userName, sponsor: compensationFee.sponsor, type: 'transfer', payed: true,
         });
         await recalculateDebt(author, permlink);
-        const result = await PaymentHistory.findOne({ _id: payment._id });
+        const result = (await PaymentHistory.findOne({ _id: payment._id })).toJSON();
         expect(result.details.remaining).to.be.eq(compensationFee.amount);
       });
       it('should change status (payed) at transfer after recount', async () => {
@@ -170,24 +169,25 @@ describe('On recalculateDebt', async () => {
         total_payout_value: '0.330 HBD',
         curator_payout_value: '0.370 HBD',
         percent_steem_dollars: 10000,
-        active_votes: [{ rshares: 1000, voter: bot }, { rshares: -500, voter: faker.random.string() }],
+        active_votes: [{ rshares: 1000, voter: bot },
+          { rshares: -500, voter: faker.random.string() }],
       }));
       sinon.stub(hiveOperations, 'getCurrentPriceInfo').returns(Promise.resolve({ currentPrice: 1 }));
     });
     it('should update compensation fee with correct amount', async () => {
       await recalculateDebt(author, permlink);
-      const result = await PaymentHistory.findOne({ _id: compensationFee._id });
+      const result = (await PaymentHistory.findOne({ _id: compensationFee._id })).toJSON();
       expect(result.amount).to.be.eq(newVoteValue);
     });
     it('should recount transfer remaining', async () => {
       await recalculateDebt(author, permlink);
-      const result = await PaymentHistory.findOne({ _id: transfer._id });
+      const result = (await PaymentHistory.findOne({ _id: transfer._id })).toJSON();
       expect(result.details.remaining)
         .to.be.eq(transfer.details.remaining - (1 - newVoteValue) * 0.97);
     });
     it('should recount review votesAmount', async () => {
       await recalculateDebt(author, permlink);
-      const result = await PaymentHistory.findOne({ _id: reviewPmnt._id });
+      const result = (await PaymentHistory.findOne({ _id: reviewPmnt._id })).toJSON();
       expect(result.details.votesAmount)
         .to.be.eq(_.round((1 - (1 - newVoteValue)) * 0.97, 4));
     });
@@ -207,8 +207,8 @@ describe('On recalculateDebt', async () => {
       const newRemaining = 0.01;
       await PaymentHistory.updateOne({ _id: transfer._id }, { 'details.remaining': newRemaining });
       await recalculateDebt(author, permlink);
-      const result = await PaymentHistory.findOne({ _id: transfer._id });
-      expect(result.details.remaining).to.be.eq(newRemaining + reviewPmnt.amount);
+      const result = (await PaymentHistory.findOne({ _id: transfer._id })).toJSON();
+      expect(result.details.remaining).to.be.eq(add(newRemaining, reviewPmnt.amount));
     });
   });
 });

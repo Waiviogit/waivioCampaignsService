@@ -3,6 +3,7 @@ const {
 } = require('test/testHelper');
 const { PaymentHistoryFactory, WobjectFactory, CurrenciesRatesFactory } = require('test/factories');
 const { SUPPORTED_CURRENCIES } = require('constants/constants');
+const { multiply, add } = require('utilities/helpers/calcHelper');
 
 chai.use(chaiHttp);
 chai.should();
@@ -698,7 +699,7 @@ describe('Payables', async () => {
           });
           it('should add amount of payment skipped document to common ammount', async () => {
             expect(resultSkip.body.amount).to.be.eq(
-              (reward * countRewardPayments) + newHistory.amount,
+              add(multiply(reward, countRewardPayments), newHistory.amount),
             );
           });
           it('should return result with limit', async () => {

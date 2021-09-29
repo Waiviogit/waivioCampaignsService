@@ -3,10 +3,12 @@ const {
   BotUpvote, PaymentHistory, MatchBot, faker, hiveOperations, sentryHelper, ExtendedMatchBot,
 } = require('test/testHelper');
 const {
-  MatchBotFactory, BotUpvoteFactory, PostFactory, PaymentHistoryFactory, CampaignFactory, ExtendedMatchBotFactory,
+  MatchBotFactory, BotUpvoteFactory, PostFactory, PaymentHistoryFactory, CampaignFactory,
+  ExtendedMatchBotFactory,
 } = require('test/factories');
 const { MATCH_BOT_TYPES, BOT_ENV_KEY } = require('constants/matchBotsData');
 const { getSetBotData, getCanVoteMock, getVoteDataMock } = require('test/mockData/matchBots');
+const { multiply, divide } = require('utilities/helpers/calcHelper');
 
 describe('matchBotHelper', async () => {
   describe('payableRecount', async () => {
@@ -45,8 +47,7 @@ describe('matchBotHelper', async () => {
 
       sinon.stub(hiveOperations, 'getPostInfo').returns(Promise.resolve(postInfo));
       await matchBotHelper.executeRecount();
-
-      const paymentHistories = await PaymentHistory.find();
+      const paymentHistories = _.map(await PaymentHistory.find(), (payment) => payment.toJSON());
       const botUpvotes = await BotUpvote.find();
 
       expect(_.map(paymentHistories, 'amount')).to.be.eql([4.8]);
@@ -66,7 +67,7 @@ describe('matchBotHelper', async () => {
       sinon.stub(hiveOperations, 'getPostInfo').returns(Promise.resolve(postInfo));
       await matchBotHelper.executeRecount();
 
-      const paymentHistories = await PaymentHistory.find();
+      const paymentHistories = _.map(await PaymentHistory.find(), (payment) => payment.toJSON());
       const botUpvotes = await BotUpvote.find();
 
       expect(_.map(paymentHistories, 'amount')).to.be.eql([5]);
@@ -96,7 +97,7 @@ describe('matchBotHelper', async () => {
       });
       sinon.stub(hiveOperations, 'getPostInfo').returns(Promise.resolve(postInfo));
       await matchBotHelper.executeRecount();
-      const paymentHistories = await PaymentHistory.find();
+      const paymentHistories = _.map(await PaymentHistory.find(), (payment) => payment.toJSON());
       const botUpvotes = await BotUpvote.find();
 
       expect(_.map(paymentHistories, 'amount')).to.be.eql([0]);
@@ -115,7 +116,7 @@ describe('matchBotHelper', async () => {
       }
       sinon.stub(hiveOperations, 'getPostInfo').returns(Promise.resolve(postInfo));
       await matchBotHelper.executeRecount();
-      const paymentHistories = await PaymentHistory.find();
+      const paymentHistories = _.map(await PaymentHistory.find(), (payment) => payment.toJSON());
       const botUpvotes = await BotUpvote.find();
 
       expect(_.map(paymentHistories, 'amount')).to.be.eql([4.8, 4.8, 4.8]);
@@ -211,7 +212,7 @@ describe('matchBotHelper', async () => {
         userName: beneficiaries[1].account,
         sponsor: botUpvote.sponsor,
         type: 'beneficiary_fee',
-        amount: payment.amount * (weight * 2 / 10000),
+        amount: multiply(payment.amount, divide(multiply(weight, 2), 10000)),
         beneficiaries,
         weight,
       });
@@ -221,8 +222,8 @@ describe('matchBotHelper', async () => {
       priceInfo = { amount: 0.2 };
       sinon.stub(hiveOperations, 'getPostInfo').returns(Promise.resolve(postInfo));
       await matchBotHelper.executeRecount();
-
-      paymentHistories = await PaymentHistory.find({ recounted: true }).lean();
+      paymentHistories = _.map(await PaymentHistory.find({ recounted: true }),
+        (history) => history.toJSON());
     });
     afterEach(async () => {
       sinon.restore();
@@ -305,7 +306,7 @@ describe('matchBotHelper', async () => {
         it('should update payment history by all allowed upvote reward', async () => {
           await matchBotHelper.executeUpvotes();
           await matchBotHelper.executeRecount();
-          const history = await PaymentHistory.findOne({ 'details.review_permlink': paymentHistory.details.review_permlink }).lean();
+          const history = (await PaymentHistory.findOne({ 'details.review_permlink': paymentHistory.details.review_permlink })).toJSON();
           expect(history.details.votesAmount).to.be.eq(paymentHistory.amount);
         });
       });
@@ -318,13 +319,13 @@ describe('matchBotHelper', async () => {
       it('should take voteAmount from payment history amount after vote', async () => {
         await matchBotHelper.executeUpvotes();
         await matchBotHelper.executeRecount();
-        const history = await PaymentHistory.findOne({ 'details.review_permlink': paymentHistory.details.review_permlink }).lean();
+        const history = (await PaymentHistory.findOne({ 'details.review_permlink': paymentHistory.details.review_permlink })).toJSON();
         expect(history.amount).to.be.eq(paymentHistory.amount - voteWeight / 2);
       });
       it('should add to votesAmount vote weight after vote', async () => {
         await matchBotHelper.executeUpvotes();
         await matchBotHelper.executeRecount();
-        const history = await PaymentHistory.findOne({ 'details.review_permlink': paymentHistory.details.review_permlink }).lean();
+        const history = (await PaymentHistory.findOne({ 'details.review_permlink': paymentHistory.details.review_permlink })).toJSON();
         expect(history.details.votesAmount).to.be.eq(voteWeight / 2);
       });
       it('success executes two async calls upvotes', async () => {
@@ -778,7 +779,7 @@ describe('matchBotHelper', async () => {
               payed: false, type: 'transfer', remaining: amount + 1, userName: history.userName, sponsor: history.sponsor,
             });
             await matchBotHelper.checkForPayed({ history, amount, marker: 'add' });
-            const result = await PaymentHistory.findOne({ _id: transfer._id });
+            const result = (await PaymentHistory.findOne({ _id: transfer._id })).toJSON();
             expect(!result.payed && result.details.remaining === 1).to.be.true;
           });
           it('should update transfer to status payed', async () => {
@@ -786,7 +787,7 @@ describe('matchBotHelper', async () => {
               payed: false, type: 'transfer', remaining: amount, userName: history.userName, sponsor: history.sponsor,
             });
             await matchBotHelper.checkForPayed({ history, amount, marker: 'add' });
-            const result = await PaymentHistory.findOne({ _id: transfer._id });
+            const result = (await PaymentHistory.findOne({ _id: transfer._id })).toJSON();
             expect(result.payed && result.details.remaining === 0).to.be.true;
           });
           it('should not update transfer if remaining < amount', async () => {
@@ -794,7 +795,7 @@ describe('matchBotHelper', async () => {
               payed: false, type: 'transfer', remaining: amount - 0.5, userName: history.userName, sponsor: history.sponsor,
             });
             await matchBotHelper.checkForPayed({ history, amount, marker: 'add' });
-            const result = await PaymentHistory.findOne({ _id: transfer._id }).lean();
+            const result = (await PaymentHistory.findOne({ _id: transfer._id })).toJSON();
             expect(!result.payed && result.details.remaining === transfer.details.remaining + history.amount).to.be.true;
           });
         });

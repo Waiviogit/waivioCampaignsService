@@ -1,6 +1,7 @@
-const { PaymentHistory } = require('database').models;
-
 const currencyRequest = require('utilities/requests/currencyRequest');
+const { PaymentHistory } = require('database').models;
+const BigNumber = require('bignumber.js');
+const _ = require('lodash');
 
 const addPaymentHistory = async ({
   // eslint-disable-next-line camelcase
@@ -91,9 +92,24 @@ const updateAmount = async ({
   return !!result.n;
 };
 
+const parseDecimal = (payment) => {
+  for (const paymentKey in _.omit(payment, ['_id'])) {
+    if (_.get(payment[paymentKey], '_bsontype') === 'Decimal128') {
+      payment[paymentKey] = new BigNumber(payment[paymentKey]).toNumber();
+      continue;
+    }
+
+    if (typeof payment[paymentKey] === 'object') {
+      payment[paymentKey] = parseDecimal(payment[paymentKey]);
+    }
+  }
+  return payment;
+};
+
 const aggregate = async (pipeline) => {
   try {
-    return { result: await PaymentHistory.aggregate(pipeline) };
+    const payments = await PaymentHistory.aggregate(pipeline);
+    return { result: _.map(payments, (payment) => parseDecimal(payment)) };
   } catch (error) {
     return { error };
   }
@@ -101,7 +117,8 @@ const aggregate = async (pipeline) => {
 
 const find = async (condition, sort = {}) => {
   try {
-    return { result: await PaymentHistory.find(condition).sort(sort).lean() };
+    const payments = await PaymentHistory.find(condition).sort(sort);
+    return { result: _.map(payments, (payment) => payment.toJSON()) };
   } catch (error) {
     return { error };
   }
@@ -109,7 +126,8 @@ const find = async (condition, sort = {}) => {
 
 const findOne = async (condition) => {
   try {
-    return { result: await PaymentHistory.findOne(condition).lean() };
+    const payment = await PaymentHistory.findOne(condition);
+    return { result: _.isNil(payment) ? payment : payment.toJSON() };
   } catch (error) {
     return { error };
   }
