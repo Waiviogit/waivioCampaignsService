@@ -138,6 +138,7 @@ const HIVE_OPERATIONS_TYPES = {
   PROPOSAL_PAY: 'proposal_pay',
   WITHDRAW_VESTING: 'withdraw_vesting',
   FILL_VESTING_WITHDRAW: 'fill_vesting_withdraw',
+  SET_WITHDRAW_VESTING_ROUTE: 'set_withdraw_vesting_route',
 };
 
 const WALLET_TYPES_FOR_PARSE = Object.values(HIVE_OPERATIONS_TYPES);
