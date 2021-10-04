@@ -45,9 +45,8 @@ const campaignWithWobjFollowers = async (campaignId) => {
   if (campaignError || !campaign) return { error: { message: 'Campaign not found' } };
   const { wobjFollowers = [] } = await wobjectSubscriptions
     .getFollowers({ following: campaign.requiredObject });
-  const { users } = await userModel.find({ name: { $in: wobjFollowers } });
-  if (!users || !users.length) return { error: { message: 'Users not found' } };
-  return { campaign, users, error };
+  const { users = [] } = await userModel.find({ name: { $in: wobjFollowers } });
+  return { campaign, users };
 };
 
 const activateCampaign = async (campaignId) => {
@@ -55,9 +54,6 @@ const activateCampaign = async (campaignId) => {
   if (error) return;
   const { subscriptionData } = await Subscriptions
     .find({ condition: { following: campaign.guideName } });
-  let followers = _.map(users, 'name');
-  const guideFollowers = _.map(subscriptionData, 'follower');
-  followers = _.concat(followers, guideFollowers);
   const { objectName, error: wobjError } = await getWobjectName(campaign.requiredObject);
   if (wobjError) return;
 
@@ -65,7 +61,7 @@ const activateCampaign = async (campaignId) => {
     id: NOTIFICATIONS_ID.ACTIVATION_CAMPAIGN,
     data: {
       guide: campaign.guideName,
-      users: [...new Set(followers)],
+      users: _.uniq([..._.map(users, 'name'), ..._.map(subscriptionData, 'follower')]),
       author_permlink: campaign.requiredObject,
       object_name: objectName,
     },
@@ -83,13 +79,12 @@ const deactivateCampaign = async (campaignId) => {
   if (error) return;
   const { objectName, error: wobjError } = await getWobjectName(campaign.requiredObject);
   if (wobjError) return;
-  const followers = _.concat(_.map(users, 'name'), campaign.guideName);
 
   const operation = {
     id: NOTIFICATIONS_ID.DEACTIVATION_CAMPAIGN,
     data: {
       guide: campaign.guideName,
-      users: [...new Set(followers)],
+      users: _.uniq([..._.map(users, 'name'), campaign.guideName]),
       author_permlink: campaign.requiredObject,
       object_name: objectName,
     },
