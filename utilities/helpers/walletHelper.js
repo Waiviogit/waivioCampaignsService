@@ -1,6 +1,6 @@
 const {
   PAYMENT_HISTORIES_TYPES, HIVE_OPERATIONS_TYPES, SUPPORTED_CURRENCIES,
-  SUPPORTED_CRYPTO_CURRENCIES, DONT_GET_RATES,
+  SUPPORTED_CRYPTO_CURRENCIES, DONT_GET_RATES, WITHDRAW_FORMAT_TYPES,
 } = require('constants/constants');
 const { SAVINGS_TRANSFERS, ACCOUNT_FILTER_TYPES } = require('constants/walletData');
 const { internalExchangeModel, currenciesStatiscticModel, currenciesRateModel } = require('models');
@@ -225,9 +225,16 @@ const formatHiveHistory = ({ walletOperations, tableView, userName }) => (
       operationNum: history[0],
       ...history[1].op[1],
     };
-    if (operation.type === HIVE_OPERATIONS_TYPES.FILL_VESTING_WITHDRAW) {
+    if (_.includes(WITHDRAW_FORMAT_TYPES, operation.type)) {
       Object.assign(operation,
-        { from: operation.from_account, to: operation.to_account, amount: operation.deposited });
+        {
+          from: operation.from_account,
+          to: operation.to_account,
+          ...(
+            operation.type === HIVE_OPERATIONS_TYPES.FILL_VESTING_WITHDRAW
+            && { amount: operation.deposited }
+          ),
+        });
     }
     if (tableView && _.includes(SAVINGS_TRANSFERS, operation.type)) omitFromOperation.push('amount');
 
