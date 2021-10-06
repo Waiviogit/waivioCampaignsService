@@ -38,20 +38,22 @@ const custom = async (type, data) => {
   await sendNotification(operation);
 };
 
-const activateCampaign = async (campaignId) => {
+const campaignWithWobjFollowers = async (campaignId) => {
   const { result: id, error } = await campaignModel.getCampaignId(campaignId);
-  if (error) return;
+  if (error) return { error: { message: 'Campaign id not found' } };
   const { result: campaign, error: campaignError } = await campaignModel.findOne({ _id: id });
-  if (campaignError || !campaign) return;
+  if (campaignError || !campaign) return { error: { message: 'Campaign not found' } };
   const { wobjFollowers = [] } = await wobjectSubscriptions
     .getFollowers({ following: campaign.requiredObject });
-  const { users } = await userModel.find({ name: { $in: wobjFollowers } });
+  const { users = [] } = await userModel.find({ name: { $in: wobjFollowers } });
+  return { campaign, users };
+};
+
+const activateCampaign = async (campaignId) => {
+  const { campaign, users, error } = await campaignWithWobjFollowers(campaignId);
+  if (error) return;
   const { subscriptionData } = await Subscriptions
     .find({ condition: { following: campaign.guideName } });
-  if (!users || !users.length) return;
-  let names = _.map(users, 'name');
-  const guideFollowings = _.map(subscriptionData, 'follower');
-  names = _.concat(names, guideFollowings);
   const { objectName, error: wobjError } = await getWobjectName(campaign.requiredObject);
   if (wobjError) return;
 
@@ -59,7 +61,7 @@ const activateCampaign = async (campaignId) => {
     id: NOTIFICATIONS_ID.ACTIVATION_CAMPAIGN,
     data: {
       guide: campaign.guideName,
-      users: [...new Set(names)],
+      users: _.uniq([..._.map(users, 'name'), ..._.map(subscriptionData, 'follower')]),
       author_permlink: campaign.requiredObject,
       object_name: objectName,
     },
@@ -70,6 +72,24 @@ const activateCampaign = async (campaignId) => {
     primaryObject: campaign.requiredObject,
     guideName: campaign.guideName,
   });
+};
+
+const deactivateCampaign = async (campaignId) => {
+  const { campaign, users, error } = await campaignWithWobjFollowers(campaignId);
+  if (error) return;
+  const { objectName, error: wobjError } = await getWobjectName(campaign.requiredObject);
+  if (wobjError) return;
+
+  const operation = {
+    id: NOTIFICATIONS_ID.DEACTIVATION_CAMPAIGN,
+    data: {
+      guide: campaign.guideName,
+      users: _.uniq([..._.map(users, 'name'), campaign.guideName]),
+      author_permlink: campaign.requiredObject,
+      object_name: objectName,
+    },
+  };
+  await sendNotification(operation);
 };
 
 const sendBellNotification = async ({ objects, primaryObject, guideName }) => {
@@ -91,4 +111,4 @@ const sendBellNotification = async ({ objects, primaryObject, guideName }) => {
   }
 };
 
-module.exports = { custom, activateCampaign };
+module.exports = { custom, activateCampaign, deactivateCampaign };

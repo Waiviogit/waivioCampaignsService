@@ -97,7 +97,7 @@ const parseCoordinates = (map) => {
 };
 
 const fillObjects = (
-  campaign, userName, wobjects, obj, radius, area, firstMapLoad = false,
+  campaign, userName, wobjects, obj, radius, area, firstMapLoad = false, guideName = '',
 ) => {
   let reservation = null, distance = null, reward = null, countUsers = 0;
   if (userName) {
@@ -112,7 +112,12 @@ const fillObjects = (
     }
   }
   const object = _.find(wobjects, (wobj) => wobj.author_permlink === obj);
-  if (!object || _.includes(REMOVE_OBJ_STATUSES, _.get(object, 'status.title'))) return null;
+
+  const toDisplay = requireDisplay({
+    guideName, campaign, object, userName,
+  });
+  if (!object || !toDisplay) return null;
+
   if (_.get(campaign.users, 'length')) {
     countUsers = _.filter(campaign.users,
       (user) => user.status === 'assigned' && user.object_permlink === obj).length;
@@ -132,6 +137,15 @@ const fillObjects = (
     reservationCreated: _.get(reservation, 'createdAt', null),
     distance,
   };
+};
+
+// require display to reserved user and sponsor
+const requireDisplay = ({
+  guideName, campaign, object, userName,
+}) => {
+  if (!_.includes(['relisted', 'unavailable'], _.get(object, 'status.title'))) return true;
+  const isAssigned = _.filter(campaign.users, (user) => user.name === userName && user.status === 'assigned').length;
+  return !!(isAssigned || guideName === campaign.guideName);
 };
 
 /**
@@ -270,7 +284,7 @@ exports.getPrimaryCampaigns = async ({
 
 exports.getSecondaryCampaigns = async ({
   allCampaigns, skip, limit, userName, eligible, reserved, needProcess = true,
-  radius, area, sort = CAMPAIGN_SORTS.REWARD, firstMapLoad, guideNames, appName, locale,
+  radius, area, sort = CAMPAIGN_SORTS.REWARD, firstMapLoad, guideNames, guideName, appName, locale,
 }) => {
   let campaigns = [], currentUser, wobjectsFollow = [];
   const { wobjects } = await wobjectHelper.getWobjects({
@@ -288,7 +302,7 @@ exports.getSecondaryCampaigns = async ({
   await Promise.all(allCampaigns.map(async (campaign) => {
     if (needProcess) {
       campaign.objects = _.compact(_.map(campaign.objects,
-        (obj) => fillObjects(campaign, userName, wobjects, obj, radius, area, firstMapLoad)));
+        (obj) => fillObjects(campaign, userName, wobjects, obj, radius, area, firstMapLoad, guideName)));
       campaign.guide = await getGuideInfo(campaign.guideName, users, currentUser);
     }
     if (!campaign.objects.length) return;

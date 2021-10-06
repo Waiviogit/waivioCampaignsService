@@ -1,7 +1,7 @@
-const mongoose = require('mongoose');
+const { REFERRAL_TYPES, REFERRAL_STATUSES, SUPPORTED_CURRENCIES } = require('constants/constants');
 const LANGUAGES = require('constants/languages');
 const db = require('database/db_Connection');
-const { REFERRAL_TYPES, REFERRAL_STATUSES } = require('constants/constants');
+const mongoose = require('mongoose');
 
 const { Schema } = mongoose;
 
@@ -30,6 +30,11 @@ const UserMetadataSchema = new Schema({
       type: Number, min: 1, max: 10000, default: 5000,
     }, // default percent of your upvotes
     votingPower: { type: Boolean, default: false }, // dynamic toggle of vote power on each vote
+  },
+  currency: {
+    type: String,
+    enum: Object.values(SUPPORTED_CURRENCIES),
+    default: SUPPORTED_CURRENCIES.USD,
   },
   bookmarks: { type: [String], default: [] },
   drafts: {

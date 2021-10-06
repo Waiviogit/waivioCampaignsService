@@ -138,7 +138,13 @@ const HIVE_OPERATIONS_TYPES = {
   PROPOSAL_PAY: 'proposal_pay',
   WITHDRAW_VESTING: 'withdraw_vesting',
   FILL_VESTING_WITHDRAW: 'fill_vesting_withdraw',
+  SET_WITHDRAW_VESTING_ROUTE: 'set_withdraw_vesting_route',
 };
+
+const WITHDRAW_FORMAT_TYPES = [
+  HIVE_OPERATIONS_TYPES.FILL_VESTING_WITHDRAW,
+  HIVE_OPERATIONS_TYPES.SET_WITHDRAW_VESTING_ROUTE,
+];
 
 const WALLET_TYPES_FOR_PARSE = Object.values(HIVE_OPERATIONS_TYPES);
 
@@ -178,6 +184,7 @@ const SORT_TYPES = {
 };
 const NOTIFICATIONS_ID = {
   ACTIVATION_CAMPAIGN: 'activationCampaign',
+  DEACTIVATION_CAMPAIGN: 'deactivationCampaign',
   BELL_WOBJ_REWARDS: 'bellWobjectRewards',
 };
 
@@ -294,4 +301,5 @@ module.exports = {
   SUPPORTED_CRYPTO_CURRENCIES,
   PAYABLES_CURRENCIES,
   DONT_GET_RATES,
+  WITHDRAW_FORMAT_TYPES,
 };

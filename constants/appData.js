@@ -1,8 +1,8 @@
 const nodeUrls = [
+  'https://api.hive.blog',
   'https://rpc.esteem.app',
   'https://hive-api.arcange.eu',
   'https://rpc.ausbit.dev',
-  'https://api.hive.blog',
   'https://hive.roelandp.nl',
   'https://hived.emre.sh',
 ];
