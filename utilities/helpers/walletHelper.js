@@ -32,7 +32,6 @@ exports.getWalletData = async ({
     }
     lastId = _.get(result, '[0][0]');
     result = _.reverse(result);
-
     for (const record of result) {
       if (_.includes(types, _.get(record, '[1].op[0]'))) {
         const recordTimestamp = moment.utc(_.get(record, '[1].timestamp')).valueOf();
