@@ -75,8 +75,7 @@ const PAYMENT_HISTORIES_TYPES = {
   USER_TO_GUEST_TRANSFER: 'user_to_guest_transfer',
   COMPENSATION_FEE: 'compensation_fee',
   OVERPAYMENT_REFUND: 'overpayment_refund',
-  FILL_COLLATERALIZED_CONVERT: 'fill_collateralized_convert_request',
-  COLLATERALIZED_CONVERT: 'collateralized_convert',
+
 };
 
 const TRANSFER_TYPES = [
@@ -142,7 +141,7 @@ const HIVE_OPERATIONS_TYPES = {
   FILL_VESTING_WITHDRAW: 'fill_vesting_withdraw',
   SET_WITHDRAW_VESTING_ROUTE: 'set_withdraw_vesting_route',
   FILL_COLLATERALIZED_CONVERT: 'fill_collateralized_convert_request',
-  COLLATERALIZED_CONVERT:  'collateralized_convert',
+  COLLATERALIZED_CONVERT: 'collateralized_convert',
 };
 
 const WITHDRAW_FORMAT_TYPES = [
@@ -170,8 +169,6 @@ const GUEST_WALLET_OPERATIONS = [
   PAYMENT_HISTORIES_TYPES.DEMO_POST,
   PAYMENT_HISTORIES_TYPES.DEMO_DEBT,
   PAYMENT_HISTORIES_TYPES.DEMO_USER_TRANSFER,
-  PAYMENT_HISTORIES_TYPES.FILL_COLLATERALIZED_CONVERT,
-  PAYMENT_HISTORIES_TYPES.COLLATERALIZED_CONVERT,
 ];
 
 const REFERRAL_TYPES = {
