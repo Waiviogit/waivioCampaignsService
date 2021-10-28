@@ -75,7 +75,6 @@ const PAYMENT_HISTORIES_TYPES = {
   USER_TO_GUEST_TRANSFER: 'user_to_guest_transfer',
   COMPENSATION_FEE: 'compensation_fee',
   OVERPAYMENT_REFUND: 'overpayment_refund',
-
 };
 
 const TRANSFER_TYPES = [
@@ -139,7 +138,7 @@ const HIVE_OPERATIONS_TYPES = {
   PROPOSAL_PAY: 'proposal_pay',
   WITHDRAW_VESTING: 'withdraw_vesting',
   FILL_VESTING_WITHDRAW: 'fill_vesting_withdraw',
-  SET_WITHDRAW_VESTING_ROUTE: 'set_withdraw_vesting_route',
+  SET_WITHDRAW_VESTING_ROUTE: 'set_withdrawпше _vesting_route',
   FILL_COLLATERALIZED_CONVERT: 'fill_collateralized_convert_request',
   COLLATERALIZED_CONVERT: 'collateralized_convert',
 };
