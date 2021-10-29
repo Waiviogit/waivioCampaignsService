@@ -141,6 +141,7 @@ const HIVE_OPERATIONS_TYPES = {
   SET_WITHDRAW_VESTING_ROUTE: 'set_withdraw_vesting_route',
   FILL_COLLATERALIZED_CONVERT: 'fill_collateralized_convert_request',
   COLLATERALIZED_CONVERT: 'collateralized_convert',
+  CONVERT: 'convert',
 };
 
 const WITHDRAW_FORMAT_TYPES = [
