@@ -142,6 +142,7 @@ const HIVE_OPERATIONS_TYPES = {
   FILL_COLLATERALIZED_CONVERT: 'fill_collateralized_convert_request',
   COLLATERALIZED_CONVERT: 'collateralized_convert',
   CONVERT: 'convert',
+  FILL_CONVERT_REQUEST: 'fill_convert_request',
 };
 
 const WITHDRAW_FORMAT_TYPES = [
