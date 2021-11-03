@@ -1,4 +1,4 @@
-const { BOT_ENV_KEY, MATCH_BOT_TYPES } = require('constants/matchBotsData');
+const { BOT_ENV_KEY, MATCH_BOT_TYPES, MANA_CHECK_TYPES } = require('constants/matchBotsData');
 const Joi = require('@hapi/joi');
 const moment = require('moment');
 
@@ -25,8 +25,8 @@ exports.matchBotVoteSchema = Joi.object().keys({
   minHBD: Joi.number().min(0.0001).required(),
   minVotingPower: Joi.number().integer().min(1).max(10000)
     .required(),
-  minVotingPowerWAIV: Joi.number().integer().min(1).max(10000)
-    .required(),
+  minVotingPowerCurrencies: Joi.array()
+    .items(Joi.string().valid(...MANA_CHECK_TYPES)),
   voteWeight: Joi.number().integer().min(-10000).max(10000)
     .invalid(0)
     .required(),
@@ -55,6 +55,8 @@ exports.matchBotSetSchema = Joi.object().keys({
   expiredAt: Joi.date().greater(moment().utc().add(1, 'days').startOf('day')),
   minVotingPower: Joi.number().integer().min(1).max(10000)
     .required(),
+  minVotingPowerCurrencies: Joi.array()
+    .items(Joi.string().valid(...MANA_CHECK_TYPES)),
   voteComments: Joi.when('type', {
     is: MATCH_BOT_TYPES.CURATOR,
     then: Joi.boolean(),

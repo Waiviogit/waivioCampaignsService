@@ -1172,4 +1172,77 @@ describe('matchBotHelper', async () => {
       });
     });
   });
+  describe('On checkMinVotingPowerCondition', async () => {
+    let result;
+    it('should return true when minVotingPowerCurrencies WAIV and HIVE and engineVotePower > minVotingPower', async () => {
+      const minVotingPower = _.random(0, 9);
+      result = await matchBotHelper.checkMinVotingPowerCondition({
+        votePower: _.random(0, 9),
+        engineVotePower: minVotingPower + _.random(1, 9),
+        minVotingPower,
+        minVotingPowerCurrencies: ['WAIV', 'HIVE'],
+      });
+      expect(result).to.be.eq(true);
+    });
+    it('should return true when minVotingPowerCurrencies WAIV and HIVE and votePower > minVotingPower', async () => {
+      const minVotingPower = _.random(0, 9);
+      result = await matchBotHelper.checkMinVotingPowerCondition({
+        votePower: minVotingPower + _.random(1, 9),
+        engineVotePower: _.random(1, 9),
+        minVotingPower,
+        minVotingPowerCurrencies: ['WAIV', 'HIVE'],
+      });
+      expect(result).to.be.eq(true);
+    });
+    it('should return false when minVotingPowerCurrencies WAIV and HIVE and votePower&&engineVotePower < minVotingPower', async () => {
+      const minVotingPower = _.random(0, 9);
+      result = await matchBotHelper.checkMinVotingPowerCondition({
+        votePower: minVotingPower - _.random(1, 9),
+        engineVotePower: minVotingPower - _.random(1, 9),
+        minVotingPower,
+        minVotingPowerCurrencies: ['WAIV', 'HIVE'],
+      });
+      expect(result).to.be.eq(false);
+    });
+    it('should return true when minVotingPowerCurrencies WAIV and engineVotePower > minVotingPower', async () => {
+      const minVotingPower = _.random(0, 9);
+      result = await matchBotHelper.checkMinVotingPowerCondition({
+        votePower: _.random(0, 9),
+        engineVotePower: minVotingPower + _.random(1, 9),
+        minVotingPower,
+        minVotingPowerCurrencies: ['WAIV'],
+      });
+      expect(result).to.be.eq(true);
+    });
+    it('should return false when minVotingPowerCurrencies WAIV and engineVotePower < minVotingPower', async () => {
+      const minVotingPower = _.random(0, 9);
+      result = await matchBotHelper.checkMinVotingPowerCondition({
+        votePower: _.random(0, 9),
+        engineVotePower: minVotingPower - _.random(1, 9),
+        minVotingPower,
+        minVotingPowerCurrencies: ['WAIV'],
+      });
+      expect(result).to.be.eq(false);
+    });
+    it('should return true when minVotingPowerCurrencies HIVE and votePower > minVotingPower', async () => {
+      const minVotingPower = _.random(0, 9);
+      result = await matchBotHelper.checkMinVotingPowerCondition({
+        votePower: minVotingPower + _.random(1, 9),
+        engineVotePower: _.random(1, 9),
+        minVotingPower,
+        minVotingPowerCurrencies: ['HIVE'],
+      });
+      expect(result).to.be.eq(true);
+    });
+    it('should return false when minVotingPowerCurrencies HIVE and votePower < minVotingPower', async () => {
+      const minVotingPower = _.random(0, 9);
+      result = await matchBotHelper.checkMinVotingPowerCondition({
+        votePower: minVotingPower - _.random(1, 9),
+        engineVotePower: _.random(1, 9),
+        minVotingPower,
+        minVotingPowerCurrencies: ['HIVE'],
+      });
+      expect(result).to.be.eq(false);
+    });
+  });
 });

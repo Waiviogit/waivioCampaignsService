@@ -9,8 +9,8 @@ const {
 } = require('models');
 const { hiveOperations } = require('utilities/hiveApi');
 const sentryHelper = require('utilities/helpers/sentryHelper');
-const { MATCH_BOT_TYPES, BOT_ENV_KEY } = require('constants/matchBotsData');
-const { voteCoefficients } = require('constants/constants');
+const { MATCH_BOT_TYPES, BOT_ENV_KEY, MANA_CHECK_TYPES } = require('constants/matchBotsData');
+const { voteCoefficients, SUPPORTED_CRYPTO_CURRENCIES } = require('constants/constants');
 const jsonHelper = require('utilities/helpers/jsonHelper');
 const { RPC_MESSAGES } = require('constants/regExp');
 const validators = require('controllers/validators');
@@ -582,10 +582,11 @@ const voteExtendedMatchBots = async (voteData) => {
     return { result: false };
   }
   const {
-    voter, author, permlink, voteWeight, minVotingPower, minHBD, botKey, voteComments, minVotingPowerWAIV,
+    voter, author, permlink, voteWeight, minVotingPower,
+    minHBD, botKey, voteComments, minVotingPowerCurrencies,
   } = params;
   const validVote = await canVote({
-    minVotingPowerWAIV,
+    minVotingPowerCurrencies,
     voteWeight: Math.abs(voteWeight / 100),
     minVotingPower,
     voteComments,
@@ -614,7 +615,8 @@ const voteExtendedMatchBots = async (voteData) => {
 };
 
 const canVote = async ({
-  name, voteWeight, author, permlink, minVotingPower, minHBD, voteComments, botKey, minVotingPowerWAIV,
+  name, voteWeight, author, permlink, minVotingPower,
+  minHBD, voteComments, botKey, minVotingPowerCurrencies,
 }) => {
   const { result: sponsorsVote } = await botUpvoteModel.findOne(
     { botName: name, author, permlink },
@@ -641,12 +643,30 @@ const canVote = async ({
     account: name,
   });
 
-  // #TODO minVotingPower voting power waiv
-  if (votePower < minVotingPower) return false;
+  const manaCheck = checkMinVotingPowerCondition({
+    minVotingPowerCurrencies, votePower, engineVotePower, minVotingPower,
+  });
+  if (!manaCheck) return false;
   if (voteValueHBD + engineVoteValueHBD < minHBD) return false;
   if (!isPost && !voteComments) return false;
 
   return true;
+};
+
+const checkMinVotingPowerCondition = ({
+  minVotingPowerCurrencies, votePower, engineVotePower, minVotingPower,
+}) => {
+  const diff = _.difference(MANA_CHECK_TYPES, minVotingPowerCurrencies);
+  if (_.isEmpty(diff)) {
+    return engineVotePower > minVotingPower || votePower > minVotingPower;
+  }
+  if (_.includes(diff, SUPPORTED_CRYPTO_CURRENCIES.HIVE)) {
+    return engineVotePower > minVotingPower;
+  }
+  if (_.includes(diff, TOKEN_WAIV.SYMBOL)) {
+    return votePower > minVotingPower;
+  }
+  return false;
 };
 
 const setBot = async ({ botName, json }) => {
@@ -694,6 +714,7 @@ const getMatchBotType = (botName) => {
 };
 
 module.exports = {
+  checkMinVotingPowerCondition,
   checkAndRemoveHistories,
   removePaymentHistories,
   updatePaymentHistories,

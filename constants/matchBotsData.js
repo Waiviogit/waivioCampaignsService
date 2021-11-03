@@ -25,3 +25,8 @@ exports.WORK_BOTS_ENV = [
   'test',
   'production',
 ];
+
+exports.MANA_CHECK_TYPES = [
+  'HIVE',
+  'WAIV',
+];
