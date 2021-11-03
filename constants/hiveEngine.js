@@ -1,0 +1,5 @@
+exports.TOKEN_WAIV = {
+  SYMBOL: 'WAIV',
+  POOL_ID: 13,
+  DIESEL_POOL_ID: 63,
+};

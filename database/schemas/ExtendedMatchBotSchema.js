@@ -13,6 +13,9 @@ const ExtendedMatchBotSchema = new Schema({
       minVotingPower: {
         type: Number, default: 8000, min: 1, max: 10000, required: true,
       },
+      minVotingPowerWAIV: {
+        type: Number, default: 8000, min: 1, max: 10000, required: true,
+      },
       voteWeight: { type: Number, min: 1, max: 10000 },
       voteRatio: { type: Number, min: 0.01, max: 10 },
       note: { type: String, maxlength: 256 },

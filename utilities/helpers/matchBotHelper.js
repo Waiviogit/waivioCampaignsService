@@ -16,6 +16,8 @@ const { RPC_MESSAGES } = require('constants/regExp');
 const validators = require('controllers/validators');
 const moment = require('moment');
 const _ = require('lodash');
+const engineOperations = require('utilities/hiveEngine/engineOperations');
+const { TOKEN_WAIV } = require('constants/hiveEngine');
 
 /**
  * Find all expired match bot upvotes and recount sponsors debt to the contractors
@@ -580,9 +582,10 @@ const voteExtendedMatchBots = async (voteData) => {
     return { result: false };
   }
   const {
-    voter, author, permlink, voteWeight, minVotingPower, minHBD, botKey, voteComments,
+    voter, author, permlink, voteWeight, minVotingPower, minHBD, botKey, voteComments, minVotingPowerWAIV,
   } = params;
   const validVote = await canVote({
+    minVotingPowerWAIV,
     voteWeight: Math.abs(voteWeight / 100),
     minVotingPower,
     voteComments,
@@ -611,7 +614,7 @@ const voteExtendedMatchBots = async (voteData) => {
 };
 
 const canVote = async ({
-  name, voteWeight, author, permlink, minVotingPower, minHBD, voteComments, botKey,
+  name, voteWeight, author, permlink, minVotingPower, minHBD, voteComments, botKey, minVotingPowerWAIV,
 }) => {
   const { result: sponsorsVote } = await botUpvoteModel.findOne(
     { botName: name, author, permlink },
@@ -630,9 +633,17 @@ const canVote = async ({
       name, voteWeight, author, permlink,
     },
   );
+  const { engineVoteValueHBD, engineVotePower } = await engineOperations.calculateVotePower({
+    dieselPoolId: TOKEN_WAIV.DIESEL_POOL_ID,
+    poolId: TOKEN_WAIV.POOL_ID,
+    symbol: TOKEN_WAIV.SYMBOL,
+    weight: voteWeight * 100,
+    account: name,
+  });
 
+  // #TODO minVotingPower voting power waiv
   if (votePower < minVotingPower) return false;
-  if (voteValueHBD < minHBD) return false;
+  if (voteValueHBD + engineVoteValueHBD < minHBD) return false;
   if (!isPost && !voteComments) return false;
 
   return true;

@@ -25,6 +25,8 @@ exports.matchBotVoteSchema = Joi.object().keys({
   minHBD: Joi.number().min(0.0001).required(),
   minVotingPower: Joi.number().integer().min(1).max(10000)
     .required(),
+  minVotingPowerWAIV: Joi.number().integer().min(1).max(10000)
+    .required(),
   voteWeight: Joi.number().integer().min(-10000).max(10000)
     .invalid(0)
     .required(),
