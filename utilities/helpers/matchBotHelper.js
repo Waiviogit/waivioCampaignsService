@@ -9,13 +9,15 @@ const {
 } = require('models');
 const { hiveOperations } = require('utilities/hiveApi');
 const sentryHelper = require('utilities/helpers/sentryHelper');
-const { MATCH_BOT_TYPES, BOT_ENV_KEY } = require('constants/matchBotsData');
-const { voteCoefficients } = require('constants/constants');
+const { MATCH_BOT_TYPES, BOT_ENV_KEY, MANA_CHECK_TYPES } = require('constants/matchBotsData');
+const { voteCoefficients, SUPPORTED_CRYPTO_CURRENCIES } = require('constants/constants');
 const jsonHelper = require('utilities/helpers/jsonHelper');
 const { RPC_MESSAGES } = require('constants/regExp');
 const validators = require('controllers/validators');
 const moment = require('moment');
 const _ = require('lodash');
+const engineOperations = require('utilities/hiveEngine/engineOperations');
+const { TOKEN_WAIV } = require('constants/hiveEngine');
 
 /**
  * Find all expired match bot upvotes and recount sponsors debt to the contractors
@@ -580,9 +582,11 @@ const voteExtendedMatchBots = async (voteData) => {
     return { result: false };
   }
   const {
-    voter, author, permlink, voteWeight, minVotingPower, minHBD, botKey, voteComments,
+    voter, author, permlink, voteWeight, minVotingPower,
+    minHBD, botKey, voteComments, minVotingPowerCurrencies,
   } = params;
   const validVote = await canVote({
+    minVotingPowerCurrencies,
     voteWeight: Math.abs(voteWeight / 100),
     minVotingPower,
     voteComments,
@@ -611,7 +615,8 @@ const voteExtendedMatchBots = async (voteData) => {
 };
 
 const canVote = async ({
-  name, voteWeight, author, permlink, minVotingPower, minHBD, voteComments, botKey,
+  name, voteWeight, author, permlink, minVotingPower,
+  minHBD, voteComments, botKey, minVotingPowerCurrencies,
 }) => {
   const { result: sponsorsVote } = await botUpvoteModel.findOne(
     { botName: name, author, permlink },
@@ -630,12 +635,38 @@ const canVote = async ({
       name, voteWeight, author, permlink,
     },
   );
+  const { engineVoteValueHBD, engineVotePower } = await engineOperations.calculateVotePower({
+    dieselPoolId: TOKEN_WAIV.DIESEL_POOL_ID,
+    poolId: TOKEN_WAIV.POOL_ID,
+    symbol: TOKEN_WAIV.SYMBOL,
+    weight: voteWeight * 100,
+    account: name,
+  });
 
-  if (votePower < minVotingPower) return false;
-  if (voteValueHBD < minHBD) return false;
+  const manaCheck = checkMinVotingPowerCondition({
+    minVotingPowerCurrencies, votePower, engineVotePower, minVotingPower,
+  });
+  if (!manaCheck) return false;
+  if (voteValueHBD + engineVoteValueHBD < minHBD) return false;
   if (!isPost && !voteComments) return false;
 
   return true;
+};
+
+const checkMinVotingPowerCondition = ({
+  minVotingPowerCurrencies, votePower, engineVotePower, minVotingPower,
+}) => {
+  const diff = _.difference(MANA_CHECK_TYPES, minVotingPowerCurrencies);
+  if (_.isEmpty(diff)) {
+    return engineVotePower > minVotingPower || votePower > minVotingPower;
+  }
+  if (_.includes(diff, SUPPORTED_CRYPTO_CURRENCIES.HIVE)) {
+    return engineVotePower > minVotingPower;
+  }
+  if (_.includes(diff, TOKEN_WAIV.SYMBOL)) {
+    return votePower > minVotingPower;
+  }
+  return false;
 };
 
 const setBot = async ({ botName, json }) => {
@@ -683,6 +714,7 @@ const getMatchBotType = (botName) => {
 };
 
 module.exports = {
+  checkMinVotingPowerCondition,
   checkAndRemoveHistories,
   removePaymentHistories,
   updatePaymentHistories,
