@@ -15,7 +15,7 @@ const ExtendedMatchBotSchema = new Schema({
         type: Number, default: 8000, min: 1, max: 10000, required: true,
       },
       minVotingPowerCurrencies: {
-        type: String,
+        type: [String],
         enum: MANA_CHECK_TYPES,
         default: [SUPPORTED_CRYPTO_CURRENCIES.HIVE],
       },

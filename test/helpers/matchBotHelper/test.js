@@ -5,7 +5,7 @@ const {
 const {
   MatchBotFactory, BotUpvoteFactory, PostFactory, PaymentHistoryFactory, CampaignFactory, ExtendedMatchBotFactory,
 } = require('test/factories');
-const { MATCH_BOT_TYPES, BOT_ENV_KEY } = require('constants/matchBotsData');
+const { MATCH_BOT_TYPES, BOT_ENV_KEY, MANA_CHECK_TYPES } = require('constants/matchBotsData');
 const { getSetBotData, getCanVoteMock, getVoteDataMock } = require('test/mockData/matchBots');
 
 describe('matchBotHelper', async () => {
@@ -1074,7 +1074,7 @@ describe('matchBotHelper', async () => {
     });
     describe('On Ok', async () => {
       it('should return true on valid params', async () => {
-        const mock = getCanVoteMock();
+        const mock = getCanVoteMock({ minVotingPowerCurrencies: MANA_CHECK_TYPES });
         sinon.stub(hiveOperations, 'calculateVotePower').returns({
           votePower: mock.minVotingPower + _.random(1, 100),
           voteValueHBD: mock.minHBD + _.random(1, 100),
