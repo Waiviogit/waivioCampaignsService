@@ -26,6 +26,8 @@ const getTTLCampaignsData = async (key) => {
 
 const getHashAll = async (key, client = lastBlockClient) => client.hgetallAsync(key);
 
+const smembers = async (key, client = demoPosts) => client.smembersAsync(key);
+
 module.exports = {
-  getLastBlockNum, getTTLData, getTTLCampaignsData, getHashAll,
+  getLastBlockNum, getTTLData, getTTLCampaignsData, getHashAll, smembers,
 };

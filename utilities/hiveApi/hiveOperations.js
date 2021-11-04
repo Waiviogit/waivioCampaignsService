@@ -4,6 +4,8 @@ const { specialTransferBeneficiaries } = require('constants/constants');
 const { broadcastClient, databaseClient } = require('utilities/hiveApi/hiveClient');
 const { postModel } = require('models');
 
+broadcastClient.broadcast.updateAccount()
+
 exports.likePost = async ({
   key, voter, author, permlink, weight,
 }) => {
