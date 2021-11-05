@@ -749,6 +749,7 @@ const voteEngineCurator = async (vote) => {
   if (error) return;
   if (percentage < BOTS_QUEUE.ENGINE_CURATOR.MIN_PERCENTAGE) return;
   const result = false;
+  // #TODO add custom weight
   // const { result, error: votingError } = await hiveOperations.likePost(
   //   {
   //     key: process.env.ENGINE_CURATOR_BOT_KEY,
@@ -759,7 +760,7 @@ const voteEngineCurator = async (vote) => {
   //   },
   // );
   if (result) {
-    await redisSetter.zadd(key, [expire, `${author}/${permlink}`]);
+    await redisSetter.zadd(key, [expire, `${author}/${permlink}/${vote.voter}`]);
   }
 };
 
