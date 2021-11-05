@@ -5,8 +5,10 @@ const { campaignModel } = require('models');
 const { redisSetter, redisGetter } = require('utilities/redis');
 const { hiveOperations } = require('utilities/hiveApi');
 const curatorsBot = require('utilities/operations/matchBots/curatorsBot');
+const hiveEngineCurator = require('utilities/operations/matchBots/hiveEngineCurator');
 
 exports.parse = async (votes) => {
+  await hiveEngineCurator.processEngineCuratorMatchBot(votes);
   await Promise.all(votes.map(async (vote) => {
     await curatorsBot.processCuratorsMatchBot(vote);
     const { result: campaign } = await campaignModel.findOne({

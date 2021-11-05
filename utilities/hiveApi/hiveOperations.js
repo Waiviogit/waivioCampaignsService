@@ -248,6 +248,15 @@ exports.makeSpecialTransfers = async (account) => {
   }
 };
 
+exports.getVotingManaPercentage = async (account) => {
+  const user = await this.getAccountInfo(account);
+  if (!user && user.name) return { error: new Error('getAccountInfo request Err') };
+
+  const mana = await databaseClient.rc.calculateVPMana(user);
+  if (!mana && !mana.percentage) return { error: new Error('calculateVPMana request Err') };
+  return { percentage: mana.percentage };
+};
+
 const parseToFloat = (balance) => parseFloat(balance.match(/.\d*.\d*/)[0]);
 
 const getPostVoteRhares = async ({ author, permlink }) => {

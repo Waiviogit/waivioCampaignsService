@@ -83,6 +83,12 @@ const deleteCampaignsData = async (key) => {
   await campaigns.del(key);
 };
 
+const zadd = async (key, value, client = demoPosts) => client.zaddAsync(key, value);
+
+const zremrangebyscore = async ({
+  key, start, end, client = demoPosts,
+}) => client.zremrangebyscoreAsync(key, start, end);
+
 module.exports = {
   setDemoPost,
   setLastBlockNum,
@@ -93,4 +99,6 @@ module.exports = {
   setSimpleTtl,
   deleteCampaignsData,
   saveTTL,
+  zremrangebyscore,
+  zadd,
 };
