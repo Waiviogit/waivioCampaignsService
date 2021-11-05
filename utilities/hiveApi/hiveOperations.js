@@ -4,8 +4,6 @@ const { specialTransferBeneficiaries } = require('constants/constants');
 const { broadcastClient, databaseClient } = require('utilities/hiveApi/hiveClient');
 const { postModel } = require('models');
 
-broadcastClient.broadcast.updateAccount()
-
 exports.likePost = async ({
   key, voter, author, permlink, weight,
 }) => {
@@ -248,6 +246,15 @@ exports.makeSpecialTransfers = async (account) => {
       from: account.name, amount: _.floor(amount, 2), to: acc, activeKey: account.key,
     });
   }
+};
+
+exports.getVotingManaPercentage = async (account) => {
+  const user = await this.getAccountInfo(account);
+  if (!user && user.name) return { error: new Error('getAccountInfo request Err') };
+
+  const mana = await databaseClient.rc.calculateVPMana(user);
+  if (!mana && !mana.percentage) return { error: new Error('calculateVPMana request Err') };
+  return { percentage: mana.percentage };
 };
 
 const parseToFloat = (balance) => parseFloat(balance.match(/.\d*.\d*/)[0]);

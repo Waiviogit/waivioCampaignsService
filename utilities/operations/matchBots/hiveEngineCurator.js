@@ -1,24 +1,11 @@
-const redisGetter = require('utilities/redis/redisGetter');
 const { TOKEN_WAIV, REDIS_ENGINE_CURATORS } = require('constants/hiveEngine');
+const { engineCuratorBotQueue } = require('utilities/redis/queues');
+const redisGetter = require('utilities/redis/redisGetter');
+const { BOTS_QUEUE } = require('constants/matchBotsData');
 const { postModel } = require('models');
 const _ = require('lodash');
 
-const votes = [
-  {
-    voter: 'curie',
-    author: 'sandracarrascal',
-    permlink: 'how-can-we-enhance-self-knowledge',
-    weight: 550,
-  },
-  {
-    voter: 'oy',
-    author: 'sandracarrascal',
-    permlink: 'how-can-we-enhance-self-knowledge',
-    weight: 550,
-  },
-];
-
-exports.processEngineCuratorMatchBot = async () => {
+exports.processEngineCuratorMatchBot = async (votes) => {
   const curators = await redisGetter.smembers(`${REDIS_ENGINE_CURATORS}:${TOKEN_WAIV.SYMBOL}`);
   const filteredCuratorsVotes = _.filter(votes, (el) => _.includes(curators, el.voter));
   if (_.isEmpty(filteredCuratorsVotes)) return;
@@ -37,5 +24,14 @@ exports.processEngineCuratorMatchBot = async () => {
     filteredCuratorsVotes,
     (v) => _.some(posts, (p) => p.root_author === v.author && p.permlink === v.permlink),
   );
-  console.log();
+  if (_.isEmpty(filteredCuratorsByTag)) return;
+  const uniqueVotes = _
+    .chain(filteredCuratorsByTag)
+    .orderBy(['weight'], ['desc'])
+    .uniqWith((a, b) => a.permlink === b.permlink && a.author === b.author)
+    .value();
+
+  for (const uniqueVote of uniqueVotes) {
+    await engineCuratorBotQueue.send(JSON.stringify(uniqueVote), BOTS_QUEUE.ENGINE_CURATOR.DELAY);
+  }
 };

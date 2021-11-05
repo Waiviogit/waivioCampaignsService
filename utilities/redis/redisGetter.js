@@ -28,6 +28,16 @@ const getHashAll = async (key, client = lastBlockClient) => client.hgetallAsync(
 
 const smembers = async (key, client = demoPosts) => client.smembersAsync(key);
 
+const zrevrange = async ({
+  key, start, end, client = demoPosts,
+}) => {
+  try {
+    return { result: await client.zrevrangeAsync(key, start, end) };
+  } catch (error) {
+    return { error };
+  }
+};
+
 module.exports = {
-  getLastBlockNum, getTTLData, getTTLCampaignsData, getHashAll, smembers,
+  getLastBlockNum, getTTLData, getTTLCampaignsData, getHashAll, smembers, zrevrange,
 };
