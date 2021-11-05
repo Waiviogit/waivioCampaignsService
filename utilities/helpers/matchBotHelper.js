@@ -733,6 +733,7 @@ const voteEngineCurator = async (vote) => {
   const expire = moment().add(7, 'days').valueOf();
   const now = moment().valueOf();
 
+  await redisSetter.zremrangebyscore({ key, start: -Infinity, end: now });
   const { result: votedPosts, error: redisErr } = await redisGetter
     .zrevrange({ key, start: 0, end: -1 });
 
@@ -760,7 +761,6 @@ const voteEngineCurator = async (vote) => {
   if (result) {
     await redisSetter.zadd(key, [expire, `${author}/${permlink}`]);
   }
-  await redisSetter.zremrangebyscore({ key, start: -Infinity, end: now });
 };
 
 module.exports = {
