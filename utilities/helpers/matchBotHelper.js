@@ -727,40 +727,48 @@ const getMatchBotType = (botName) => {
 
 const voteEngineCurator = async (vote) => {
   if (_.isEmpty(vote)) return;
-  const { author, permlink, weight } = vote;
+  const {
+    author, permlink, weight, voter,
+  } = vote;
   if (weight < 1) return;
   const key = `${BOTS_QUEUE.ENGINE_CURATOR.VOTED_KEY}:${TOKEN_WAIV.SYMBOL}`;
-  const expire = moment().add(7, 'days').valueOf();
+  const expire = moment().subtract(7, 'days').valueOf();
+  const yesterday = moment().subtract(1, 'days').valueOf();
   const now = moment().valueOf();
 
-  await redisSetter.zremrangebyscore({ key, start: -Infinity, end: now });
-  const { result: votedPosts, error: redisErr } = await redisGetter
+  await redisSetter.zremrangebyscore({ key, start: -Infinity, end: expire });
+  const { result: votedPosts } = await redisGetter
     .zrevrange({ key, start: 0, end: -1 });
 
   const alreadyVoted = _.some(_.map(votedPosts, (el) => ({
     author: el.split('/')[0],
     permlink: el.split('/')[1],
   })), (p) => _.isEqual(p, { author, permlink }));
-  if (alreadyVoted || redisErr) return;
+  if (alreadyVoted) return;
 
   const { percentage, error } = await hiveOperations
     .getVotingManaPercentage(process.env.ENGINE_CURATOR_BOT_NAME);
 
   if (error) return;
   if (percentage < BOTS_QUEUE.ENGINE_CURATOR.MIN_PERCENTAGE) return;
-  const result = false;
-  // #TODO add custom weight
-  // const { result, error: votingError } = await hiveOperations.likePost(
-  //   {
-  //     key: process.env.ENGINE_CURATOR_BOT_KEY,
-  //     voter: process.env.ENGINE_CURATOR_BOT_NAME,
-  //     weight,
-  //     permlink,
-  //     author,
-  //   },
-  // );
+  const { result: dayBefore } = await redisGetter
+    .zrevrangebyscore({ key, max: now, min: yesterday });
+
+  const botWeight = BOTS_QUEUE.ENGINE_CURATOR.DAILY_WEIGHT / dayBefore.length > 10000
+    ? 10000
+    : Math.ceil(BOTS_QUEUE.ENGINE_CURATOR.DAILY_WEIGHT / dayBefore.length);
+
+  const { result } = await hiveOperations.likePost(
+    {
+      key: process.env.ENGINE_CURATOR_BOT_KEY,
+      voter: process.env.ENGINE_CURATOR_BOT_NAME,
+      weight: botWeight,
+      permlink,
+      author,
+    },
+  );
   if (result) {
-    await redisSetter.zadd(key, [expire, `${author}/${permlink}/${vote.voter}`]);
+    await redisSetter.zadd(key, [now, `${author}/${permlink}/${voter}`]);
   }
 };
 
