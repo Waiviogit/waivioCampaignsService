@@ -6,6 +6,7 @@ const { postModel } = require('models');
 const _ = require('lodash');
 
 exports.processEngineCuratorMatchBot = async (votes) => {
+  if (process.env.NODE_ENV !== 'production') return;
   const curators = await redisGetter.smembers(`${REDIS_ENGINE_CURATORS}:${TOKEN_WAIV.SYMBOL}`);
   const filteredCuratorsVotes = _.filter(votes, (el) => _.includes(curators, el.voter));
   if (_.isEmpty(filteredCuratorsVotes)) return;
