@@ -38,6 +38,22 @@ const zrevrange = async ({
   }
 };
 
+const zrevrangebyscore = async ({
+  key, max, min, client = demoPosts,
+}) => {
+  try {
+    return { result: await client.zrevrangebyscoreAsync(key, max, min) };
+  } catch (error) {
+    return { error };
+  }
+};
+
 module.exports = {
-  getLastBlockNum, getTTLData, getTTLCampaignsData, getHashAll, smembers, zrevrange,
+  getTTLCampaignsData,
+  zrevrangebyscore,
+  getLastBlockNum,
+  getTTLData,
+  getHashAll,
+  zrevrange,
+  smembers,
 };

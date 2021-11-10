@@ -19,6 +19,7 @@ exports.BOTS_QUEUE = {
     DELAY: 1,
     MIN_PERCENTAGE: 7000,
     VOTED_KEY: 'engineCuratorVoted',
+    DAILY_WEIGHT: 100000,
   },
 };
 
