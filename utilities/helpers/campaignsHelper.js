@@ -111,8 +111,8 @@ const fillObjects = (
           + reservation.rewardRaisedBy - (reservation.rewardReducedBy || 0);
     }
   }
-  const object = wobjects;
 
+  const object = _.find(wobjects, (wobj) => wobj.author_permlink === obj);
   const toDisplay = requireDisplay({
     guideName, campaign, object, userName,
   });
@@ -301,7 +301,7 @@ exports.getSecondaryCampaigns = async ({
 
   await Promise.all(allCampaigns.map(async (campaign) => {
     if (needProcess) {
-      campaign.objects = _.compact(_.map(campaign.objects,
+      campaign.objects = _.compact(_.map([campaign.requiredObject],
         (obj) => fillObjects(campaign, userName, wobjects, obj, radius, area, firstMapLoad, guideName)));
       campaign.guide = await getGuideInfo(campaign.guideName, users, currentUser);
     }
