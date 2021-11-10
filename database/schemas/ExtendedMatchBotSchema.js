@@ -1,6 +1,7 @@
 const mongoose = require('mongoose');
 const db = require('database/db_Connection');
-const { MATCH_BOT_TYPES } = require('constants/matchBotsData');
+const { MATCH_BOT_TYPES, MANA_CHECK_TYPES } = require('constants/matchBotsData');
+const { SUPPORTED_CRYPTO_CURRENCIES } = require('constants/constants');
 
 const { Schema } = mongoose;
 
@@ -12,6 +13,11 @@ const ExtendedMatchBotSchema = new Schema({
       name: { type: String, required: true },
       minVotingPower: {
         type: Number, default: 8000, min: 1, max: 10000, required: true,
+      },
+      minVotingPowerCurrencies: {
+        type: [String],
+        enum: MANA_CHECK_TYPES,
+        default: [SUPPORTED_CRYPTO_CURRENCIES.HIVE],
       },
       voteWeight: { type: Number, min: 1, max: 10000 },
       voteRatio: { type: Number, min: 0.01, max: 10 },
