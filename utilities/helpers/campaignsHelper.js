@@ -111,7 +111,7 @@ const fillObjects = (
           + reservation.rewardRaisedBy - (reservation.rewardReducedBy || 0);
     }
   }
-  const object = _.find(wobjects, (wobj) => wobj.author_permlink === obj);
+  const object = wobjects;
 
   const toDisplay = requireDisplay({
     guideName, campaign, object, userName,
