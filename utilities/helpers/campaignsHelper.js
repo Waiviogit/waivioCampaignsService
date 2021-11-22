@@ -14,6 +14,7 @@ const { divide } = require('utilities/helpers/calcHelper');
 const { getNamespace } = require('cls-hooked');
 const moment = require('moment');
 const _ = require('lodash');
+const { REMOVE_OBJ_STATUSES } = require('../../constants/wobjectsData');
 
 const sortPrimaryCampaigns = (campaigns, sort) => {
   switch (sort) {
@@ -313,8 +314,8 @@ exports.getSecondaryCampaigns = async ({
 
     if (sort === CAMPAIGN_SORTS.PAYOUT) campaign.payout = amountPayments(campaign);
     const objStatus = _.get(campaign, 'required_object.status.title', null);
-
-    if (!reserved && ((!_.get(currentUser, 'user_metadata.settings.showNSFWPosts', true) && objStatus === STATUSES.NSFW))) return;
+    if (!reserved && (_.includes(REMOVE_OBJ_STATUSES, objStatus))) return;
+    if ((!_.get(currentUser, 'user_metadata.settings.showNSFWPosts', true) && objStatus === STATUSES.NSFW)) return;
     campaign.requirement_filters = await getRequirementFilters(
       campaign, _.find(users, (usr) => usr.name === userName),
     );
