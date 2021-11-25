@@ -20,6 +20,7 @@ const {
   getDashboard,
   getCampaign,
   getHistory,
+  getTabType,
 } = require('utilities/operations').campaigns;
 
 const reservedCampaigns = async (req, res) => {
@@ -247,11 +248,11 @@ const getCampaignsTabType = async (req, res) => {
     params,
     validationError,
   } = validators.validate(
-    Object.assign(req.body, { appName: req.headers.app, locale: req.headers.locale }),
-    validators.campaigns.validateStatisticsSchema,
+    Object.assign(req.body, { locale: req.headers.locale }),
+    validators.campaigns.validateTabTypeSchema,
   );
   if (validationError) return renderError(res, validationError);
-  const { tabType } = await getDataForFirstLoad(params);
+  const tabType = await getTabType(params);
   renderSuccess(res, tabType);
 };
 
