@@ -242,6 +242,19 @@ const getCampaignsStatistic = async (req, res) => {
   renderSuccess(res, result);
 };
 
+const getCampaignsTabType = async (req, res) => {
+  const {
+    params,
+    validationError,
+  } = validators.validate(
+    Object.assign(req.body, { appName: req.headers.app, locale: req.headers.locale }),
+    validators.campaigns.validateStatisticsSchema,
+  );
+  if (validationError) return renderError(res, validationError);
+  const { tabType } = await getDataForFirstLoad(params);
+  renderSuccess(res, tabType);
+};
+
 const userRewards = async (req, res) => {
   const { params, validationError } = validators
     .validate({
@@ -292,6 +305,7 @@ module.exports = {
   reservedCampaignsCount,
   validateAssignCampaign,
   getCampaignsStatistic,
+  getCampaignsTabType,
   validateStopCampaign,
   getWobjectCampaigns,
   campaignsDashboard,
