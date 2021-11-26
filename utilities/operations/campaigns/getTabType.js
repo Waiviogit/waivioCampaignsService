@@ -2,25 +2,22 @@ const getReservedCampigns = require('./getReservedCampigns');
 const getEligibleCampaigns = require('./getEligibleCampaigns');
 
 module.exports = async ({
-  userName, skip, status, locale,
+  userName, status, locale,
 }) => {
-
-  const limit = 1;
-  let campaigns, error, tabType;
-
+  let tabType, campaigns, error;
   ({ campaigns, error } = await getReservedCampigns({
-    userName, skip, status, locale, limit,
+    userName, skip: 0, status, locale, limit: 1,
   }));
   tabType = 'reserved';
   if (error || !campaigns.length) {
     ({ campaigns, error } = await getEligibleCampaigns({
-      userName, skip, status, locale, limit,
+      userName, skip: 0, status, locale, limit: 1,
     }));
-    tabType = 'eligible';
+    if (error || !campaigns.length) {
+      tabType = 'eligible';
+    }
   }
-  if (error || !campaigns.length) {
-    tabType = 'all';
-  }
+
   if (error) return { error };
 
   return tabType;

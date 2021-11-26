@@ -911,27 +911,8 @@
           {
             "in": "body",
             "name": "params",
-            "description": " ",
-            "required": false,
-            "schema": {
-              "example": {
-                "sort": "reward",
-                "userName": "w7ngc",
-                "skip": 10
-              }
-            }
-          },{
-            "in": "header",
-            "name": "app",
-            "description": "App name",
-            "type": "string",
-            "required": true
-          },{
-            "in": "header",
-            "name": "locale",
-            "description": "Users locale",
-            "type": "string",
-            "required": true
+            "description": " d",
+            "required": false
           }
         ],
         "responses": {

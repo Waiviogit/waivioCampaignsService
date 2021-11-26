@@ -119,7 +119,6 @@ exports.validateStatisticsSchema = Joi.object().keys({
 
 exports.validateTabTypeSchema = Joi.object().keys({
   userName: Joi.string(),
-  skip: Joi.number().default(0),
   locale: Joi.string().default('en-US'),
   status: Joi.array().default(['active']),
 });
