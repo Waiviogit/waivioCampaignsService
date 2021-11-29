@@ -5,6 +5,7 @@ module.exports = async ({
   userName, status, locale,
 }) => {
   let tabType, campaigns, error;
+
   ({ campaigns, error } = await getReservedCampigns({
     userName, skip: 0, status, locale, limit: 1,
   }));
@@ -13,12 +14,11 @@ module.exports = async ({
     ({ campaigns, error } = await getEligibleCampaigns({
       userName, skip: 0, status, locale, limit: 1,
     }));
-    if (error || !campaigns.length) {
-      tabType = 'eligible';
-    }
+    tabType = 'eligible';
   }
-
-  if (error) return { error };
+  if (error || !campaigns.length) {
+    tabType = 'all';
+  }
 
   return tabType;
 };

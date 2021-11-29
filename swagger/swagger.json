@@ -909,17 +909,17 @@
         ],
         "parameters": [
           {
-            "in": "body",
-            "name": "params",
-            "description": " d",
-            "required": false
+            "name": "userName",
+            "in": "path",
+            "type": "string",
+            "required": true
           }
         ],
         "responses": {
           "200": {
             "description": "successful operation",
             "schema": {
-              "$ref": "#/definitions/statistics"
+              "$ref": "#/definitions/tabType"
             }
           },
           "422": {
