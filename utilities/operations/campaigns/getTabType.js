@@ -20,5 +20,5 @@ module.exports = async ({
     tabType = 'all';
   }
 
-  return tabType;
+  return { tabType };
 };
