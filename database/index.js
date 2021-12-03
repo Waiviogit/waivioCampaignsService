@@ -24,5 +24,6 @@ module.exports = {
     WobjectSubscriptions: require('./schemas/WobjectSubscriptionSchema'),
     WalletExemptions: require('./schemas/WalletExemptions'),
     ExtendedMatchBot: require('./schemas/ExtendedMatchBotSchema'),
+    EngineAccountHistories: require('./schemas/EngineAccountHistorySchema'),
   },
 };

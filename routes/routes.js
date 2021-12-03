@@ -7,12 +7,14 @@ const {
   demoUserController,
   withdrawController,
   mailerController,
+  accountController,
 } = require('controllers');
 
 const { guestRequests } = require('utilities/requests');
 const { Router } = require('express');
 
 const campaignsRoutes = new Router();
+const accountRoutes = new Router();
 const withdrawRoutes = new Router();
 const referralRoutes = new Router();
 const mailerRoutes = new Router();
@@ -22,6 +24,7 @@ apiRoutes.use('/campaigns-api/referrals', referralRoutes);
 apiRoutes.use('/campaigns-api/withdraw', withdrawRoutes);
 apiRoutes.use('/campaigns-api/mailer', mailerRoutes);
 apiRoutes.use('/campaigns-api', campaignsRoutes);
+apiRoutes.use('/campaigns-api', accountRoutes);
 
 campaignsRoutes.route('/campaigns/dashboard/:guide_name').get(campaignsController.campaignsDashboard);
 campaignsRoutes.route('/campaigns/reserved/count').get(campaignsController.reservedCampaignsCount);
@@ -38,6 +41,7 @@ campaignsRoutes.route('/campaign/:campaign_id').get(campaignsController.show);
 
 campaignsRoutes.route('/statistics').get(campaignsController.getCampaignsStatistic);
 campaignsRoutes.route('/statistics').post(campaignsController.getCampaignsStatistic);
+campaignsRoutes.route('/tab_type').post(campaignsController.getCampaignsTabType);
 
 campaignsRoutes.route('/rewards/:userName').get(campaignsController.userRewards);
 campaignsRoutes.route('/create_campaign').post(campaignsController.create);
@@ -67,6 +71,8 @@ withdrawRoutes.route('/confirm-transaction').get(withdrawController.finalConfirm
 withdrawRoutes.route('/create-demo-payment').post(withdrawController.demoPayment);
 // temporary solution to an immediate guest withdraw
 withdrawRoutes.route('/immediate-withdraw').post(withdrawController.immediateConfirm);
+
+accountRoutes.route('/account-history').get(accountController.accountHistory);
 
 mailerRoutes.route('/confirm-email-in-transaction').get(mailerController.confirmEmailInTransaction);
 mailerRoutes.route('/confirm-email-response').get(mailerController.confirmEmailResponse);

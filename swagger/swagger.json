@@ -176,6 +176,56 @@
         }
       }
     },
+    "account-history/": {
+      "get": {
+        "tags": [
+          "Account-history"
+        ],
+        "produces": [
+          "application/json"
+        ],
+        "description": "Get account history",
+        "parameters": [
+          {
+            "name": "account",
+            "in": "query",
+            "type": "string",
+            "required": true
+          },{
+            "name": "symbol",
+            "in": "query",
+            "type": "string",
+            "required": true
+          },{
+            "name": "skip",
+            "in": "query",
+            "description": "skip",
+            "type": "number",
+            "required": false
+          },
+          {
+            "name": "limit",
+            "in": "query",
+            "description": "limit",
+            "type": "number",
+            "required": false
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "successful operation",
+            "schema": {
+              "type": "object",
+              "properties": {
+                "history": {
+                  "type": "array"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
     "/campaigns/all": {
       "post": {
         "tags": [

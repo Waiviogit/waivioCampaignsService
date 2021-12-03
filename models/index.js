@@ -17,4 +17,5 @@ module.exports = {
   walletExemptionsModel: require('./walletExemptionsModel'),
   currenciesRateModel: require('./currenciesRateModel'),
   extendedMatchBotModel: require('./extendedMatchBotModel'),
+  engineAccountHistoryModel: require('./engineAccountHistoryModel'),
 };
