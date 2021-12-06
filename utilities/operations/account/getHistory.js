@@ -1,9 +1,12 @@
 const { engineAccountHistoryModel } = require('models');
 const _ = require('lodash');
-const axios = require('axios');
+const hiveEngineRequests = require('../../requests/hiveEngineRequests');
 
 module.exports = async (params) => {
-  const res = await axios.get('https://accounts.hive-engine.com/accountHistory', { params });
+  const res = await hiveEngineRequests(params);
+
+  if (res instanceof Error) return { error: res };
+
   const { result, error } = await engineAccountHistoryModel.find({
     account: params.account,
     $or: [{ symbol: params.symbol }, { symbolOut: params.symbol }, { symbolIn: params.symbol }],

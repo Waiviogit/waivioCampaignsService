@@ -176,7 +176,7 @@
         }
       }
     },
-    "account-history/": {
+    "account-history": {
       "get": {
         "tags": [
           "Account-history"
@@ -215,12 +215,35 @@
           "200": {
             "description": "successful operation",
             "schema": {
-              "type": "object",
-              "properties": {
-                "history": {
-                  "type": "array"
-                }
+              "example": {
+                "history": [
+                  {
+                    "_id": "61a88903625a631934a2a00a",
+                    "refHiveBlockNumber": 58072317,
+                    "blockNumber": 11087250,
+                    "account": "wiv01",
+                    "operation": "newAirdrop",
+                    "transactionId": "2f1165fa0ab2a789f392b816d8908346b6243b20",
+                    "quantity": "10",
+                    "tokenState": "stake",
+                    "timestamp": 1633574061,
+                    "symbol": "WAIV",
+                    "__v": 0
+                  }
+                ]
               }
+            }
+          },
+          "422": {
+            "description": "Error",
+            "schema": {
+              "$ref": "#/definitions/validationError"
+            }
+          },
+          "500": {
+            "description": "Error",
+            "schema": {
+              "$ref": "#/definitions/serverError"
             }
           }
         }

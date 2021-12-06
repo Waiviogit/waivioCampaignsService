@@ -41,7 +41,6 @@ campaignsRoutes.route('/campaign/:campaign_id').get(campaignsController.show);
 
 campaignsRoutes.route('/statistics').get(campaignsController.getCampaignsStatistic);
 campaignsRoutes.route('/statistics').post(campaignsController.getCampaignsStatistic);
-campaignsRoutes.route('/tab_type').post(campaignsController.getCampaignsTabType);
 
 campaignsRoutes.route('/rewards/:userName').get(campaignsController.userRewards);
 campaignsRoutes.route('/create_campaign').post(campaignsController.create);

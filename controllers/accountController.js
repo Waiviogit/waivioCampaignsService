@@ -11,7 +11,9 @@ const accountHistory = async (req, res) => {
 
   if (validationError) return renderError(res, validationError);
 
-  const { history } = await getHistory(params);
+  const { history, error } = await getHistory(params);
+
+  if (error) renderError(res, { message: error });
 
   renderSuccess(res, { history });
 };
