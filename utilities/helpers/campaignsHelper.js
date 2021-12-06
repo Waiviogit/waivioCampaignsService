@@ -26,6 +26,7 @@ const sortPrimaryCampaigns = (campaigns, sort) => {
     case CAMPAIGN_SORTS.PAYOUT:
       return _.orderBy(campaigns, ['payout'], ['desc']);
     case CAMPAIGN_SORTS.DEFAULT:
+    default:
       return _.orderBy(campaigns, [(campaign) => campaign.distance, 'payout'], ['asc', 'desc']);
   }
 };
