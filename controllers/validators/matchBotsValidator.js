@@ -26,7 +26,7 @@ exports.matchBotVoteSchema = Joi.object().keys({
   minVotingPower: Joi.number().integer().min(1).max(10000)
     .required(),
   minVotingPowerCurrencies: Joi.array()
-    .items(Joi.string().valid(...MANA_CHECK_TYPES)),
+    .items(Joi.string().valid(...MANA_CHECK_TYPES)).default([MANA_CHECK_TYPES[0]]),
   voteWeight: Joi.number().integer().min(-10000).max(10000)
     .invalid(0)
     .required(),
