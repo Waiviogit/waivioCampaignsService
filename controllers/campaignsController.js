@@ -20,6 +20,7 @@ const {
   getDashboard,
   getCampaign,
   getHistory,
+  getTabType,
 } = require('utilities/operations').campaigns;
 
 const reservedCampaigns = async (req, res) => {
@@ -242,6 +243,19 @@ const getCampaignsStatistic = async (req, res) => {
   renderSuccess(res, result);
 };
 
+const getCampaignsTabType = async (req, res) => {
+  const {
+    params,
+    validationError,
+  } = validators.validate(
+    Object.assign(req.body, { locale: req.headers.locale }),
+    validators.campaigns.validateTabTypeSchema,
+  );
+  if (validationError) return renderError(res, validationError);
+  const tabType = await getTabType(params);
+  renderSuccess(res, tabType);
+};
+
 const userRewards = async (req, res) => {
   const { params, validationError } = validators
     .validate({
@@ -292,6 +306,7 @@ module.exports = {
   reservedCampaignsCount,
   validateAssignCampaign,
   getCampaignsStatistic,
+  getCampaignsTabType,
   validateStopCampaign,
   getWobjectCampaigns,
   campaignsDashboard,

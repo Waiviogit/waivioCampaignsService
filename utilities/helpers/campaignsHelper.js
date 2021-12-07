@@ -7,13 +7,14 @@ const {
   campaignModel, userModel, paymentHistoryModel, Subscriptions, wobjectSubscriptions, appModel,
   currenciesRateModel,
 } = require('models');
-const { CAMPAIGN_FIELDS, REMOVE_OBJ_STATUSES, STATUSES } = require('constants/wobjectsData');
+const { CAMPAIGN_FIELDS, STATUSES } = require('constants/wobjectsData');
 const blackListHelper = require('utilities/helpers/blackListHelper');
 const wobjectHelper = require('utilities/helpers/wobjectHelper');
 const { divide } = require('utilities/helpers/calcHelper');
 const { getNamespace } = require('cls-hooked');
 const moment = require('moment');
 const _ = require('lodash');
+const { REMOVE_OBJ_STATUSES } = require('../../constants/wobjectsData');
 
 const sortPrimaryCampaigns = (campaigns, sort) => {
   switch (sort) {
@@ -26,6 +27,7 @@ const sortPrimaryCampaigns = (campaigns, sort) => {
     case CAMPAIGN_SORTS.PAYOUT:
       return _.orderBy(campaigns, ['payout'], ['desc']);
     case CAMPAIGN_SORTS.DEFAULT:
+    default:
       return _.orderBy(campaigns, [(campaign) => campaign.distance, 'payout'], ['asc', 'desc']);
   }
 };
@@ -111,8 +113,8 @@ const fillObjects = (
           + reservation.rewardRaisedBy - (reservation.rewardReducedBy || 0);
     }
   }
-  const object = _.find(wobjects, (wobj) => wobj.author_permlink === obj);
 
+  const object = _.find(wobjects, (wobj) => wobj.author_permlink === obj);
   const toDisplay = requireDisplay({
     guideName, campaign, object, userName,
   });
@@ -239,9 +241,7 @@ exports.getPrimaryCampaigns = async ({
     if (userName) {
       ({ user: currentUser } = await userModel.findOne(userName));
     }
-
-    if (!reserved && (_.includes(REMOVE_OBJ_STATUSES, objStatus)
-        || (!_.get(currentUser, 'user_metadata.settings.showNSFWPosts', true) && objStatus === 'nsfw'))) return;
+    if (!reserved && ((!_.get(currentUser, 'user_metadata.settings.showNSFWPosts', true) && objStatus === 'nsfw'))) return;
 
     if (simplified && requiredObject) {
       requiredObject.fields = _.filter(requiredObject.fields, (field) => field.name === 'name' || field.name === 'avatar');
@@ -315,9 +315,8 @@ exports.getSecondaryCampaigns = async ({
 
     if (sort === CAMPAIGN_SORTS.PAYOUT) campaign.payout = amountPayments(campaign);
     const objStatus = _.get(campaign, 'required_object.status.title', null);
-
-    if (!reserved && (_.includes(REMOVE_OBJ_STATUSES, objStatus)
-      || (!_.get(currentUser, 'user_metadata.settings.showNSFWPosts', true) && objStatus === STATUSES.NSFW))) return;
+    if (!reserved && (_.includes(REMOVE_OBJ_STATUSES, objStatus))) return;
+    if ((!_.get(currentUser, 'user_metadata.settings.showNSFWPosts', true) && objStatus === STATUSES.NSFW)) return;
     campaign.requirement_filters = await getRequirementFilters(
       campaign, _.find(users, (usr) => usr.name === userName),
     );

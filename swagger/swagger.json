@@ -898,6 +898,60 @@
         }
       }
     },
+    "/tab-type": {
+      "post": {
+        "tags": [
+          "Campaign"
+        ],
+        "description": "Get tab for first rewards load",
+        "produces": [
+          "application/json"
+        ],
+        "parameters": [
+          {
+            "in": "body",
+            "name": "params",
+            "description": "**userName** - name of user",
+            "required": false,
+            "schema": {
+              "type": "object",
+              "properties": {
+                "userName": {
+                  "type": "string"
+                },
+                "status": {
+                  "type": "array",
+                  "example": ["active"]
+                }
+              }
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "successful operation",
+            "schema": {
+              "example": {
+                "tabType": "all"
+              }
+            }
+          },
+          "422": {
+            "description": "Error",
+            "schema": {
+              "$ref": "#/definitions/validationError"
+            }
+          },
+          "500": {
+            "description": "Error",
+            "schema": {
+              "$ref": "#/definitions/serverError"
+            }
+          }
+        }
+      }
+    },
+
     "/rewards/{userName}": {
       "get": {
         "tags": [

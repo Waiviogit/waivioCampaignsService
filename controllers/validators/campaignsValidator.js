@@ -117,6 +117,12 @@ exports.validateStatisticsSchema = Joi.object().keys({
   ),
 });
 
+exports.validateTabTypeSchema = Joi.object().keys({
+  userName: Joi.string(),
+  locale: Joi.string().default('en-US'),
+  status: Joi.array().default(['active']),
+});
+
 exports.campaignsSchema = Joi.object().keys({
   guideNames: Joi.array().items(Joi.string()),
   types: Joi.array().items(Joi.string()),
