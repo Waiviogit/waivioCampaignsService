@@ -5,7 +5,7 @@ const { getHistory } = require('../utilities/operations').account;
 
 const accountHistory = async (req, res) => {
   const { params, validationError } = validators.validate(
-    req.query,
+    req.body,
     validators.account.validateAccountHistorySchema,
   );
 

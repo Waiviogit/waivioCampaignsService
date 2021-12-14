@@ -7,5 +7,4 @@ module.exports = {
   mailerRequests: require('./mailerRequests'),
   blockcypherRequests: require('./blockcypherRequests'),
   hiveSignerRequests: require('./hiveSignerRequests'),
-  hiveEngineRequests: require('./hiveEngineRequests'),
 };

@@ -19,12 +19,15 @@ const withdrawRoutes = new Router();
 const referralRoutes = new Router();
 const mailerRoutes = new Router();
 const apiRoutes = new Router();
+const hiveEngineRoutes = new Router();
+
 
 apiRoutes.use('/campaigns-api/referrals', referralRoutes);
 apiRoutes.use('/campaigns-api/withdraw', withdrawRoutes);
 apiRoutes.use('/campaigns-api/mailer', mailerRoutes);
 apiRoutes.use('/campaigns-api', campaignsRoutes);
 apiRoutes.use('/campaigns-api', accountRoutes);
+apiRoutes.use('/hive-engine', hiveEngineRoutes);
 
 campaignsRoutes.route('/campaigns/dashboard/:guide_name').get(campaignsController.campaignsDashboard);
 campaignsRoutes.route('/campaigns/reserved/count').get(campaignsController.reservedCampaignsCount);
@@ -71,7 +74,7 @@ withdrawRoutes.route('/create-demo-payment').post(withdrawController.demoPayment
 // temporary solution to an immediate guest withdraw
 withdrawRoutes.route('/immediate-withdraw').post(withdrawController.immediateConfirm);
 
-accountRoutes.route('/account-history').get(accountController.accountHistory);
+hiveEngineRoutes.route('/account-history').post(accountController.accountHistory);
 
 mailerRoutes.route('/confirm-email-in-transaction').get(mailerController.confirmEmailInTransaction);
 mailerRoutes.route('/confirm-email-response').get(mailerController.confirmEmailResponse);

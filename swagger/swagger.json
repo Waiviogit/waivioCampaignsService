@@ -176,8 +176,8 @@
         }
       }
     },
-    "account-history": {
-      "get": {
+    "/hive-engine/account-history": {
+      "post": {
         "tags": [
           "Account-history"
         ],
@@ -188,25 +188,32 @@
         "parameters": [
           {
             "name": "account",
-            "in": "query",
+            "in": "body",
             "type": "string",
             "required": true
           },{
             "name": "symbol",
-            "in": "query",
+            "in": "body",
             "type": "string",
-            "required": true
+            "required": false
           },{
             "name": "skip",
-            "in": "query",
-            "description": "skip",
+            "in": "body",
             "type": "number",
             "required": false
-          },
-          {
+          },{
             "name": "limit",
-            "in": "query",
-            "description": "limit",
+            "in": "body",
+            "type": "number",
+            "required": false
+          },{
+            "name": "excludeSymbols",
+            "in": "body",
+            "type": "array",
+            "required": false
+          },{
+            "name": "timestampEnd",
+            "in": "body",
             "type": "number",
             "required": false
           }
