@@ -7,6 +7,7 @@ const {
   demoUserController,
   withdrawController,
   mailerController,
+  hiveEngineController,
 } = require('controllers');
 
 const { guestRequests } = require('utilities/requests');
@@ -17,11 +18,13 @@ const withdrawRoutes = new Router();
 const referralRoutes = new Router();
 const mailerRoutes = new Router();
 const apiRoutes = new Router();
+const hiveEngineRoutes = new Router();
 
 apiRoutes.use('/campaigns-api/referrals', referralRoutes);
 apiRoutes.use('/campaigns-api/withdraw', withdrawRoutes);
 apiRoutes.use('/campaigns-api/mailer', mailerRoutes);
 apiRoutes.use('/campaigns-api', campaignsRoutes);
+apiRoutes.use('/campaigns-api/hive-engine', hiveEngineRoutes);
 
 campaignsRoutes.route('/campaigns/dashboard/:guide_name').get(campaignsController.campaignsDashboard);
 campaignsRoutes.route('/campaigns/reserved/count').get(campaignsController.reservedCampaignsCount);
@@ -76,5 +79,7 @@ mailerRoutes.route('/confirm-email-request').post(mailerController.confirmEmailR
 referralRoutes.route('/check-user-app-blacklist').get(referralsController.blackList);
 referralRoutes.route('/details').get(referralsController.details);
 referralRoutes.route('/status').get(referralsController.status);
+
+hiveEngineRoutes.route('/swap').get(hiveEngineController.getSwapParams);
 
 module.exports = apiRoutes;
