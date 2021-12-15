@@ -33,6 +33,7 @@ exports.sendToCuratorsQueue = async ({ vote, bots }) => {
 };
 
 const getCuratorVoteData = ({ vote, bot }) => ({
+  minVotingPowerCurrencies: _.get(bot, 'accounts[0].minVotingPowerCurrencies'),
   voteWeight: getWeightFromRatio({ curatorWeight: vote.weight, ratio: _.get(bot, 'accounts[0].voteRatio') }),
   minVotingPower: _.get(bot, 'accounts[0].minVotingPower'),
   voteComments: _.get(bot, 'accounts[0].voteComments', false),

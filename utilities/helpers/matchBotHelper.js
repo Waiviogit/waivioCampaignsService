@@ -9,13 +9,19 @@ const {
 } = require('models');
 const { hiveOperations } = require('utilities/hiveApi');
 const sentryHelper = require('utilities/helpers/sentryHelper');
-const { MATCH_BOT_TYPES, BOT_ENV_KEY } = require('constants/matchBotsData');
-const { voteCoefficients } = require('constants/constants');
+const {
+  MATCH_BOT_TYPES, BOT_ENV_KEY, MANA_CHECK_TYPES, BOTS_QUEUE,
+} = require('constants/matchBotsData');
+const { voteCoefficients, SUPPORTED_CRYPTO_CURRENCIES } = require('constants/constants');
 const jsonHelper = require('utilities/helpers/jsonHelper');
 const { RPC_MESSAGES } = require('constants/regExp');
 const validators = require('controllers/validators');
 const moment = require('moment');
 const _ = require('lodash');
+const engineOperations = require('utilities/hiveEngine/engineOperations');
+const { TOKEN_WAIV } = require('constants/hiveEngine');
+const redisSetter = require('utilities/redis/redisSetter');
+const redisGetter = require('utilities/redis/redisGetter');
 
 /**
  * Find all expired match bot upvotes and recount sponsors debt to the contractors
@@ -85,7 +91,8 @@ const executeUpvotes = async () => {
 
     if (post && post.active_votes && _.map(post.active_votes, 'voter').includes(upvote.bot_name)) {
       return;
-    } if (currentVotePower >= upvote.min_voting_power) {
+    }
+    if (currentVotePower >= upvote.min_voting_power) {
       try {
         ({ votePower: weight, voteWeight } = await getNeededVoteWeight(voteWeight, upvote));
         const { result: vote } = await hiveOperations.likePost(
@@ -117,7 +124,7 @@ const getNeededVoteWeight = async (totalAmount, upvote) => {
     idealCoef = _.round(upvote.amountToVote / totalAmount, 3);
     const realFault = idealCoef > 1 ? idealCoef : voteCoefficients[_.round(upvote.amountToVote / totalAmount, 1) * 100];
     const realVote = totalAmount * idealCoef * realFault;
-    if (!needVotePower)needVotePower = idealCoef + (((totalAmount * idealCoef) - realVote) / totalAmount);
+    if (!needVotePower) needVotePower = idealCoef + (((totalAmount * idealCoef) - realVote) / totalAmount);
     else needVotePower *= idealCoef > 1 ? idealCoef : (idealCoef * realFault);
     ({ voteWeight: totalAmount } = await hiveOperations.getVotingInfo(
       {
@@ -148,7 +155,10 @@ const updateCompensationFee = async (upvote, campaign, voteAmount) => {
     voteAmount = (campaign.reward / reservation.hiveCurrency) - _.get(result, 'amount', 0);
   }
   const { result: transfer } = await paymentHistoryModel.findOne({
-    type: { $in: ['transfer', 'demo_debt'] }, userName: campaign.compensationAccount, sponsor: upvote.sponsor, payed: false,
+    type: { $in: ['transfer', 'demo_debt'] },
+    userName: campaign.compensationAccount,
+    sponsor: upvote.sponsor,
+    payed: false,
   });
   if (_.get(transfer, 'details.remaining', 0) >= voteAmount) {
     await paymentHistoryModel.updateOne({ _id: transfer._id },
@@ -400,7 +410,11 @@ const checkForPayed = async ({ history, amount, marker }) => {
     case 'subtract':
       switch (history.payed) {
         case true:
-          let condition = { type: { $in: ['transfer', 'demo_debt'] }, userName: history.userName, sponsor: history.sponsor };
+          let condition = {
+            type: { $in: ['transfer', 'demo_debt'] },
+            userName: history.userName,
+            sponsor: history.sponsor,
+          };
           if (transfer) condition = { _id: transfer._id };
           await paymentHistoryModel.updateOne(condition, { payed: false, $inc: { 'details.remaining': amount } });
           return true;
@@ -580,9 +594,11 @@ const voteExtendedMatchBots = async (voteData) => {
     return { result: false };
   }
   const {
-    voter, author, permlink, voteWeight, minVotingPower, minHBD, botKey, voteComments,
+    voter, author, permlink, voteWeight, minVotingPower,
+    minHBD, botKey, voteComments, minVotingPowerCurrencies,
   } = params;
   const validVote = await canVote({
+    minVotingPowerCurrencies,
     voteWeight: Math.abs(voteWeight / 100),
     minVotingPower,
     voteComments,
@@ -611,7 +627,8 @@ const voteExtendedMatchBots = async (voteData) => {
 };
 
 const canVote = async ({
-  name, voteWeight, author, permlink, minVotingPower, minHBD, voteComments, botKey,
+  name, voteWeight, author, permlink, minVotingPower,
+  minHBD, voteComments, botKey, minVotingPowerCurrencies,
 }) => {
   const { result: sponsorsVote } = await botUpvoteModel.findOne(
     { botName: name, author, permlink },
@@ -630,12 +647,38 @@ const canVote = async ({
       name, voteWeight, author, permlink,
     },
   );
+  const { engineVoteValueHBD, engineVotePower } = await engineOperations.calculateVotePower({
+    dieselPoolId: TOKEN_WAIV.DIESEL_POOL_ID,
+    poolId: TOKEN_WAIV.POOL_ID,
+    symbol: TOKEN_WAIV.SYMBOL,
+    weight: voteWeight * 100,
+    account: name,
+  });
 
-  if (votePower < minVotingPower) return false;
-  if (voteValueHBD < minHBD) return false;
+  const manaCheck = checkMinVotingPowerCondition({
+    minVotingPowerCurrencies, votePower, engineVotePower, minVotingPower,
+  });
+  if (!manaCheck) return false;
+  if (voteValueHBD + engineVoteValueHBD < minHBD) return false;
   if (!isPost && !voteComments) return false;
 
   return true;
+};
+
+const checkMinVotingPowerCondition = ({
+  minVotingPowerCurrencies, votePower, engineVotePower, minVotingPower,
+}) => {
+  const diff = _.difference(MANA_CHECK_TYPES, minVotingPowerCurrencies);
+  if (_.isEmpty(diff)) {
+    return engineVotePower > minVotingPower || votePower > minVotingPower;
+  }
+  if (_.includes(diff, SUPPORTED_CRYPTO_CURRENCIES.HIVE)) {
+    return engineVotePower > minVotingPower;
+  }
+  if (_.includes(diff, TOKEN_WAIV.SYMBOL)) {
+    return votePower > minVotingPower;
+  }
+  return false;
 };
 
 const setBot = async ({ botName, json }) => {
@@ -682,7 +725,55 @@ const getMatchBotType = (botName) => {
   return (botType[botName] || botType.default)();
 };
 
+const voteEngineCurator = async (vote) => {
+  if (_.isEmpty(vote)) return;
+  const {
+    author, permlink, weight, voter,
+  } = vote;
+  if (weight < 1) return;
+  const key = `${BOTS_QUEUE.ENGINE_CURATOR.VOTED_KEY}:${TOKEN_WAIV.SYMBOL}`;
+  const expire = moment().subtract(7, 'days').valueOf();
+  const yesterday = moment().subtract(1, 'days').valueOf();
+  const now = moment().valueOf();
+
+  await redisSetter.zremrangebyscore({ key, start: -Infinity, end: expire });
+  const { result: votedPosts } = await redisGetter
+    .zrevrange({ key, start: 0, end: -1 });
+
+  const alreadyVoted = _.some(_.map(votedPosts, (el) => ({
+    author: el.split('/')[0],
+    permlink: el.split('/')[1],
+  })), (p) => _.isEqual(p, { author, permlink }));
+  if (alreadyVoted) return;
+
+  const { percentage, error } = await hiveOperations
+    .getVotingManaPercentage(process.env.ENGINE_CURATOR_BOT_NAME);
+
+  if (error) return;
+  if (percentage < BOTS_QUEUE.ENGINE_CURATOR.MIN_PERCENTAGE) return;
+  const { result: dayBefore } = await redisGetter
+    .zrevrangebyscore({ key, max: now, min: yesterday });
+
+  const botWeight = BOTS_QUEUE.ENGINE_CURATOR.DAILY_WEIGHT / dayBefore.length > 10000
+    ? 10000
+    : Math.ceil(BOTS_QUEUE.ENGINE_CURATOR.DAILY_WEIGHT / dayBefore.length);
+
+  const { result } = await hiveOperations.likePost(
+    {
+      key: process.env.ENGINE_CURATOR_BOT_KEY,
+      voter: process.env.ENGINE_CURATOR_BOT_NAME,
+      weight: botWeight,
+      permlink,
+      author,
+    },
+  );
+  if (result) {
+    await redisSetter.zadd(key, [now, `${author}/${permlink}/${voter}`]);
+  }
+};
+
 module.exports = {
+  checkMinVotingPowerCondition,
   checkAndRemoveHistories,
   removePaymentHistories,
   updatePaymentHistories,
@@ -693,6 +784,7 @@ module.exports = {
   isAccountsIncludeBot,
   getNeededVoteWeight,
   getExtendedBotsArr,
+  voteEngineCurator,
   getMatchBotName,
   getMatchBotType,
   executeUpvotes,

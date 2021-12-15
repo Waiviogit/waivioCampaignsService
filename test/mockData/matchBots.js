@@ -1,4 +1,4 @@
-const { MATCH_BOT_TYPES, BOT_ENV_KEY } = require('constants/matchBotsData');
+const { MATCH_BOT_TYPES, BOT_ENV_KEY, MANA_CHECK_TYPES } = require('constants/matchBotsData');
 const { faker } = require('test/testHelper');
 const moment = require('moment');
 const _ = require('lodash');
@@ -13,6 +13,7 @@ exports.getSetBotData = (data = {}) => {
     enablePowerDown: !!data.enablePowerDown,
     expiredAt: data.expiredAt || moment().utc().add(1, 'days').toDate(),
     minVotingPower: data.minVotingPower || _.random(1, 10000),
+    minVotingPowerCurrencies: data.minVotingPowerCurrencies || MANA_CHECK_TYPES,
   };
   if (json.type === MATCH_BOT_TYPES.CURATOR) {
     json.voteRatio = data.voteRatio || _.random(0.01, 10);
@@ -34,6 +35,7 @@ exports.getCanVoteMock = (data = {}) => {
     author: data.author || faker.random.string(),
     permlink: data.permlink || faker.random.string(),
     minVotingPower: data.minVotingPower || _.random(1, 10000),
+    minVotingPowerCurrencies: data.minVotingPowerCurrencies || MANA_CHECK_TYPES,
     minHBD: data.minHBD || _.random(0.001, 10),
   };
   return canVoteData;
@@ -46,6 +48,7 @@ exports.getVoteDataMock = (data = {}) => {
     author: data.author || faker.random.string(),
     permlink: data.permlink || faker.random.string(),
     minVotingPower: data.minVotingPower || _.random(1, 10000),
+    minVotingPowerCurrencies: data.minVotingPowerCurrencies || MANA_CHECK_TYPES,
     minHBD: data.minHBD || _.random(0.001, 10),
     voteWeight: data.voteWeight || _.random(1, 10000),
   };

@@ -1,7 +1,7 @@
 const {
   faker, ExtendedMatchBot, moment, _,
 } = require('test/testHelper');
-const { MATCH_BOT_TYPES } = require('constants/matchBotsData');
+const { MATCH_BOT_TYPES, MANA_CHECK_TYPES } = require('constants/matchBotsData');
 
 const Create = async (data = {}) => {
   const matchBotData = {
@@ -10,6 +10,7 @@ const Create = async (data = {}) => {
     accounts: data.accounts || [{
       name: data.name || `${faker.name.firstName()}${faker.random.number()}`,
       minVotingPower: data.minVotingPower || 8000,
+      // minVotingPowerCurrencies: data.minVotingPowerCurrencies || [_.sample(MANA_CHECK_TYPES)],
       enabled: data.enabled !== false,
       expiredAt: data.expiredAt || moment().utc().add(1, 'days').startOf('day')
         .toDate(),
