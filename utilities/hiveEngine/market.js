@@ -5,6 +5,5 @@ exports.getMarketMetrics = async ({ query }) => engineQuery({
     contract: 'market',
     table: 'metrics',
     query,
-    indexes: '',
   },
 });
