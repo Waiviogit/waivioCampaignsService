@@ -24,7 +24,7 @@ apiRoutes.use('/campaigns-api/referrals', referralRoutes);
 apiRoutes.use('/campaigns-api/withdraw', withdrawRoutes);
 apiRoutes.use('/campaigns-api/mailer', mailerRoutes);
 apiRoutes.use('/campaigns-api', campaignsRoutes);
-apiRoutes.use('/hive-engine', hiveEngineRoutes);
+apiRoutes.use('/campaigns-api/hive-engine', hiveEngineRoutes);
 
 campaignsRoutes.route('/campaigns/dashboard/:guide_name').get(campaignsController.campaignsDashboard);
 campaignsRoutes.route('/campaigns/reserved/count').get(campaignsController.reservedCampaignsCount);
