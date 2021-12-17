@@ -8,4 +8,5 @@ module.exports = {
   mailerController: require('./mailerController'),
   referralsController: require('./referralsController'),
   hiveEngineController: require('./hiveEngineController'),
+  accountController: require('./accountController'),
 };

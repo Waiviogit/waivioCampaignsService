@@ -7,6 +7,7 @@ const {
   demoUserController,
   withdrawController,
   mailerController,
+  accountController,
   hiveEngineController,
 } = require('controllers');
 
@@ -19,6 +20,7 @@ const referralRoutes = new Router();
 const mailerRoutes = new Router();
 const apiRoutes = new Router();
 const hiveEngineRoutes = new Router();
+
 
 apiRoutes.use('/campaigns-api/referrals', referralRoutes);
 apiRoutes.use('/campaigns-api/withdraw', withdrawRoutes);
@@ -81,5 +83,6 @@ referralRoutes.route('/details').get(referralsController.details);
 referralRoutes.route('/status').get(referralsController.status);
 
 hiveEngineRoutes.route('/swap').get(hiveEngineController.getSwapParams);
+hiveEngineRoutes.route('/account-history').post(accountController.accountHistory);
 
 module.exports = apiRoutes;

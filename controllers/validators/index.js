@@ -5,6 +5,7 @@ module.exports = {
   payables: require('./payablesValidator'),
   matchBots: require('./matchBotsValidator'),
   demoUsers: require('./demoUsersValidator'),
+  account: require('./accountValidator'),
   referrals: require('./referralsValidator'),
   validate: (data, schema) => {
     const result = schema.validate(data, { abortEarly: false });
