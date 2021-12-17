@@ -1,6 +1,6 @@
 const { engineAccountHistoryModel } = require('models');
 const _ = require('lodash');
-const { hiveEngineRequest } = require('../../hiveEngine/engineOperations');
+const { accountHistory } = require('../../hiveEngine/engineOperations');
 
 const getHistoryData = async (params) => {
   let condition = _.get(params, 'symbol');
@@ -31,7 +31,7 @@ const getHistoryData = async (params) => {
 const getAccountHistory = async (params) => {
   const { data, query } = await getHistoryData(params);
 
-  const res = await hiveEngineRequest(data);
+  const res = await accountHistory(data);
   if (res instanceof Error) return { error: res };
 
   const sortedRes = _.filter(res.data, (el) => !_.includes(params.excludeSymbols, el.symbol));

@@ -7,7 +7,7 @@ const commentContract = require('./commentContract');
 const tokensContract = require('./tokensContract');
 const marketPools = require('./marketPools');
 
-exports.hiveEngineRequest = async (params) => {
+exports.accountHistory = async (params) => {
   try {
     const instance = axios.create();
 
