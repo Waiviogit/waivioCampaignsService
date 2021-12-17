@@ -1,10 +1,26 @@
 const currencyRequest = require('utilities/requests/currencyRequest');
 const { TOKEN_WAIV } = require('constants/hiveEngine');
 const _ = require('lodash');
+const axios = require('axios');
+const axiosRetry = require('axios-retry');
 const commentContract = require('./commentContract');
 const tokensContract = require('./tokensContract');
 const marketPools = require('./marketPools');
 
+exports.hiveEngineRequest = async (params) => {
+  try {
+    const instance = axios.create();
+
+    axiosRetry(instance, {
+      retries: 3,
+      retryDelay: (retryCount) => retryCount * 100,
+      retryCondition: (error) => error.response.status !== 200,
+    });
+    return await instance.get('https://accounts.hive-engine.com/accountHistory', { params });
+  } catch (error) {
+    return error;
+  }
+};
 exports.calculateVotePower = async ({
   symbol, account, poolId, weight, dieselPoolId,
 }) => {

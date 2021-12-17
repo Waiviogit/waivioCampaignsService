@@ -7,6 +7,7 @@ exports.validateAccountHistorySchema = Joi.object().keys({
   skip: Joi.number().default(0),
   limit: Joi.number().default(10),
   timestampEnd: Joi.number().default(0),
-  symbol: Joi.string(),
   excludeSymbols: Joi.array().items(Joi.string()),
+  symbol: Joi.string()
+    .when('excludeSymbols', { not: Joi.exist(), then: Joi.required() }),
 }).options(options);
