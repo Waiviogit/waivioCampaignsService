@@ -187,35 +187,20 @@
         "description": "Get account history",
         "parameters": [
           {
-            "name": "account",
             "in": "body",
-            "type": "string",
-            "required": true
-          },{
-            "name": "symbol",
-            "in": "body",
-            "type": "string",
-            "required": false
-          },{
-            "name": "skip",
-            "in": "body",
-            "type": "number",
-            "required": false
-          },{
-            "name": "limit",
-            "in": "body",
-            "type": "number",
-            "required": false
-          },{
-            "name": "excludeSymbols",
-            "in": "body",
-            "type": "array",
-            "required": false
-          },{
-            "name": "timestampEnd",
-            "in": "body",
-            "type": "number",
-            "required": false
+            "name": "params",
+            "description": "**symbol** - get account history by symbol,\n**excludeSymbols** - symbols to exclude for the story. Example ['SWAP.HIVE','WAIV']. \n**account** - account for get history\n**timestampEnd** - timestamp of last record, for infinity scroll \n**offset** - offset first records for infinity scroll\n**limit** - limit count records",
+            "required": false,
+            "schema": {
+              "example": {
+                "symbol": "WAIV",
+                "account": "wiv01",
+                "offset": 0,
+                "limit": 5,
+                "excludeSymbols":["SWAP","as"],
+                "timestampEnd": 1638359286
+              }
+            }
           }
         ],
         "responses": {

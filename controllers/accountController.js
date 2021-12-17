@@ -1,7 +1,7 @@
 const validators = require('controllers/validators');
 
 const { renderError, renderSuccess } = require('concerns/renderConcern');
-const { getHistory } = require('../utilities/operations').account;
+const { getAccountHistory } = require('../utilities/operations/account/getHistory');
 
 const accountHistory = async (req, res) => {
   const { params, validationError } = validators.validate(
@@ -11,7 +11,7 @@ const accountHistory = async (req, res) => {
 
   if (validationError) return renderError(res, validationError);
 
-  const { history, error } = await getHistory(params);
+  const { history, error } = await getAccountHistory(params);
 
   if (error) renderError(res, { message: error });
 
