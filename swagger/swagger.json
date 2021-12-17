@@ -9,6 +9,34 @@
   },
   "basePath": "/campaigns-api",
   "paths": {
+    "/hive-engine/swap": {
+      "get": {
+        "tags": [
+          "Hive-Engine"
+        ],
+        "produces": [
+          "application/json"
+        ],
+        "description": "available swaps",
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": "successful operation",
+            "schema": {
+              "type": "object",
+              "properties": {
+                "SWAP.HIVE": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/definitions/enginePoolWithSymbol"
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
     "/campaigns/wobject": {
       "get": {
         "tags": [
@@ -963,6 +991,60 @@
         }
       }
     },
+    "/tab-type": {
+      "post": {
+        "tags": [
+          "Campaign"
+        ],
+        "description": "Get tab for first rewards load",
+        "produces": [
+          "application/json"
+        ],
+        "parameters": [
+          {
+            "in": "body",
+            "name": "params",
+            "description": "**userName** - name of user",
+            "required": false,
+            "schema": {
+              "type": "object",
+              "properties": {
+                "userName": {
+                  "type": "string"
+                },
+                "status": {
+                  "type": "array",
+                  "example": ["active"]
+                }
+              }
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "successful operation",
+            "schema": {
+              "example": {
+                "tabType": "all"
+              }
+            }
+          },
+          "422": {
+            "description": "Error",
+            "schema": {
+              "$ref": "#/definitions/validationError"
+            }
+          },
+          "500": {
+            "description": "Error",
+            "schema": {
+              "$ref": "#/definitions/serverError"
+            }
+          }
+        }
+      }
+    },
+
     "/rewards/{userName}": {
       "get": {
         "tags": [
@@ -2861,6 +2943,47 @@
         },
         "hasMore": {
           "type": "boolean"
+        }
+      }
+    },
+    "enginePoolWithSymbol" : {
+      "type": "object",
+      "properties": {
+        "_id" : {
+          "type": "number"
+        },
+        "tokenPair" : {
+          "type": "string"
+        },
+        "baseQuantity" : {
+          "type": "string"
+        },
+        "baseVolume" : {
+          "type": "string"
+        },
+        "basePrice" : {
+          "type": "string"
+        },
+        "quoteQuantity" : {
+          "type": "string"
+        },
+        "quoteVolume" : {
+          "type": "string"
+        },
+        "quotePrice" : {
+          "type": "string"
+        },
+        "totalShares" : {
+          "type": "string"
+        },
+        "precision" : {
+          "type": "number"
+        },
+        "creator" : {
+          "type": "string"
+        },
+        "symbol" : {
+          "type": "string"
         }
       }
     },

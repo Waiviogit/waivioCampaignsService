@@ -12,4 +12,5 @@ module.exports = {
   getDashboard: require('./getDashboard'),
   getCampaign: require('./getCampaign'),
   getHistory: require('./getHistory'),
+  getTabType: require('./getTabType'),
 };

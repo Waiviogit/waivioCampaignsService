@@ -8,6 +8,7 @@ const {
   withdrawController,
   mailerController,
   accountController,
+  hiveEngineController,
 } = require('controllers');
 
 const { guestRequests } = require('utilities/requests');
@@ -42,6 +43,7 @@ campaignsRoutes.route('/campaign/:campaign_id').get(campaignsController.show);
 
 campaignsRoutes.route('/statistics').get(campaignsController.getCampaignsStatistic);
 campaignsRoutes.route('/statistics').post(campaignsController.getCampaignsStatistic);
+campaignsRoutes.route('/tab-type').post(campaignsController.getCampaignsTabType);
 
 campaignsRoutes.route('/rewards/:userName').get(campaignsController.userRewards);
 campaignsRoutes.route('/create_campaign').post(campaignsController.create);
@@ -72,8 +74,6 @@ withdrawRoutes.route('/create-demo-payment').post(withdrawController.demoPayment
 // temporary solution to an immediate guest withdraw
 withdrawRoutes.route('/immediate-withdraw').post(withdrawController.immediateConfirm);
 
-hiveEngineRoutes.route('/account-history').post(accountController.accountHistory);
-
 mailerRoutes.route('/confirm-email-in-transaction').get(mailerController.confirmEmailInTransaction);
 mailerRoutes.route('/confirm-email-response').get(mailerController.confirmEmailResponse);
 mailerRoutes.route('/confirm-email-request').post(mailerController.confirmEmailRequest);
@@ -81,5 +81,8 @@ mailerRoutes.route('/confirm-email-request').post(mailerController.confirmEmailR
 referralRoutes.route('/check-user-app-blacklist').get(referralsController.blackList);
 referralRoutes.route('/details').get(referralsController.details);
 referralRoutes.route('/status').get(referralsController.status);
+
+hiveEngineRoutes.route('/swap').get(hiveEngineController.getSwapParams);
+hiveEngineRoutes.route('/account-history').post(accountController.accountHistory);
 
 module.exports = apiRoutes;
