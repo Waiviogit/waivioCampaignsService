@@ -21,7 +21,7 @@ const getData = async (guideName, startDate) => {
       retryDelay: (retryCount) => retryCount * 100,
       retryCondition: (error) => error.response.status !== 200,
     });
-    return await instance.post('https://api.hive.blog', data);
+    return await instance.post('https://api.openhive.network', data);
   } catch (error) {
     return error;
   }
@@ -30,11 +30,11 @@ const getData = async (guideName, startDate) => {
 const setDate = async (comments) => {
   for (const element of comments) {
     const json = jsonHelper.parseJson(element.json_metadata);
-    if (_.get(json, 'waivioRewards.type') === 'waivio_stop_campaign' && _.get(json, 'waivioRewards.timestamp')) {
+    if (_.get(json, 'waivioRewards.type') === 'waivio_stop_campaign') {
       await CampaignModel.updateOne({
         deactivation_permlink: element.permlink,
       },
-      { $set: { stoppedAt: json.waivioRewards.timestamp } });
+      { $set: { stoppedAt: element.created } });
       console.log('set:', element.permlink);
     }
   }
