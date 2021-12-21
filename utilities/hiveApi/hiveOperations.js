@@ -3,6 +3,7 @@ const { PrivateKey, Asset } = require('@hiveio/dhive');
 const { specialTransferBeneficiaries } = require('constants/constants');
 const { broadcastClient, databaseClient } = require('utilities/hiveApi/hiveClient');
 const { postModel } = require('models');
+const redisGetter = require('utilities/redis/redisGetter');
 
 exports.likePost = async ({
   key, voter, author, permlink, weight,
@@ -175,7 +176,9 @@ exports.calculateVotePower = async ({
   name, voteWeight, author, permlink,
 }) => {
   const account = await this.getAccountInfo(name);
-  const { rewardFund, currentPrice: price } = await this.getCurrentPriceInfo();
+  // eslint-disable-next-line camelcase
+  const { reward_balance, recent_claims, price } = await redisGetter.getHashAll('current_price_info');
+  // const { rewardFund, currentPrice: price } = await this.getCurrentPriceInfo();
   const vests = parseFloat(account.vesting_shares)
     + parseFloat(account.received_vesting_shares) - parseFloat(account.delegated_vesting_shares);
 
@@ -191,7 +194,7 @@ exports.calculateVotePower = async ({
 
   const tRShares = postVoteRhares + rShares;
 
-  const rewards = parseFloat(rewardFund.reward_balance) / parseFloat(rewardFund.recent_claims);
+  const rewards = parseFloat(reward_balance) / parseFloat(recent_claims);
   const postValue = tRShares * rewards; // *price - to calculate in HBD
   const voteValue = postValue * (rShares / tRShares);
   return {
@@ -246,6 +249,15 @@ exports.makeSpecialTransfers = async (account) => {
       from: account.name, amount: _.floor(amount, 2), to: acc, activeKey: account.key,
     });
   }
+};
+
+exports.getVotingManaPercentage = async (account) => {
+  const user = await this.getAccountInfo(account);
+  if (!user && user.name) return { error: new Error('getAccountInfo request Err') };
+
+  const mana = await databaseClient.rc.calculateVPMana(user);
+  if (!mana && !mana.percentage) return { error: new Error('calculateVPMana request Err') };
+  return { percentage: mana.percentage };
 };
 
 const parseToFloat = (balance) => parseFloat(balance.match(/.\d*.\d*/)[0]);

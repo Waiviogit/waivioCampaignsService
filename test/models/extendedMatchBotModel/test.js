@@ -148,7 +148,7 @@ describe('On extendedMatchBotModel', async () => {
         expect(result.type).to.be.eq(botData.type);
       });
       it('should create bot with proper account', async () => {
-        const actual = _.omit(result.accounts[0], ['_id', 'enablePowerDown']);
+        const actual = _.omit(result.accounts[0], ['_id', 'enablePowerDown', 'minVotingPowerCurrencies']);
         const expected = _.omit(botData, ['type', 'botName']);
         expect(actual).to.be.deep.eq(expected);
       });
@@ -186,7 +186,7 @@ describe('On extendedMatchBotModel', async () => {
       });
       it('should update bot with proper account', async () => {
         const expected = _.omit(updateData, ['type', 'botName']);
-        const actual = _.omit(result.accounts[0], ['_id', 'enablePowerDown']);
+        const actual = _.omit(result.accounts[0], ['_id', 'enablePowerDown', 'minVotingPowerCurrencies']);
         expect(actual).to.be.deep.eq(expected);
       });
     });
