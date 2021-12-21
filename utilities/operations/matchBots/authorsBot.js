@@ -33,6 +33,7 @@ exports.sendToAuthorsQueue = async ({ post, bots }) => {
 };
 
 const getAuthorVoteData = ({ post, bot }) => ({
+  minVotingPowerCurrencies: _.get(bot, 'accounts[0].minVotingPowerCurrencies'),
   minVotingPower: _.get(bot, 'accounts[0].minVotingPower'),
   voteWeight: _.get(bot, 'accounts[0].voteWeight'),
   minHBD: BOTS_QUEUE.AUTHOR.MIN_HBD,

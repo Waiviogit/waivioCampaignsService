@@ -11,6 +11,16 @@ const getOne = async ({ author, permlink }) => {
   }
 };
 
+const find = async (filter, projection) => {
+  try {
+    return {
+      posts: await Post.find(filter, projection).lean(),
+    };
+  } catch (error) {
+    return { error };
+  }
+};
+
 module.exports = {
-  getOne,
+  getOne, find,
 };
