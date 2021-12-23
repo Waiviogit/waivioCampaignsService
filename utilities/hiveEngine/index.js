@@ -3,4 +3,5 @@ module.exports = {
   commentContract: require('./commentContract'),
   marketPools: require('./marketPools'),
   engineOperations: require('./engineOperations'),
+  hiveEngineRequests: require('./hiveEngineRequests'),
 };

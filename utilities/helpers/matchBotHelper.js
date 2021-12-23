@@ -590,7 +590,7 @@ const voteExtendedMatchBots = async (voteData) => {
   const { params, validationError } = validators
     .validate(jsonHelper.parseJson(voteData), validators.matchBots.matchBotVoteSchema);
   if (validationError) {
-    await sentryHelper.handleError(validationError);
+    console.error(validationError);
     return { result: false };
   }
   const {
@@ -619,8 +619,7 @@ const voteExtendedMatchBots = async (voteData) => {
     },
   );
   if (votingError) {
-    const testRegularErr = _.get(votingError, 'message', '').match(RPC_MESSAGES.IGNORED_VOTE_ERRORS);
-    if (_.isNil(testRegularErr)) await sentryHelper.handleError(votingError);
+    console.error(votingError.message);
     return { result: false };
   }
   return { result: !!vote };

@@ -9,6 +9,34 @@
   },
   "basePath": "/campaigns-api",
   "paths": {
+    "/hive-engine/swap": {
+      "get": {
+        "tags": [
+          "Hive-Engine"
+        ],
+        "produces": [
+          "application/json"
+        ],
+        "description": "available swaps",
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": "successful operation",
+            "schema": {
+              "type": "object",
+              "properties": {
+                "SWAP.HIVE": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/definitions/enginePoolWithSymbol"
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
     "/campaigns/wobject": {
       "get": {
         "tags": [
@@ -158,6 +186,71 @@
                 "count": {
                   "type": "number"
                 }
+              }
+            }
+          },
+          "422": {
+            "description": "Error",
+            "schema": {
+              "$ref": "#/definitions/validationError"
+            }
+          },
+          "500": {
+            "description": "Error",
+            "schema": {
+              "$ref": "#/definitions/serverError"
+            }
+          }
+        }
+      }
+    },
+    "/hive-engine/account-history": {
+      "post": {
+        "tags": [
+          "Account-history"
+        ],
+        "produces": [
+          "application/json"
+        ],
+        "description": "Get account history",
+        "parameters": [
+          {
+            "in": "body",
+            "name": "params",
+            "description": "**symbol** - get account history by symbol,\n**excludeSymbols** - symbols to exclude for the story. Example ['WAIV']. \n**account** - account for get history\n**timestampEnd** - timestamp of last record, for infinity scroll \n**limit** - limit count records",
+            "required": false,
+            "schema": {
+              "example": {
+                "symbol": "WAIV",
+                "account": "wiv01",
+                "offset": 0,
+                "limit": 5,
+                "excludeSymbols":["WAIV"],
+                "timestampEnd": 1638359286
+              }
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "successful operation",
+            "schema": {
+              "example": {
+                "history": [
+                  {
+                    "_id": "61a88903625a631934a2a00a",
+                    "refHiveBlockNumber": 58072317,
+                    "blockNumber": 11087250,
+                    "account": "wiv01",
+                    "operation": "airdrops_newAirdrop",
+                    "transactionId": "2f1165fa0ab2a789f392b816d8908346b6243b20",
+                    "quantity": "10",
+                    "tokenState": "stake",
+                    "timestamp": 1633574061,
+                    "symbol": "WAIV",
+                    "__v": 0
+                  }
+                ]
               }
             }
           },
@@ -2850,6 +2943,47 @@
         },
         "hasMore": {
           "type": "boolean"
+        }
+      }
+    },
+    "enginePoolWithSymbol" : {
+      "type": "object",
+      "properties": {
+        "_id" : {
+          "type": "number"
+        },
+        "tokenPair" : {
+          "type": "string"
+        },
+        "baseQuantity" : {
+          "type": "string"
+        },
+        "baseVolume" : {
+          "type": "string"
+        },
+        "basePrice" : {
+          "type": "string"
+        },
+        "quoteQuantity" : {
+          "type": "string"
+        },
+        "quoteVolume" : {
+          "type": "string"
+        },
+        "quotePrice" : {
+          "type": "string"
+        },
+        "totalShares" : {
+          "type": "string"
+        },
+        "precision" : {
+          "type": "number"
+        },
+        "creator" : {
+          "type": "string"
+        },
+        "symbol" : {
+          "type": "string"
         }
       }
     },
