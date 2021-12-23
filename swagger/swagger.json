@@ -217,7 +217,7 @@
           {
             "in": "body",
             "name": "params",
-            "description": "**symbol** - get account history by symbol,\n**excludeSymbols** - symbols to exclude for the story. Example ['SWAP.HIVE','WAIV']. \n**account** - account for get history\n**timestampEnd** - timestamp of last record, for infinity scroll \n**offset** - offset first records for infinity scroll\n**limit** - limit count records",
+            "description": "**symbol** - get account history by symbol,\n**excludeSymbols** - symbols to exclude for the story. Example ['WAIV']. \n**account** - account for get history\n**timestampEnd** - timestamp of last record, for infinity scroll \n**limit** - limit count records",
             "required": false,
             "schema": {
               "example": {
@@ -225,7 +225,7 @@
                 "account": "wiv01",
                 "offset": 0,
                 "limit": 5,
-                "excludeSymbols":["SWAP","as"],
+                "excludeSymbols":["WAIV"],
                 "timestampEnd": 1638359286
               }
             }
@@ -242,7 +242,7 @@
                     "refHiveBlockNumber": 58072317,
                     "blockNumber": 11087250,
                     "account": "wiv01",
-                    "operation": "newAirdrop",
+                    "operation": "airdrops_newAirdrop",
                     "transactionId": "2f1165fa0ab2a789f392b816d8908346b6243b20",
                     "quantity": "10",
                     "tokenState": "stake",
