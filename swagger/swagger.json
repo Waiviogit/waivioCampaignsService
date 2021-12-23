@@ -217,7 +217,7 @@
           {
             "in": "body",
             "name": "params",
-            "description": "**symbol** - get account history by symbol,\n**excludeSymbols** - symbols to exclude for the story. Example ['SWAP.HIVE','WAIV']. \n**account** - account for get history\n**timestampEnd** - timestamp of last record, for infinity scroll \n**offset** - offset first records for infinity scroll\n**limit** - limit count records",
+            "description": "**symbol** - get account history by symbol,\n**excludeSymbols** - symbols to exclude for the story. Example ['WAIV']. \n**account** - account for get history\n**timestampEnd** - timestamp of last record, for infinity scroll \n**limit** - limit count records",
             "required": false,
             "schema": {
               "example": {
