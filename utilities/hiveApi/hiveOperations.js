@@ -253,7 +253,8 @@ exports.makeSpecialTransfers = async (account) => {
 
 exports.getVotingManaPercentage = async (account) => {
   const user = await this.getAccountInfo(account);
-  if (!user && user.name) return { error: new Error('getAccountInfo request Err') };
+  const errorCondition = (!user && user.name) || _.has(user, 'error');
+  if (errorCondition) return { error: new Error('getAccountInfo request Err') };
 
   const mana = await databaseClient.rc.calculateVPMana(user);
   if (!mana && !mana.percentage) return { error: new Error('calculateVPMana request Err') };

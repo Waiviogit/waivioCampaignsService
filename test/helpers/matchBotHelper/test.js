@@ -1094,7 +1094,6 @@ describe('matchBotHelper', async () => {
       const expected = { result: false };
       describe('On validation error', async () => {
         beforeEach(async () => {
-          sinon.spy(sentryHelper, 'handleError');
           const mock = getVoteDataMock({
             remove: _.sample([
               'permlink',
@@ -1110,10 +1109,6 @@ describe('matchBotHelper', async () => {
         });
         it('should return false result', async () => {
           expect(result).to.be.deep.eq(expected);
-        });
-        it('should call sentry once', async () => {
-          const actual = sentryHelper.handleError.calledOnce;
-          expect(actual).to.be.true;
         });
       });
       describe('When can vote return false', async () => {
@@ -1139,15 +1134,10 @@ describe('matchBotHelper', async () => {
             isPost: true,
           });
           sinon.stub(hiveOperations, 'likePost').returns({ error: {} });
-          sinon.spy(sentryHelper, 'handleError');
           result = await matchBotHelper.voteExtendedMatchBots(JSON.stringify(mock));
         });
         it('should should return false result', async () => {
           expect(result).to.be.deep.eq(expected);
-        });
-        it('should call sentry once', async () => {
-          const actual = sentryHelper.handleError.calledOnce;
-          expect(actual).to.be.true;
         });
       });
     });
