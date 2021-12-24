@@ -4,12 +4,10 @@ const { accountHistory } = require('../../hiveEngine/engineOperations');
 
 const getHistoryData = async (params) => {
   let condition = _.get(params, 'symbol');
-  let operator = '$or';
   let { limit } = params;
 
   if (params.excludeSymbols) {
     condition = { $nin: params.excludeSymbols };
-    operator = '$and';
     limit = 1000;
   }
 
@@ -23,7 +21,7 @@ const getHistoryData = async (params) => {
   const query = {
     account: params.account,
     ...(params.timestampEnd && { timestamp: { $lte: params.timestampEnd } }),
-    [operator]: [{ symbol: condition }, { symbolOut: condition }, { symbolIn: condition }],
+    $or: [{ symbol: condition }, { symbolOut: condition }, { symbolIn: condition }],
   };
   return { data, query };
 };
