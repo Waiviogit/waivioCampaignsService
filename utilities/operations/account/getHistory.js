@@ -4,7 +4,7 @@ const { accountHistory } = require('../../hiveEngine/engineOperations');
 
 const getHistoryData = async (params) => {
   let condition = _.get(params, 'symbol');
-  let { limit } = params;
+  let limit = params.limit + 1;
   let operator = '$or';
 
   if (params.excludeSymbols) {
