@@ -21,7 +21,7 @@ const getHistoryData = async (params) => {
   const query = {
     account: params.account,
     ...(params.timestampEnd && { timestamp: { $lte: params.timestampEnd } }),
-    $or: [{ symbol: condition }, { symbolOut: condition }, { symbolIn: condition }],
+    $and: [{ symbol: condition }, { $or: [{ symbolOut: condition }, { symbolIn: condition }] }],
   };
   return { data, query };
 };
