@@ -9,7 +9,8 @@ exports.find = async ({
         .find(condition)
         .sort(sort)
         .skip(skip)
-        .limit(limit),
+        .limit(limit)
+        .lean(),
     };
   } catch (error) {
     return { error };
