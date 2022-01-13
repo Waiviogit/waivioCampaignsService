@@ -45,7 +45,7 @@ describe('messageHandler', async () => {
     expect(spy.calledWith(id)).to.be.true;
   });
 
-  it('should call next message with correct data', async () => {
+  it('should call next with correct data', async () => {
     await deleteCommentQueue.messageHandler(JSON.stringify(message), next, id);
     expect(next.called).to.be.true;
   });
