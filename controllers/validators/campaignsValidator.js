@@ -191,8 +191,6 @@ exports.campaignsByWobjectSchema = Joi.object().keys({
 }).options(options);
 
 exports.campaignsRemoveObligationsSchema = Joi.object().keys({
-  author: Joi.string().required(),
-  permlink: Joi.string().required(),
   campaignId: Joi.string().required(),
   reservation_permlink: Joi.string().required(),
 }).options(options);
