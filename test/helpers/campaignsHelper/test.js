@@ -274,4 +274,79 @@ describe('on CampaignsHelper', async () => {
       });
     });
   });
+
+  describe('On deleteSponsorObligationsHelper', async () => {
+    let campaign, reservation_permlink;
+    beforeEach(async () => {
+      await dropDatabase();
+      reservation_permlink = faker.random.string();
+      const obligations = ['review', 'campaign_server_fee', 'index_fee', 'referral_server_fee', 'beneficiary_fee'];
+      const users = [{
+        permlink: reservation_permlink,
+        status: RESERVATION_STATUSES.COMPLETED,
+        hiveCurrency: 1,
+        object_permlink: faker.random.string(),
+        name: faker.random.string(),
+      }];
+      campaign = await CampaignFactory.Create({ users });
+
+      for (const obligation of obligations) {
+        await PaymentHistoryFactory.Create({
+          sponsor: campaign.guideName,
+          permlink: reservation_permlink,
+          type: obligation,
+        });
+      }
+    });
+
+    it('should return false if campaign not found', async () => {
+      const result = await campaignHelper.deleteSponsorObligationsHelper(
+        { campaignId: faker.random.string(), reservation_permlink },
+      );
+      expect(result).to.be.eq(false);
+    });
+
+    it('should return false if wrong reservation permlink', async () => {
+      const result = await campaignHelper.deleteSponsorObligationsHelper(
+        { campaignId: campaign._id.toString(), reservation_permlink: faker.random.string() },
+      );
+      expect(result).to.be.eq(false);
+    });
+
+    it('should return false if user has different status from completed', async () => {
+      const status = _.sample(
+        _.filter(Object.values(RESERVATION_STATUSES), (s) => s !== RESERVATION_STATUSES.COMPLETED),
+      );
+      await Campaign.updateOne(
+        { _id: campaign._id, users: { $elemMatch: { permlink: reservation_permlink } } },
+        { $set: { 'users.$.status': status } },
+      );
+      const result = await campaignHelper.deleteSponsorObligationsHelper(
+        { campaignId: campaign._id.toString(), reservation_permlink },
+      );
+      expect(result).to.be.eq(false);
+    });
+
+    it('should update user status on assigned on valid data', async () => {
+      await campaignHelper.deleteSponsorObligationsHelper(
+        { campaignId: campaign._id.toString(), reservation_permlink },
+      );
+      const updatedCampaign = await Campaign.findOne({ _id: campaign._id });
+      const user = _.find(updatedCampaign.users, (u) => u.permlink === reservation_permlink);
+      expect(user.status).to.be.eq(RESERVATION_STATUSES.ASSIGNED);
+    });
+
+    it('should delete all sponsor obligation records on valid data', async () => {
+      await campaignHelper.deleteSponsorObligationsHelper(
+        { campaignId: campaign._id.toString(), reservation_permlink },
+      );
+      const result = await PaymentHistory.find(
+        {
+          'details.reservation_permlink': reservation_permlink,
+          sponsor: campaign.guideName,
+        },
+      ).lean();
+      expect(result).to.deep.equal([]);
+    });
+  });
 });

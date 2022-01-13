@@ -464,12 +464,12 @@ exports.rewardConvertJob = async () => {
 
 exports.deleteSponsorObligationsHelper = async ({ campaignId, reservation_permlink }) => {
   const { result } = await campaignModel.findOne({ _id: campaignId });
-  if (!result) return;
+  if (!result) return false;
   const user = _.find(
     result.users,
     (u) => u.status === RESERVATION_STATUSES.COMPLETED && u.permlink === reservation_permlink,
   );
-  if (!user) return;
+  if (!user) return false;
   await campaignModel.updateOne(
     { _id: campaignId, users: { $elemMatch: { permlink: reservation_permlink } } },
     {
@@ -481,5 +481,9 @@ exports.deleteSponsorObligationsHelper = async ({ campaignId, reservation_permli
       },
     },
   );
-  await paymentHistoryModel.deleteMany({ 'details.reservation_permlink': reservation_permlink });
+  await paymentHistoryModel.deleteMany({
+    'details.reservation_permlink': reservation_permlink,
+    sponsor: result.guideName,
+  });
+  return true;
 };
