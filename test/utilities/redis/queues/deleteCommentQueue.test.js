@@ -20,7 +20,7 @@ describe('messageHandler', async () => {
   let message, id, next;
   beforeEach(async () => {
     message = mockDeleteQueueData();
-    next = () => {};
+    next = sinon.spy();
     id = faker.random.string();
   });
   afterEach(() => {
@@ -43,5 +43,10 @@ describe('messageHandler', async () => {
     const spy = sinon.spy(deleteCommentQueue, 'del');
     await deleteCommentQueue.messageHandler(JSON.stringify(message), next, id);
     expect(spy.calledWith(id)).to.be.true;
+  });
+
+  it('should call next message with correct data', async () => {
+    await deleteCommentQueue.messageHandler(JSON.stringify(message), next, id);
+    expect(next.called).to.be.true;
   });
 });
