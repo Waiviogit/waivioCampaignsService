@@ -189,3 +189,8 @@ exports.campaignsByWobjectSchema = Joi.object().keys({
   userName: Joi.string().default(''),
   locale: Joi.string().default('en-US'),
 }).options(options);
+
+exports.campaignsRemoveObligationsSchema = Joi.object().keys({
+  campaignId: Joi.string().required(),
+  reservation_permlink: Joi.string().required(),
+}).options(options);
