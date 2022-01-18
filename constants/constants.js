@@ -262,12 +262,6 @@ const REWARD_JOB_CURRENCIES = [
   SUPPORTED_CURRENCIES.UAH,
 ];
 
-const OPERATION_TYPES = {
-  CURATION_REWARDS: 'comments_curationReward',
-  AUTHOR_REWARDS: 'comments_authorReward',
-  BENEFICIARY_REWARD: 'comments_beneficiaryReward',
-};
-
 module.exports = {
   SORT_TYPES,
   REFERRAL_TYPES,
@@ -312,5 +306,4 @@ module.exports = {
   PAYABLES_CURRENCIES,
   DONT_GET_RATES,
   WITHDRAW_FORMAT_TYPES,
-  OPERATION_TYPES,
 };

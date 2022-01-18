@@ -1,6 +1,6 @@
 const { engineAccountHistoryModel } = require('models');
 const _ = require('lodash');
-const { OPERATION_TYPES } = require('constants/constants');
+const { HISTORY_OPERATION_TYPES } = require('constants/hiveEngine');
 const { accountHistory } = require('../../hiveEngine/engineOperations');
 
 const getHistoryData = async (params) => {
@@ -14,7 +14,7 @@ const getHistoryData = async (params) => {
     operator = '$and';
   }
   if (!params.excludeCuratorAuthorRewards) {
-    excludeOperation = { $nin: [OPERATION_TYPES.CURATION_REWARDS, OPERATION_TYPES.AUTHOR_REWARDS, OPERATION_TYPES.BENEFICIARY_REWARD] };
+    excludeOperation = { $nin: [HISTORY_OPERATION_TYPES.CURATION_REWARDS, HISTORY_OPERATION_TYPES.AUTHOR_REWARDS, HISTORY_OPERATION_TYPES.BENEFICIARY_REWARD] };
   }
 
   const data = {
