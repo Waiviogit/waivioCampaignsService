@@ -15,6 +15,8 @@ module.exports = async ({
   const { requiredObject, secondaryObject } = fillObjects({
     wobjects, primaryPermlink: campaign.requiredObject, secondaryPermlink,
   });
+  const assignedUser = _.find(campaign.users, (u) => u.status === 'assigned' && u.name === userName);
+  const reservationPermlink = _.get(assignedUser, 'permlink');
   return {
     campaign: {
       _id,
@@ -26,6 +28,7 @@ module.exports = async ({
       guideName: campaign.guideName,
       requirements: campaign.requirements,
       userRequirements: campaign.userRequirements,
+      reservation_permlink: reservationPermlink,
     },
   };
 };
