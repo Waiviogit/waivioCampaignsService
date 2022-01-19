@@ -1,3 +1,4 @@
+/* eslint-disable camelcase */
 const {
   maxMapRadius, minCountMapCampaigns, PAYMENT_HISTORIES_TYPES, CAMPAIGN_STATUSES,
   RESERVATION_STATUSES, CAMPAIGN_FIELDS_FOR_CARDS, CAMPAIGN_SORTS, CAMPAIGN_PAYMENT_SORTS,
@@ -10,7 +11,9 @@ const {
 const { CAMPAIGN_FIELDS, STATUSES } = require('constants/wobjectsData');
 const blackListHelper = require('utilities/helpers/blackListHelper');
 const wobjectHelper = require('utilities/helpers/wobjectHelper');
+const jsonHelper = require('utilities/helpers/jsonHelper');
 const { divide } = require('utilities/helpers/calcHelper');
+const validators = require('controllers/validators');
 const { getNamespace } = require('cls-hooked');
 const moment = require('moment');
 const _ = require('lodash');
@@ -457,4 +460,30 @@ exports.rewardConvertJob = async () => {
     const reward = divide(campaign.rewardInCurrency, _.get(result, `rates.${campaign.currency}`));
     await campaignModel.updateOne({ _id: campaign._id }, { $set: { reward } });
   }
+};
+
+exports.deleteSponsorObligationsHelper = async ({ campaignId, reservation_permlink }) => {
+  const { result } = await campaignModel.findOne({ _id: campaignId });
+  if (!result) return false;
+  const user = _.find(
+    result.users,
+    (u) => u.status === RESERVATION_STATUSES.COMPLETED && u.permlink === reservation_permlink,
+  );
+  if (!user) return false;
+  await campaignModel.updateOne(
+    { _id: campaignId, users: { $elemMatch: { permlink: reservation_permlink } } },
+    {
+      $set: { 'users.$.status': RESERVATION_STATUSES.ASSIGNED },
+      $unset: {
+        'users.$.completedAt': 1,
+        'users.$.fraudSuspicion': 1,
+        'users.$.fraudCodes': 1,
+      },
+    },
+  );
+  await paymentHistoryModel.deleteMany({
+    'details.reservation_permlink': reservation_permlink,
+    sponsor: result.guideName,
+  });
+  return true;
 };

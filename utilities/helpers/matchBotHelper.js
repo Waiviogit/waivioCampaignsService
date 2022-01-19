@@ -8,13 +8,11 @@ const {
   postModel,
 } = require('models');
 const { hiveOperations } = require('utilities/hiveApi');
-const sentryHelper = require('utilities/helpers/sentryHelper');
 const {
   MATCH_BOT_TYPES, BOT_ENV_KEY, MANA_CHECK_TYPES, BOTS_QUEUE,
 } = require('constants/matchBotsData');
 const { voteCoefficients, SUPPORTED_CRYPTO_CURRENCIES } = require('constants/constants');
 const jsonHelper = require('utilities/helpers/jsonHelper');
-const { RPC_MESSAGES } = require('constants/regExp');
 const validators = require('controllers/validators');
 const moment = require('moment');
 const _ = require('lodash');

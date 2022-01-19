@@ -1,16 +1,20 @@
 const { engineAccountHistoryModel } = require('models');
 const _ = require('lodash');
+const { HISTORY_OPERATION_TYPES } = require('constants/hiveEngine');
 const { accountHistory } = require('../../hiveEngine/engineOperations');
 
 const getHistoryData = async (params) => {
   let condition = _.get(params, 'symbol');
   let limit = params.limit + 1;
   let operator = '$or';
-
+  let excludeOperation = { $nin: [] };
   if (params.excludeSymbols) {
     condition = { $nin: params.excludeSymbols };
     limit = 1000;
     operator = '$and';
+  }
+  if (!params.excludeCuratorAuthorRewards) {
+    excludeOperation = { $nin: [HISTORY_OPERATION_TYPES.CURATION_REWARDS, HISTORY_OPERATION_TYPES.AUTHOR_REWARDS, HISTORY_OPERATION_TYPES.BENEFICIARY_REWARD] };
   }
 
   const data = {
@@ -27,6 +31,7 @@ const getHistoryData = async (params) => {
       { symbol: condition },
       { $or: [{ symbolOut: condition }, { symbolIn: condition }] },
     ],
+    operation: excludeOperation,
   };
   return { data, query };
 };
