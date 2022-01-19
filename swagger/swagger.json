@@ -217,7 +217,7 @@
           {
             "in": "body",
             "name": "params",
-            "description": "**symbol** - get account history by symbol,\n**excludeSymbols** - symbols to exclude for the story. Example ['WAIV']. \n**account** - account for get history\n**timestampEnd** - timestamp of last record, for infinity scroll \n**limit** - limit count records",
+            "description": "**symbol** - get account history by symbol,\n**excludeSymbols** - symbols to exclude for the story. Example ['WAIV']. \n**account** - account for get history\n**timestampEnd** - timestamp of last record, for infinity scroll \n**limit** - limit count records \n**excludeCuratorAuthorRewards** - boolean flag , if true then show curator and author rewords",
             "required": false,
             "schema": {
               "example": {
@@ -226,7 +226,8 @@
                 "offset": 0,
                 "limit": 5,
                 "excludeSymbols":["WAIV"],
-                "timestampEnd": 1638359286
+                "timestampEnd": 1638359286,
+                "excludeCuratorAuthorRewards": true
               }
             }
           }
