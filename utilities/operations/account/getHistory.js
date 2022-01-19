@@ -13,7 +13,7 @@ const getHistoryData = async (params) => {
     limit = 1000;
     operator = '$and';
   }
-  if (!params.excludeCuratorAuthorRewards) {
+  if (!params.showRewards) {
     excludeOperation = { $nin: [HISTORY_OPERATION_TYPES.CURATION_REWARDS, HISTORY_OPERATION_TYPES.AUTHOR_REWARDS, HISTORY_OPERATION_TYPES.BENEFICIARY_REWARD] };
   }
 
