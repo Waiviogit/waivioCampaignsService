@@ -5,7 +5,7 @@ const { accountHistory } = require('../../hiveEngine/engineOperations');
 
 const getHistoryData = async (params) => {
   let condition = _.get(params, 'symbol');
-  let limit = params.limit + 1;
+  let limit = params.limit + 10;
   let operator = '$or';
   let excludeOperation = { $nin: [] };
   if (params.excludeSymbols) {
@@ -45,14 +45,15 @@ const getAccountHistory = async (params) => {
   const sortedRes = _.filter(res.data, (el) => !_.includes(params.excludeSymbols, el.symbol));
   const { result, error } = await engineAccountHistoryModel.find({
     condition: query,
-    limit: params.limit + 1,
+    limit: params.limit + 10,
     sort: { timestamp: -1 },
   });
   if (error) return { error };
 
   const resArray = _.concat(sortedRes, result).sort((x, y) => y.timestamp - x.timestamp);
 
-  const updateSkip = resArray.indexOf(_.find(resArray, (obj) => obj.timestamp === params.timestampEnd)) + 1;
+  const updateSkip = resArray
+    .indexOf(_.find(resArray, (obj) => obj._id.toString() === params.lastId)) + 1;
   const history = resArray.slice(updateSkip, updateSkip + params.limit);
 
   return { history };

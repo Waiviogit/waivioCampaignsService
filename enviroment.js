@@ -70,6 +70,7 @@ module.exports = function (app, express) {
   app.use(Sentry.Handlers.errorHandler({
     shouldHandleError(error) {
       // Capture 500 errors
+      if (error.message === 'Invalid parameters') return false;
       if (error.status >= 500 || !error.status) {
         sendSentryNotification();
         return true;
