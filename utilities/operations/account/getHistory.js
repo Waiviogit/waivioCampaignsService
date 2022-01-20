@@ -5,7 +5,7 @@ const { accountHistory } = require('../../hiveEngine/engineOperations');
 
 const getHistoryData = async (params) => {
   let condition = _.get(params, 'symbol');
-  let limit = params.limit + 10;
+  let limit = params.limit + 100;
   let operator = '$or';
   let excludeOperation = { $nin: [] };
   if (params.excludeSymbols) {
@@ -14,7 +14,14 @@ const getHistoryData = async (params) => {
     operator = '$and';
   }
   if (!params.showRewards) {
-    excludeOperation = { $nin: [HISTORY_OPERATION_TYPES.CURATION_REWARDS, HISTORY_OPERATION_TYPES.AUTHOR_REWARDS, HISTORY_OPERATION_TYPES.BENEFICIARY_REWARD] };
+    excludeOperation = {
+      $nin:
+        [
+          HISTORY_OPERATION_TYPES.BENEFICIARY_REWARD,
+          HISTORY_OPERATION_TYPES.CURATION_REWARDS,
+          HISTORY_OPERATION_TYPES.AUTHOR_REWARDS,
+        ],
+    };
   }
 
   const data = {
@@ -39,22 +46,29 @@ const getHistoryData = async (params) => {
 const getAccountHistory = async (params) => {
   const { data, query } = await getHistoryData(params);
 
-  const res = await accountHistory(data);
-  if (res instanceof Error) return { error: res };
+  const apiResponse = await accountHistory(data);
+  if (apiResponse instanceof Error) return { error: apiResponse };
 
-  const sortedRes = _.filter(res.data, (el) => !_.includes(params.excludeSymbols, el.symbol));
-  const { result, error } = await engineAccountHistoryModel.find({
+  const filteredApiData = _.filter(
+    apiResponse.data,
+    (el) => !_.includes(params.excludeSymbols, el.symbol),
+  );
+
+  const { result: dbResponse, error } = await engineAccountHistoryModel.find({
     condition: query,
-    limit: params.limit + 10,
+    limit: params.limit + 100,
     sort: { timestamp: -1 },
   });
   if (error) return { error };
 
-  const resArray = _.concat(sortedRes, result).sort((x, y) => y.timestamp - x.timestamp);
+  const sortedHistory = _.orderBy(
+    [...filteredApiData, ...dbResponse],
+    ['timestamp', '_id'], ['desc', 'desc'],
+  );
 
-  const updateSkip = resArray
-    .indexOf(_.find(resArray, (obj) => obj._id.toString() === params.lastId)) + 1;
-  const history = resArray.slice(updateSkip, updateSkip + params.limit);
+  const updateSkip = sortedHistory
+    .indexOf(_.find(sortedHistory, (obj) => obj._id.toString() === params.lastId)) + 1;
+  const history = sortedHistory.slice(updateSkip, updateSkip + params.limit);
 
   return { history };
 };
