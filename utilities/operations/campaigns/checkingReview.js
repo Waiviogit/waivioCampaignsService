@@ -1,6 +1,7 @@
 const _ = require('lodash');
 const { campaignModel, userModel } = require('models');
 const { getWobjects } = require('utilities/helpers/wobjectHelper');
+const { RESERVATION_STATUSES } = require('constants/constants');
 
 module.exports = async ({
   _id, postPermlink, userName, locale,
@@ -15,7 +16,9 @@ module.exports = async ({
   const { requiredObject, secondaryObject } = fillObjects({
     wobjects, primaryPermlink: campaign.requiredObject, secondaryPermlink,
   });
-  const assignedUser = _.find(campaign.users, (u) => u.status === 'assigned' && u.name === userName);
+  const assignedUser = _.find(
+    campaign.users, (u) => u.status === RESERVATION_STATUSES.ASSIGNED && u.name === userName,
+  );
   const reservationPermlink = _.get(assignedUser, 'permlink');
   return {
     campaign: {
