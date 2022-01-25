@@ -11,3 +11,36 @@ exports.HISTORY_OPERATION_TYPES = {
 };
 
 exports.REDIS_ENGINE_CURATORS = 'engineCurators';
+
+exports.HISTORY_API_OPS = [
+  'tokens_create',
+  'tokens_issue',
+  'tokens_transfer',
+  'tokens_transferToContract',
+  'tokens_transferFromContract',
+  'tokens_updatePrecision',
+  'tokens_updateUrl',
+  'tokens_updateMetadata',
+  'tokens_transferOwnership',
+  'tokens_enableStaking',
+  'tokens_enableDelegation',
+  'tokens_stake',
+  'tokens_unstakeStart',
+  'tokens_cancelUnstake',
+  'tokens_delegate',
+  'tokens_undelegateStart',
+  'tokens_undelegateDone',
+  'tokens_transferFee',
+  'market_cancel',
+  'market_placeOrder',
+  'market_expire',
+  'market_buy',
+  'market_buyRemaining',
+  'market_sell',
+  'market_sellRemaining',
+  'market_close',
+  'mining_lottery',
+  'witnesses_proposeRound',
+  'hivepegged_buy',
+  'hivepegged_withdraw',
+];
