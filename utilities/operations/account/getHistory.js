@@ -1,6 +1,6 @@
+const { HISTORY_OPERATION_TYPES, HISTORY_API_OPS } = require('constants/hiveEngine');
 const { engineAccountHistoryModel } = require('models');
 const _ = require('lodash');
-const { HISTORY_OPERATION_TYPES } = require('constants/hiveEngine');
 const { accountHistory } = require('../../hiveEngine/engineOperations');
 
 const getHistoryData = async (params) => {
@@ -28,6 +28,7 @@ const getHistoryData = async (params) => {
     ...(params.timestampEnd && { timestampEnd: params.timestampEnd, timestampStart: 1 }),
     ...(params.symbol && { symbol: params.symbol }),
     account: params.account,
+    ops: HISTORY_API_OPS.toString(),
     limit,
   };
 
