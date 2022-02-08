@@ -143,6 +143,7 @@ const HIVE_OPERATIONS_TYPES = {
   COLLATERALIZED_CONVERT: 'collateralized_convert',
   CONVERT: 'convert',
   FILL_CONVERT_REQUEST: 'fill_convert_request',
+  DELEGATE_VESTING_SHARES: 'delegate_vesting_shares',
 };
 
 const WITHDRAW_FORMAT_TYPES = [
