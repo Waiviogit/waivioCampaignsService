@@ -1,7 +1,6 @@
 const {
   MATCH_BOT_TYPES, BOTS_QUEUE, BOT_ENV_KEY, WORK_BOTS_ENV,
 } = require('constants/matchBotsData');
-const sentryHelper = require('utilities/helpers/sentryHelper');
 const { curatorsBotQueue } = require('utilities/redis/queues');
 const validators = require('controllers/validators');
 const { extendedMatchBotModel } = require('models');
@@ -24,7 +23,6 @@ exports.sendToCuratorsQueue = async ({ vote, bots }) => {
     const { params, validationError } = validators
       .validate(getCuratorVoteData({ vote, bot }), validators.matchBots.matchBotVoteSchema);
     if (validationError) {
-      await sentryHelper.handleError(validationError);
       continue;
     }
 
