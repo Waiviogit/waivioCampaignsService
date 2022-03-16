@@ -13,6 +13,14 @@ exports.HISTORY_OPERATION_TYPES = {
 
 exports.REDIS_ENGINE_CURATORS = 'engineCurators';
 
+exports.MARKET_CONTRACT = {
+  BUY: 'buy',
+};
+
+exports.MARKET_OPERATION = {
+  PLACE_ORDER: 'market_placeOrder',
+};
+
 exports.HISTORY_API_OPS = [
   'tokens_create',
   'tokens_issue',
