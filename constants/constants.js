@@ -265,6 +265,8 @@ const REWARD_JOB_CURRENCIES = [
 
 const REDIS_QUEUE_DELETE_COMMENT = 'delete_comment';
 
+const FRACTION_PRECISION = 8;
+
 module.exports = {
   SORT_TYPES,
   REFERRAL_TYPES,
@@ -310,4 +312,5 @@ module.exports = {
   DONT_GET_RATES,
   WITHDRAW_FORMAT_TYPES,
   REDIS_QUEUE_DELETE_COMMENT,
+  FRACTION_PRECISION,
 };
