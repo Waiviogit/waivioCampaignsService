@@ -2,6 +2,12 @@ const { HISTORY_OPERATION_TYPES, HISTORY_API_OPS } = require('constants/hiveEngi
 const { engineAccountHistoryModel } = require('models');
 const _ = require('lodash');
 const { accountHistory } = require('../../hiveEngine/engineOperations');
+const { divide } = require('../../helpers/calcHelper');
+const {
+  TOKEN_WAIV,
+  MARKET_OPERATION,
+  MARKET_CONTRACT,
+} = require('../../../constants/hiveEngine');
 
 const getHistoryData = async (params) => {
   let condition = _.get(params, 'symbol');
@@ -69,7 +75,13 @@ const getAccountHistory = async (params) => {
 
   const updateSkip = sortedHistory
     .indexOf(_.find(sortedHistory, (obj) => obj._id.toString() === params.lastId)) + 1;
-  const history = sortedHistory.slice(updateSkip, updateSkip + params.limit);
+  const paginatedHistory = sortedHistory.slice(updateSkip, updateSkip + params.limit);
+
+  const history = _.map(paginatedHistory, (item) => ({
+    ...item,
+    ...((item.operation === MARKET_OPERATION.PLACE_ORDER && item.orderType === MARKET_CONTRACT.BUY)
+      && { quantity: divide(item.quantityLocked, item.price, TOKEN_WAIV.FRACTION_PRECISION) }),
+  }));
 
   return { history };
 };
