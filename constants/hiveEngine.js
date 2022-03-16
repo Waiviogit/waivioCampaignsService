@@ -3,6 +3,7 @@ exports.TOKEN_WAIV = {
   POOL_ID: 13,
   DIESEL_POOL_ID: 63,
   TAGS: ['waivio', 'neoxian', 'palnet', 'waiv', 'food'],
+  FRACTION_PRECISION: 8,
 };
 exports.HISTORY_OPERATION_TYPES = {
   CURATION_REWARDS: 'comments_curationReward',
