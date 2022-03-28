@@ -56,10 +56,15 @@ const getAccountHistory = async (params) => {
   const apiResponse = await accountHistory(data);
   if (apiResponse instanceof Error) return { error: apiResponse };
 
-  const filteredApiData = _.filter(
+  let filteredApiData = _.filter(
     apiResponse.data,
     (el) => !_.includes(params.excludeSymbols, el.symbol),
   );
+
+  if (!params.showRewards) {
+    filteredApiData = _.filter(filteredApiData,
+      (el) => !_.includes(HISTORY_OPERATION_TYPES, el.operation));
+  }
 
   const { result: dbResponse, error } = await engineAccountHistoryModel.find({
     condition: query,
