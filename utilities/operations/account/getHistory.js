@@ -41,25 +41,16 @@ const getAccountHistory = async (params) => {
 
 const constructApiQuery = ({
   params, limit, count, timestampEnd, skip,
-}) => {
-  // как сделать так чтоб не затирался
-  console.log('count', count);
-  console.log(moment().unix());
-  console.log('timestampEnd', timestampEnd);
-  console.log('skip', skip);
-
-  return {
-    // тут менять таймстамп
-    ...(params.timestampEnd && { timestampEnd: params.timestampEnd, timestampStart: 1 }),
-    ...(params.symbol && { symbol: params.symbol }),
-    account: params.account,
-    ops: !params.showRewards ? HISTORY_API_OPS.toString()
-      : [...HISTORY_API_OPS, ...Object.values(HISTORY_OPERATION_TYPES)].toString(),
-    limit,
-    ...(count && { offset: skip }),
-    ...(timestampEnd && { timestampStart: timestampEnd, timestampEnd: moment().unix() }),
-  };
-};
+}) => ({
+  ...(params.timestampEnd && { timestampEnd: params.timestampEnd, timestampStart: 1 }),
+  ...(params.symbol && { symbol: params.symbol }),
+  account: params.account,
+  ops: !params.showRewards ? HISTORY_API_OPS.toString()
+    : [...HISTORY_API_OPS, ...Object.values(HISTORY_OPERATION_TYPES)].toString(),
+  limit,
+  ...(count && { offset: skip }),
+  ...(timestampEnd && { timestampStart: timestampEnd, timestampEnd: moment().unix() }),
+});
 
 const constructDbQuery = (params) => {
   let condition = _.get(params, 'symbol');
@@ -91,24 +82,23 @@ const getFilteredApiData = async ({
   params, count = 0, filteredApiData = [], timestampEnd = 0, skip = 0,
 }) => {
   let limit = params.limit + 100;
-  if (params.excludeSymbols) limit = 1000;
-  // timestamp менять как-то!
+  if (params.excludeSymbols) limit = TOKEN_WAIV.MAX_LIMIT;
+
   const apiResponse = await accountHistory(constructApiQuery({
     params, limit, count, timestampEnd, skip,
   }));
-  // сделать какую-то рекурсию?
   if (apiResponse instanceof Error) return { errorApiResponse: apiResponse };
 
   filteredApiData.push(..._.filter(
     apiResponse.data,
     (el) => !_.includes(params.excludeSymbols, el.symbol),
   ));
-
-  console.log('limit', limit);
-  console.log('filteredApiData.length', filteredApiData.length);
   const timestampEndForQuery = filteredApiData[filteredApiData.length - 1].timestamp + 1;
-  if (limit >= 1000 && filteredApiData.length < limit && timestampEnd !== timestampEndForQuery) {
+
+  if (limit >= TOKEN_WAIV.MAX_LIMIT && filteredApiData.length < limit
+    && timestampEnd !== timestampEndForQuery) {
     count++;
+
     await getFilteredApiData({
       params,
       count,
@@ -117,7 +107,7 @@ const getFilteredApiData = async ({
       skip: filteredApiData.length,
     });
   }
-  console.log('after if');
+
   return { filteredApiData };
 };
 
