@@ -11,7 +11,7 @@ const {
 } = require('../../../constants/hiveEngine');
 
 const getAccountHistory = async (params) => {
-  const { filteredApiData, errorApiResponse } = await getFilteredApiData({ params });
+  const { apiResponseData, errorApiResponse } = await getApiData({ params });
   if (errorApiResponse) return { error: errorApiResponse };
 
   const { result: dbResponse, error } = await engineAccountHistoryModel.find({
@@ -22,7 +22,7 @@ const getAccountHistory = async (params) => {
   if (error) return { error };
 
   const sortedHistory = _.orderBy(
-    [...filteredApiData, ...dbResponse],
+    [...apiResponseData, ...dbResponse],
     ['timestamp', '_id'], ['desc', 'desc'],
   );
 
@@ -40,7 +40,7 @@ const getAccountHistory = async (params) => {
 };
 
 const constructApiQuery = ({
-  params, limit, count, timestampEnd, skip,
+  params, limit, timestampEnd,
 }) => ({
   ...(params.timestampEnd && { timestampEnd: params.timestampEnd, timestampStart: 1 }),
   ...(params.symbol && { symbol: params.symbol }),
@@ -48,7 +48,6 @@ const constructApiQuery = ({
   ops: !params.showRewards ? HISTORY_API_OPS.toString()
     : [...HISTORY_API_OPS, ...Object.values(HISTORY_OPERATION_TYPES)].toString(),
   limit,
-  ...(count && { offset: skip }),
   ...(timestampEnd && { timestampStart: timestampEnd, timestampEnd: moment().unix() }),
 });
 
@@ -78,37 +77,31 @@ const constructDbQuery = (params) => {
   };
 };
 
-const getFilteredApiData = async ({
-  params, count = 0, filteredApiData = [], timestampEnd = 0, skip = 0,
+const getApiData = async ({
+  params, apiResponseData = [], timestampEnd = 0,
 }) => {
-  let limit = params.limit + 100;
-  if (params.excludeSymbols) limit = TOKEN_WAIV.MAX_LIMIT;
+  const limit = params.excludeSymbols ? TOKEN_WAIV.MAX_LIMIT : params.limit + 100;
 
   const apiResponse = await accountHistory(constructApiQuery({
-    params, limit, count, timestampEnd, skip,
+    params, limit, timestampEnd,
   }));
   if (apiResponse instanceof Error) return { errorApiResponse: apiResponse };
 
-  filteredApiData.push(..._.filter(
-    apiResponse.data,
-    (el) => !_.includes(params.excludeSymbols, el.symbol),
-  ));
-  const timestampEndForQuery = filteredApiData[filteredApiData.length - 1].timestamp + 1;
-
-  if (limit >= TOKEN_WAIV.MAX_LIMIT && filteredApiData.length < limit
-    && timestampEnd !== timestampEndForQuery) {
-    count++;
-
-    await getFilteredApiData({
-      params,
-      count,
-      filteredApiData,
-      timestampEnd: timestampEndForQuery,
-      skip: filteredApiData.length,
-    });
+  apiResponseData.push(...apiResponse.data);
+  if (apiResponse.data.length < limit || apiResponseData.length === limit) {
+    return {
+      apiResponseData: !params.excludeSymbols ? apiResponseData : _.filter(apiResponseData,
+        (el) => !_.includes(params.excludeSymbols, el.symbol)),
+    };
   }
 
-  return { filteredApiData };
+  const timestampEndForQuery = apiResponseData[apiResponseData.length - 1].timestamp;
+  await getApiData({
+    params,
+    apiResponseData,
+    timestampEnd: timestampEndForQuery,
+    skip: apiResponseData.length,
+  });
 };
 
 module.exports = {
