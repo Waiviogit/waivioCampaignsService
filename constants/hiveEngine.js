@@ -52,7 +52,4 @@ exports.HISTORY_API_OPS = [
   'witnesses_proposeRound',
   'hivepegged_buy',
   'hivepegged_withdraw',
-  'comments_curationReward',
-  'comments_authorReward',
-  'comments_beneficiaryReward',
 ];

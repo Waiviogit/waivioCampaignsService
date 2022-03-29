@@ -1,6 +1,7 @@
 const { HISTORY_OPERATION_TYPES, HISTORY_API_OPS } = require('constants/hiveEngine');
 const { engineAccountHistoryModel } = require('models');
 const _ = require('lodash');
+const moment = require('moment');
 const { accountHistory } = require('../../hiveEngine/engineOperations');
 const { divide } = require('../../helpers/calcHelper');
 const {
@@ -9,65 +10,12 @@ const {
   MARKET_CONTRACT,
 } = require('../../../constants/hiveEngine');
 
-const getHistoryData = async (params) => {
-  let condition = _.get(params, 'symbol');
-  let limit = params.limit + 100;
-  let operator = '$or';
-  let excludeOperation = { $nin: [] };
-  if (params.excludeSymbols) {
-    condition = { $nin: params.excludeSymbols };
-    limit = 1000;
-    operator = '$and';
-  }
-  if (!params.showRewards) {
-    excludeOperation = {
-      $nin:
-        [
-          HISTORY_OPERATION_TYPES.BENEFICIARY_REWARD,
-          HISTORY_OPERATION_TYPES.CURATION_REWARDS,
-          HISTORY_OPERATION_TYPES.AUTHOR_REWARDS,
-        ],
-    };
-  }
-
-  const data = {
-    ...(params.timestampEnd && { timestampEnd: params.timestampEnd, timestampStart: 1 }),
-    ...(params.symbol && { symbol: params.symbol }),
-    account: params.account,
-    ops: HISTORY_API_OPS.toString(),
-    limit,
-  };
-
-  const query = {
-    account: params.account,
-    ...(params.timestampEnd && { timestamp: { $lte: params.timestampEnd } }),
-    [operator]: [
-      { symbol: condition },
-      { $or: [{ symbolOut: condition }, { symbolIn: condition }] },
-    ],
-    operation: excludeOperation,
-  };
-  return { data, query };
-};
-
 const getAccountHistory = async (params) => {
-  const { data, query } = await getHistoryData(params);
-
-  const apiResponse = await accountHistory(data);
-  if (apiResponse instanceof Error) return { error: apiResponse };
-
-  let filteredApiData = _.filter(
-    apiResponse.data,
-    (el) => !_.includes(params.excludeSymbols, el.symbol),
-  );
-
-  if (!params.showRewards) {
-    filteredApiData = _.filter(filteredApiData,
-      (el) => !_.includes(HISTORY_OPERATION_TYPES, el.operation));
-  }
+  const { filteredApiData, errorApiResponse } = await getFilteredApiData({ params });
+  if (errorApiResponse) return { error: errorApiResponse };
 
   const { result: dbResponse, error } = await engineAccountHistoryModel.find({
-    condition: query,
+    condition: constructDbQuery(params),
     limit: params.limit + 100,
     sort: { timestamp: -1 },
   });
@@ -89,6 +37,88 @@ const getAccountHistory = async (params) => {
   }));
 
   return { history };
+};
+
+const constructApiQuery = ({
+  params, limit, count, timestampEnd, skip,
+}) => {
+  // как сделать так чтоб не затирался
+  console.log('count', count);
+  console.log(moment().unix());
+  console.log('timestampEnd', timestampEnd);
+  console.log('skip', skip);
+
+  return {
+    // тут менять таймстамп
+    ...(params.timestampEnd && { timestampEnd: params.timestampEnd, timestampStart: 1 }),
+    ...(params.symbol && { symbol: params.symbol }),
+    account: params.account,
+    ops: !params.showRewards ? HISTORY_API_OPS.toString()
+      : [...HISTORY_API_OPS, ...Object.values(HISTORY_OPERATION_TYPES)].toString(),
+    limit,
+    ...(count && { offset: skip }),
+    ...(timestampEnd && { timestampStart: timestampEnd, timestampEnd: moment().unix() }),
+  };
+};
+
+const constructDbQuery = (params) => {
+  let condition = _.get(params, 'symbol');
+  let operator = '$or';
+  if (params.excludeSymbols) {
+    condition = { $nin: params.excludeSymbols };
+    operator = '$and';
+  }
+
+  return {
+    account: params.account,
+    ...(params.timestampEnd && { timestamp: { $lte: params.timestampEnd } }),
+    [operator]: [
+      { symbol: condition },
+      { $or: [{ symbolOut: condition }, { symbolIn: condition }] },
+    ],
+    operation: {
+      $nin:
+            [
+              HISTORY_OPERATION_TYPES.BENEFICIARY_REWARD,
+              HISTORY_OPERATION_TYPES.CURATION_REWARDS,
+              HISTORY_OPERATION_TYPES.AUTHOR_REWARDS,
+            ],
+    },
+  };
+};
+
+const getFilteredApiData = async ({
+  params, count = 0, filteredApiData = [], timestampEnd = 0, skip = 0,
+}) => {
+  let limit = params.limit + 100;
+  if (params.excludeSymbols) limit = 1000;
+  // timestamp менять как-то!
+  const apiResponse = await accountHistory(constructApiQuery({
+    params, limit, count, timestampEnd, skip,
+  }));
+  // сделать какую-то рекурсию?
+  if (apiResponse instanceof Error) return { errorApiResponse: apiResponse };
+
+  filteredApiData.push(..._.filter(
+    apiResponse.data,
+    (el) => !_.includes(params.excludeSymbols, el.symbol),
+  ));
+
+  console.log('limit', limit);
+  console.log('filteredApiData.length', filteredApiData.length);
+  const timestampEndForQuery = filteredApiData[filteredApiData.length - 1].timestamp + 1;
+  if (limit >= 1000 && filteredApiData.length < limit && timestampEnd !== timestampEndForQuery) {
+    count++;
+    await getFilteredApiData({
+      params,
+      count,
+      filteredApiData,
+      timestampEnd: timestampEndForQuery,
+      skip: filteredApiData.length,
+    });
+  }
+  console.log('after if');
+  return { filteredApiData };
 };
 
 module.exports = {
