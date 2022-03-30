@@ -101,7 +101,6 @@ const getApiData = async ({
     params,
     apiResponseData,
     timestampEnd: timestampEndForQuery,
-    skip: apiResponseData.length,
   });
 };
 
