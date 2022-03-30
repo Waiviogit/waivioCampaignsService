@@ -87,12 +87,13 @@ const getApiData = async ({
   }));
   if (apiResponse instanceof Error) return { errorApiResponse: apiResponse };
 
-  apiResponseData.push(...apiResponse.data);
-  if (apiResponse.data.length < limit || apiResponseData.length === limit) {
-    return {
-      apiResponseData: !params.excludeSymbols ? apiResponseData : _.filter(apiResponseData,
-        (el) => !_.includes(params.excludeSymbols, el.symbol)),
-    };
+  if (params.excludeSymbols) {
+    apiResponseData.push(..._.filter(apiResponse.data,
+      (el) => !_.includes(params.excludeSymbols, el.symbol)));
+  } else apiResponseData.push(...apiResponse.data);
+
+  if (apiResponse.data.length < limit || apiResponseData.length >= limit) {
+    return { apiResponseData };
   }
 
   const timestampEndForQuery = apiResponseData[apiResponseData.length - 1].timestamp;
