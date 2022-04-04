@@ -45,7 +45,7 @@ exports.matchBotSetSchema = Joi.object().keys({
   }),
   voteRatio: Joi.when('type', {
     is: MATCH_BOT_TYPES.CURATOR,
-    then: Joi.number().min(0.01).max(10)
+    then: Joi.number().min(0.01).max(100)
       .required(),
     otherwise: Joi.forbidden(),
   }),
