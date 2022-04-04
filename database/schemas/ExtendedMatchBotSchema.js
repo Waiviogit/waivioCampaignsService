@@ -20,7 +20,7 @@ const ExtendedMatchBotSchema = new Schema({
         default: [SUPPORTED_CRYPTO_CURRENCIES.HIVE],
       },
       voteWeight: { type: Number, min: 1, max: 10000 },
-      voteRatio: { type: Number, min: 0.01, max: 10 },
+      voteRatio: { type: Number, min: 0.01, max: 100 },
       note: { type: String, maxlength: 256 },
       enabled: { type: Boolean, default: false, required: true },
       enablePowerDown: { type: Boolean, default: false },
