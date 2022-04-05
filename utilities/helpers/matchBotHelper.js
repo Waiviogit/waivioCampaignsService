@@ -667,7 +667,7 @@ const checkMinVotingPowerCondition = ({
 }) => {
   const diff = _.difference(MANA_CHECK_TYPES, minVotingPowerCurrencies);
   if (_.isEmpty(diff)) {
-    return engineVotePower > minVotingPower || votePower > minVotingPower;
+    return engineVotePower > minVotingPower && votePower > minVotingPower;
   }
   if (_.includes(diff, SUPPORTED_CRYPTO_CURRENCIES.HIVE)) {
     return engineVotePower > minVotingPower;

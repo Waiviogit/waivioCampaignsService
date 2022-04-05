@@ -5,6 +5,7 @@ const _ = require('lodash');
 const commentContract = require('./commentContract');
 const tokensContract = require('./tokensContract');
 const marketPools = require('./marketPools');
+const { MAX_VOTING_POWER, VOTE_REGENERATION_DAYS, DOWNVOTE_REGENERATION_DAYS } = require('../../constants/hiveEngine');
 
 exports.accountHistory = async (params) => {
   try {
@@ -12,6 +13,25 @@ exports.accountHistory = async (params) => {
   } catch (error) {
     return error;
   }
+};
+exports.calculateMana = (votingPower) => {
+  const timestamp = new Date().getTime();
+  const result = {
+    votingPower: votingPower.votingPower,
+    downvotingPower: votingPower.downvotingPower,
+    lastVoteTimestamp: votingPower.lastVoteTimestamp,
+  };
+
+  result.votingPower += ((timestamp - result.lastVoteTimestamp) * MAX_VOTING_POWER)
+      / (VOTE_REGENERATION_DAYS * 24 * 3600 * 1000);
+  result.votingPower = Math.floor(result.votingPower);
+  result.votingPower = Math.min(result.votingPower, MAX_VOTING_POWER);
+
+  result.downvotingPower += ((timestamp - result.lastVoteTimestamp) * MAX_VOTING_POWER)
+      / (DOWNVOTE_REGENERATION_DAYS * 24 * 3600 * 1000);
+  result.downvotingPower = Math.floor(result.downvotingPower);
+  result.downvotingPower = Math.min(result.downvotingPower, MAX_VOTING_POWER);
+  return result;
 };
 
 exports.calculateVotePower = async ({
@@ -35,7 +55,7 @@ exports.calculateVotePower = async ({
   }
   const [balances, votingPowers, dieselPools, smtPool, hiveCurrency] = requests;
   const { stake, delegationsIn } = balances[0];
-  const { votingPower } = votingPowers[0];
+  const { votingPower } = this.calculateMana(votingPowers[0]);
   const { quotePrice } = dieselPools[0];
   const { rewardPool, pendingClaims } = smtPool[0];
 
