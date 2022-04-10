@@ -16,7 +16,7 @@ exports.getSwapParams = async () => {
   const [pools, metrics, currency] = requestsData;
 
   const filteredPools = filterPoolsByUsdValue({
-    pools, metrics, filterValue: 1000, hivePrice: currency.usdCurrency,
+    pools, metrics, filterValue: 500, hivePrice: currency.usdCurrency,
   });
 
   const symbols = new Set();
