@@ -3,7 +3,10 @@ const { engineAccountHistoryModel } = require('models');
 const _ = require('lodash');
 const moment = require('moment');
 const { accountHistory } = require('../../hiveEngine/engineOperations');
-const { divide } = require('../../helpers/calcHelper');
+const {
+  divide,
+  multiply,
+} = require('../../helpers/calcHelper');
 const {
   TOKEN_WAIV,
   MARKET_OPERATION,
@@ -34,6 +37,8 @@ const getAccountHistory = async (params) => {
     ...item,
     ...((item.operation === MARKET_OPERATION.PLACE_ORDER && item.orderType === MARKET_CONTRACT.BUY)
       && { quantity: divide(item.quantityLocked, item.price, TOKEN_WAIV.FRACTION_PRECISION) }),
+    ...((item.operation === MARKET_OPERATION.PLACE_ORDER && item.orderType === MARKET_CONTRACT.SELL)
+    && { quantity: multiply(item.quantityLocked, item.price, TOKEN_WAIV.FRACTION_PRECISION) }),
   }));
 
   return { history };

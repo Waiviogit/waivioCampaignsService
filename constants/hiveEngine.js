@@ -16,6 +16,7 @@ exports.REDIS_ENGINE_CURATORS = 'engineCurators';
 
 exports.MARKET_CONTRACT = {
   BUY: 'buy',
+  SELL: 'sell',
 };
 
 exports.MARKET_OPERATION = {
