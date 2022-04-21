@@ -14,6 +14,7 @@ exports.accountHistory = async (params) => {
     return error;
   }
 };
+
 exports.calculateMana = (votingPower) => {
   const timestamp = new Date().getTime();
   const result = {

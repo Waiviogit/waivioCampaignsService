@@ -13,9 +13,9 @@ const accountHistory = async (req, res) => {
 
   const { history, error } = await getAccountHistory(params);
 
-  if (error) renderError(res, { message: error });
+  if (error) return renderError(res, { message: error });
 
-  renderSuccess(res, { history });
+  return renderSuccess(res, { history });
 };
 
 module.exports = {
