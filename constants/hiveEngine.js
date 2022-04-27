@@ -21,6 +21,8 @@ exports.MARKET_CONTRACT = {
 
 exports.MARKET_OPERATION = {
   PLACE_ORDER: 'market_placeOrder',
+  BUY: 'market_buy',
+  SELL: 'market_sell',
 };
 
 exports.HISTORY_API_OPS = [
