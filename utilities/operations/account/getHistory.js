@@ -39,6 +39,8 @@ const getAccountHistory = async (params) => {
       && { quantity: divide(item.quantityLocked, item.price, TOKEN_WAIV.FRACTION_PRECISION) }),
     ...((item.operation === MARKET_OPERATION.PLACE_ORDER && item.orderType === MARKET_CONTRACT.SELL)
     && { quantity: multiply(item.quantityLocked, item.price, TOKEN_WAIV.FRACTION_PRECISION) }),
+    ...((item.operation === MARKET_OPERATION.BUY || MARKET_OPERATION.SELL)
+      && { price: divide(item.quantityHive, item.quantityTokens, TOKEN_WAIV.FRACTION_PRECISION) }),
   }));
 
   return { history };
