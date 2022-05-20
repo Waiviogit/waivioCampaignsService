@@ -54,6 +54,7 @@ const setExpireAssign = (campaignPermlink, assignPermlink, approvedObject, userN
         approved_object: approvedObject,
       }),
     );
+    campaigns.publish('expire:assign', assignPermlink);
   }
 };
 

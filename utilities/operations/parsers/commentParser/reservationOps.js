@@ -20,10 +20,6 @@ exports.assign = async (data) => {
 
   if (isValid) {
     try {
-      await redisSetter.setExpireAssign(
-        data.campaign_permlink, data.reservation_permlink,
-        data.approved_object, data.user_name, time,
-      );
       const { result: dbCurrency } = await reservationCurrencyModel.findOne(
         { _id: data.currencyId },
       );
@@ -44,6 +40,10 @@ exports.assign = async (data) => {
           },
         },
       ));
+      await redisSetter.setExpireAssign(
+        data.campaign_permlink, data.reservation_permlink,
+        data.approved_object, data.user_name, time,
+      );
       if (result) {
         await reservationCurrencyModel.deleteOne({ _id: data.currencyId });
         return { result: true };
