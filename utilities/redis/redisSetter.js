@@ -58,6 +58,8 @@ const setExpireAssign = (campaignPermlink, assignPermlink, approvedObject, userN
   }
 };
 
+const publishAssignFalse = async (permlink) => campaigns.publish('expire:assign:false', permlink);
+
 /**
  * create demo post TTL
  * @param author {string}
@@ -102,4 +104,5 @@ module.exports = {
   saveTTL,
   zremrangebyscore,
   zadd,
+  publishAssignFalse,
 };

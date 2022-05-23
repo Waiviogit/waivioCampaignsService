@@ -52,6 +52,7 @@ exports.assign = async (data) => {
       return { result: false };
     }
   }
+  await redisSetter.publishAssignFalse(data.reservation_permlink);
   return { result: false };
 };
 
