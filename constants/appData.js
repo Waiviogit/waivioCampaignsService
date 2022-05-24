@@ -1,10 +1,12 @@
 const nodeUrls = [
   'https://api.hive.blog',
-  'https://rpc.esteem.app',
+  'https://api.openhive.network',
   'https://hive-api.arcange.eu',
-  'https://rpc.ausbit.dev',
-  'https://hive.roelandp.nl',
+  'https://techcoderx.com',
   'https://hived.emre.sh',
+  'https://api.deathwing.me',
+  'https://api.c0ff33a.uk',
+  'https://api.pharesim.me',
 ];
 
 const notificationsApi = {
