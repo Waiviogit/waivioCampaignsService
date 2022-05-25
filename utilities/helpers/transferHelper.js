@@ -38,8 +38,11 @@ const checkForUnblockCampaign = async (guideName) => {
     .find({ guideName, status: CAMPAIGN_STATUSES.SUSPENDED });
   for (const campaign of campaigns) {
     let status;
-    if (campaign.expired_at < new Date()) status = campaign.deactivation_permlink ? 'unassigned' : 'expired';
-    else if (campaign.activation_permlink) {
+    if (campaign.expired_at < new Date()) {
+      status = CAMPAIGN_STATUSES.EXPIRED;
+    } else if (campaign.deactivation_permlink) {
+      status = CAMPAIGN_STATUSES.INACTIVE;
+    } else if (campaign.activation_permlink) {
       const completedUsers = _.filter(campaign.users, (user) => user.createdAt > moment.utc().startOf('month').toDate());
       status = campaign.budget - campaign.reward * completedUsers.length > campaign.reward
         ? CAMPAIGN_STATUSES.ACTIVE
