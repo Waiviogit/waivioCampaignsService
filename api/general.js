@@ -6,7 +6,7 @@ const { Client } = require('@hiveio/dhive');
 const axios = require('axios');
 const _ = require('lodash');
 
-const hive = new Client(nodeUrls[0]);
+const hive = new Client(nodeUrls[0], { timeout: 8000 });
 let CURRENT_NODE_URL = nodeUrls[0];
 
 const getBlockNumberStream = async ({
@@ -99,8 +99,9 @@ const loadBlockRest = async (blockNum) => { // return true if block exist and pa
 
 const changeNodeUrl = () => {
   const index = nodeUrls.indexOf(hive.address);
-
-  hive.address = index === nodeUrls.length - 1 ? nodeUrls[0] : nodeUrls[index + 1];
+  const address = index === nodeUrls.length - 1 ? nodeUrls[0] : nodeUrls[index + 1];
+  hive.address = address;
+  hive.currentAddress = address;
   console.error(`Node URL was changed to ${hive.address}`);
 };
 

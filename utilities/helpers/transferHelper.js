@@ -37,14 +37,8 @@ const checkForUnblockCampaign = async (guideName) => {
   const { campaigns } = await campaignModel
     .find({ guideName, status: CAMPAIGN_STATUSES.SUSPENDED });
   for (const campaign of campaigns) {
-    let status;
-    if (campaign.expired_at < new Date()) status = campaign.deactivation_permlink ? 'unassigned' : 'expired';
-    else {
-      const completedUsers = _.filter(campaign.users, (user) => user.createdAt > moment.utc().startOf('month').toDate());
-      status = campaign.budget - campaign.reward * completedUsers.length > campaign.reward
-        ? CAMPAIGN_STATUSES.ACTIVE
-        : CAMPAIGN_STATUSES.REACHED_LIMIT;
-    }
+    const status = getStatusAfterSuspend(campaign);
+
     await campaignModel.updateOne({ _id: campaign._id }, { status });
     await wobjectModel.updateCampaignsCount({
       wobjPermlinks: [campaign.requiredObject, ...campaign.objects],
@@ -52,6 +46,22 @@ const checkForUnblockCampaign = async (guideName) => {
       id: campaign._id,
     });
   }
+};
+
+const getStatusAfterSuspend = (campaign) => {
+  if (campaign.deactivation_permlink) return CAMPAIGN_STATUSES.INACTIVE;
+  if (campaign.expired_at < new Date()) return CAMPAIGN_STATUSES.EXPIRED;
+  if (campaign.activation_permlink) {
+    const completedUsers = _.filter(
+      campaign.users,
+      (user) => user.createdAt > moment.utc().startOf('month').toDate(),
+    );
+    return campaign.budget - campaign.reward * completedUsers.length
+    > campaign.reward
+      ? CAMPAIGN_STATUSES.ACTIVE
+      : CAMPAIGN_STATUSES.REACHED_LIMIT;
+  }
+  return CAMPAIGN_STATUSES.PENDING;
 };
 
 /** Public methods */
