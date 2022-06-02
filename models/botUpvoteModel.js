@@ -59,13 +59,18 @@ const getUpvotes = async () => BotUpvote.aggregate([
           $filter: {
             input: '$upvotes',
             as: 'upvote',
-            cond: { $eq: ['$$upvote.status', 'pending'] },
+            cond: {
+              $and: [
+                { $eq: ['$$upvote.status', 'pending'] },
+                { $lte: ['$$upvote.startedAt', moment.utc().toDate()] },
+                { $gte: ['$$upvote.expiredAt', moment.utc().subtract(30, 'minutes').toDate()] },
+              ],
+            },
           },
         }, 0],
       },
     },
   },
-  { $match: { 'upvote.startedAt': { $lte: moment.utc().toDate() }, 'upvote.expiredAt': { $gte: moment.utc().subtract(30, 'minutes').toDate() } } },
   {
     $lookup: {
       from: 'match_bots', localField: '_id', foreignField: 'bot_name', as: 'bot',
