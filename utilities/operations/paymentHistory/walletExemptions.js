@@ -3,8 +3,8 @@ const { ObjectId } = require('mongoose').Types;
 const _ = require('lodash');
 
 exports.addOrDeleteExemption = async (data) => (data.checked
-  ? createExemption(_.omit(data, ['checked']))
-  : removeExemption(_.omit(data, ['checked'])));
+  ? createExemption(_.omit(data, ['checked', 'symbol']))
+  : removeExemption(_.omit(data, ['checked', 'symbol'])));
 
 const createExemption = async (data) => {
   if (data.recordId) data.recordId = ObjectId(data.recordId);
