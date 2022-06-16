@@ -74,17 +74,32 @@ exports.advancedWalletSchema = Joi.object().keys({
 exports.walletExemptionsSchema = Joi.object().keys({
   userName: Joi.string().required(),
   userWithExemptions: Joi.string().required(),
-  operationNum: Joi.when('userWithExemptions', {
-    is: Joi.string()
-      .pattern(new RegExp('^((?!_).)*$')),
-    then: Joi.number().required(),
-    otherwise: Joi.forbidden(),
+  operationNum: Joi.when('symbol', {
+    is: Joi.string().valid('HIVE'),
+    then: Joi.when('userWithExemptions', {
+      is: Joi.string()
+        .pattern(new RegExp('^((?!_).)*$')),
+      then: Joi.number().required(),
+      otherwise: Joi.forbidden(),
+    }),
+    otherwise: Joi.when('symbol', {
+      is: Joi.string().valid('WAIV'),
+      then: Joi.forbidden(),
+    }),
   }),
-  recordId: Joi.when('userWithExemptions', {
-    is: Joi.string()
-      .pattern(new RegExp('_')),
-    then: Joi.string().required(),
-    otherwise: Joi.forbidden(),
+  recordId: Joi.when('symbol', {
+    is: Joi.string().valid('HIVE'),
+    then: Joi.when('userWithExemptions', {
+      is: Joi.string()
+        .pattern(new RegExp('_')),
+      then: Joi.string().required(),
+      otherwise: Joi.forbidden(),
+    }),
+    otherwise: Joi.when('symbol', {
+      is: Joi.string().valid('WAIV'),
+      then: Joi.string().required(),
+    }),
   }),
   checked: Joi.boolean().required(),
+  symbol: Joi.string().default('HIVE'),
 }).options(options);
