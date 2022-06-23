@@ -75,13 +75,6 @@ const updateMatchBot = async ({
   // eslint-disable-next-line camelcase
   bot_name, sponsor, enabled, voting_percent, note, expiredAt,
 }) => {
-  if (enabled) {
-    const matchBot = await MatchBot.findOne({ bot_name }).lean();
-
-    const findSponsor = _.find(matchBot.sponsors, (record) => record.sponsor_name === sponsor);
-
-    if (findSponsor.expiredAt && findSponsor.expiredAt < moment().utc().toDate()) return false;
-  }
   try {
     const result = await MatchBot.updateOne(
       { bot_name, 'sponsors.sponsor_name': sponsor },
