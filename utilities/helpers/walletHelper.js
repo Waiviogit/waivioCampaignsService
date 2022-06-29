@@ -14,7 +14,7 @@ const _ = require('lodash');
 exports.getWalletData = async ({
   userName, limit, operationNum, types, endDate, startDate, tableView,
 }) => {
-  let result, error;
+  let result, error, next;
   const batchSize = 1000;
   let lastId = operationNum || -1;
   const walletOperations = [];
@@ -22,7 +22,7 @@ exports.getWalletData = async ({
   const endDateTimestamp = moment.utc(endDate).valueOf();
 
   do {
-    ({ result, error } = await hiveRequests.getAccountHistory(
+    ({ result, next, error } = await hiveRequests.getAccountHistory(
       userName, lastId, lastId === -1 ? batchSize : (lastId < batchSize ? lastId : batchSize),
     ));
     let breakFlag = false;
@@ -31,6 +31,7 @@ exports.getWalletData = async ({
       continue;
     }
     lastId = _.get(result, '[0][0]');
+    if (next) lastId = next;
     result = _.reverse(result);
 
     for (const record of result) {
