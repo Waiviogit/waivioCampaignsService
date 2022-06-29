@@ -1,6 +1,6 @@
 const {
   PAYMENT_HISTORIES_TYPES, HIVE_OPERATIONS_TYPES, SUPPORTED_CURRENCIES,
-  SUPPORTED_CRYPTO_CURRENCIES, DONT_GET_RATES, WITHDRAW_FORMAT_TYPES,
+  SUPPORTED_CRYPTO_CURRENCIES, DONT_GET_RATES, WITHDRAW_FORMAT_TYPES, SWAP_HIVE_ACC,
 } = require('constants/constants');
 const { SAVINGS_TRANSFERS, ACCOUNT_FILTER_TYPES } = require('constants/walletData');
 const { internalExchangeModel, currenciesStatiscticModel, currenciesRateModel } = require('models');
@@ -32,6 +32,7 @@ exports.getWalletData = async ({
     }
     lastId = _.get(result, '[0][0]');
     if (next) lastId = next;
+    if (!next && result.length < limit) breakFlag = true;
     result = _.reverse(result);
 
     for (const record of result) {
@@ -45,6 +46,11 @@ exports.getWalletData = async ({
           break;
         }
         if (tableView && endDateTimestamp < recordTimestamp) continue;
+        if (
+          tableView
+            && _.get(record, '[1].op[0]') === HIVE_OPERATIONS_TYPES.TRANSFER
+            && (_.get(record, '[1].op[1].from') === SWAP_HIVE_ACC || _.get(record, '[1].op[1].to') === SWAP_HIVE_ACC)
+        ) continue;
         walletOperations.push(record);
       }
     }
