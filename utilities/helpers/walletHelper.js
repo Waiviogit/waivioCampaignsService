@@ -17,6 +17,7 @@ exports.getWalletData = async ({
   let result, error, next;
   const batchSize = 1000;
   let lastId = operationNum || -1;
+  let prevLastId = -2;
   const walletOperations = [];
   const startDateTimestamp = moment.utc(startDate).valueOf();
   const endDateTimestamp = moment.utc(endDate).valueOf();
@@ -30,9 +31,18 @@ exports.getWalletData = async ({
     if (!_.isArray(result)) {
       continue;
     }
-    lastId = _.get(result, '[0][0]');
-    if (next) lastId = next;
-    if (!next && result.length < limit) breakFlag = true;
+
+    lastId = _.get(result, '[0][0]') || next;
+
+    if (prevLastId === lastId && !_.isEmpty(result)) {
+      breakFlag = true;
+    }
+    if (!next && _.isEmpty(result)) breakFlag = true;
+    if (result.length === 1) lastId -= 1;
+
+    if (_.isEmpty(result)) {
+      prevLastId = lastId;
+    }
     result = _.reverse(result);
 
     for (const record of result) {
@@ -75,13 +85,22 @@ exports.getHiveCurrencyHistory = async (walletOperations, path = 'timestamp') =>
     .uniq()
     .reduce((acc, el) => {
       if (moment.unix(el).isSame(Date.now(), 'day')) includeToday = true;
-      acc.push({ createdAt: { $gte: moment.unix(el).startOf('day').format(), $lte: moment.unix(el).endOf('day').format() } });
+      acc.push({
+        createdAt: {
+          $gte: moment.unix(el).startOf('day').format(),
+          $lte: moment.unix(el).endOf('day').format(),
+        },
+      });
       return acc;
     }, [])
     .value();
   const { result = [] } = await currenciesStatiscticModel.find({ type: 'dailyData', $or: orCondition });
   if (includeToday) {
-    const { usdCurrency, hbdToDollar, error: currencyReqErr } = await currencyRequest.getHiveCurrency(['hive', 'hive_dollar']);
+    const {
+      usdCurrency,
+      hbdToDollar,
+      error: currencyReqErr,
+    } = await currencyRequest.getHiveCurrency(['hive', 'hive_dollar']);
     if (!currencyReqErr) {
       result.push({
         hive: { usd: usdCurrency },
@@ -201,14 +220,15 @@ const multiAccountFilter = ({ record, filterAccounts, userName }) => {
     case PAYMENT_HISTORIES_TYPES.DEMO_POST:
     case PAYMENT_HISTORIES_TYPES.DEMO_DEBT:
       return _.includes(filterAccounts, _.get(record, 'sponsor'));
-    default: return false;
+    default:
+      return false;
   }
 };
 
 const filterTypeTransfer = ({ record, memo, filterAccounts }) => {
   if (record.to === process.env.WALLET_ACC_NAME) {
     return memo.id === PAYMENT_HISTORIES_TYPES.USER_TO_GUEST_TRANSFER
-      && _.includes(filterAccounts, memo.to);
+        && _.includes(filterAccounts, memo.to);
   }
   if (record.from === process.env.WALLET_ACC_NAME) {
     return memo.id === 'waivio_guest_transfer' && _.includes(filterAccounts, memo.from);
@@ -239,7 +259,7 @@ const formatHiveHistory = ({ walletOperations, tableView, userName }) => (
           to: operation.to_account,
           ...(
             operation.type === HIVE_OPERATIONS_TYPES.FILL_VESTING_WITHDRAW
-            && { amount: operation.deposited }
+                  && { amount: operation.deposited }
           ),
         });
     }
