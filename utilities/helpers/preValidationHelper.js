@@ -1,5 +1,7 @@
 const { activeCampaignStatuses, CAMPAIGN_STATUSES_FOR_ON_HOLD } = require('constants/constants');
-const { campaignModel, userModel, wobjectModel } = require('models');
+const {
+  campaignModel, userModel, wobjectModel, blacklistModel,
+} = require('models');
 const campaignHelper = require('utilities/helpers/campaignsHelper');
 const _ = require('lodash');
 
@@ -33,6 +35,17 @@ const validateActivation = async ({ campaign_id, guide_name, permlink }) => {
   return { is_valid: false, message: 'Invalid campaign_id or activation permlink. Campaign status must be pending' };
 };
 
+const validateBlacklist = async (guide, user) => {
+  const { blackList, error } = await blacklistModel.findOne({ user: guide });
+  if (!blackList) return false;
+  if (error) return true;
+  const list = [...blackList.blackList];
+  for (const item of blackList.followLists) {
+    list.push(...item.blackList);
+  }
+  return _.includes(list, user);
+};
+
 /**
  * Validate can current user reserve current campaign by conditions from campaign
  * @param campaign_permlink {string}
@@ -46,6 +59,10 @@ const validateAssign = async ({
 }) => {
   const { result: campaign } = await campaignModel.findOne({ activation_permlink: campaign_permlink, status: 'active' });
   const { user: findUser } = await userModel.findOne(name);
+  const blacklisted = await validateBlacklist(campaign.guideName, name);
+  if (blacklisted) {
+    return { is_valid: false, message: 'User is blacklisted' };
+  }
   // eslint-disable-next-line max-len
   const todaySpendTime = (new Date().getUTCHours() * 3600 + new Date().getUTCMinutes() * 60 + new Date().getUTCSeconds());
 
