@@ -79,6 +79,7 @@ const constructDbQuery = (params) => {
               HISTORY_OPERATION_TYPES.BENEFICIARY_REWARD,
               HISTORY_OPERATION_TYPES.CURATION_REWARDS,
               HISTORY_OPERATION_TYPES.AUTHOR_REWARDS,
+              HISTORY_OPERATION_TYPES.BALANCE_BEFORE_REBALANCING,
             ],
     },
   };
