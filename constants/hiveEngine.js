@@ -10,6 +10,7 @@ exports.HISTORY_OPERATION_TYPES = {
   CURATION_REWARDS: 'comments_curationReward',
   AUTHOR_REWARDS: 'comments_authorReward',
   BENEFICIARY_REWARD: 'comments_beneficiaryReward',
+  BALANCE_BEFORE_REBALANCING: 'balanceBeforeRebalancing',
 };
 
 exports.REDIS_ENGINE_CURATORS = 'engineCurators';
