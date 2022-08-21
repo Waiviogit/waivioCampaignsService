@@ -8,9 +8,9 @@ const _ = require('lodash');
 const { socketHiveClient } = require('../utilities/webSoket/hiveSocket');
 
 const nodeUrls = [
-  'https://api.deathwing.me',
-  'https://hived.emre.sh',
-  'https://api.pharesim.me',
+  // 'https://api.deathwing.me',
+  // 'https://hived.emre.sh',
+  // 'https://api.pharesim.me',
   'https://blocks.waivio.com',
   ...urls];
 
@@ -137,6 +137,7 @@ const changeRestNodeUrl = () => {
 };
 
 const getOpsInBlockReqData = (blockNum) => ({
+
   jsonrpc: '2.0',
   method: 'account_history_api.get_ops_in_block',
   params: {
@@ -144,6 +145,7 @@ const getOpsInBlockReqData = (blockNum) => ({
     only_virtual: false,
   },
   id: 1,
+
 });
 
 module.exports = {
