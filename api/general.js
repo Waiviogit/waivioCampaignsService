@@ -92,23 +92,17 @@ const getBlock = async (blockNum, currenturl) => {
 
 const loadBlockRest = async (blockNum) => { // return true if block exist and parsed, else - false
   const block = [];
-  try {
-    console.log(`start loadBlock  REST${blockNum}`);
-    const lastBlockNum = await redisGetter.getLastBlockNum('last_block_num');
-    // const hive2 = new Client(nodeUrls, { failoverThreshold: 0, timeout: 8000 });
-    // const currentBlock = await hive2.database.getDynamicGlobalProperties();
-    if (blockNum > (lastBlockNum - 30)) return false;
-    const instance = axios.create();
-    const result = await instance.post(
-      CURRENT_NODE_URL,
-      getOpsInBlockReqData(blockNum),
-      // { timeout: 8000 },
-    );
 
-    if (!_.get(result, 'data.result.ops')) throw ({ message: 'No result from request' });
-    const groupedOperations = _.groupBy(result.data.result.ops, 'trx_id');
-    _.forEach(Object.keys(groupedOperations), (id) => block.push(groupedOperations[id]));
-  } catch (error) {
+  console.log(`start loadBlock  REST${blockNum}`);
+  const lastBlockNum = await redisGetter.getLastBlockNum('last_block_num');
+  // const hive2 = new Client(nodeUrls, { failoverThreshold: 0, timeout: 8000 });
+  // const currentBlock = await hive2.database.getDynamicGlobalProperties();
+  if (blockNum > (lastBlockNum - 30)) return false;
+  const { result, error } = await getBlockREST(blockNum);
+
+  const groupedOperations = _.groupBy(_.get(result, 'ops'), 'trx_id');
+  _.forEach(Object.keys(groupedOperations), (id) => block.push(groupedOperations[id]));
+  if (error) {
     console.error(error.message);
     changeRestNodeUrl();
     await loadBlockRest();
@@ -120,6 +114,23 @@ const loadBlockRest = async (blockNum) => { // return true if block exist and pa
   }
   await parseOrders(block);
   return true;
+};
+
+const getBlockREST = async (blockNum) => {
+  try {
+    const resp = await socketHiveClient.getOpsInBlock(blockNum);
+    if (!resp.error) return { result: resp };
+    const instance = axios.create();
+    const result = await instance.post(
+      CURRENT_NODE_URL,
+      getOpsInBlockReqData(blockNum),
+      // { timeout: 8000 },
+    );
+    console.log();
+    return { result: _.get(result, 'data.result.ops') };
+  } catch (error) {
+    return { error };
+  }
 };
 
 const changeNodeUrl = () => {
@@ -137,7 +148,6 @@ const changeRestNodeUrl = () => {
 };
 
 const getOpsInBlockReqData = (blockNum) => ({
-
   jsonrpc: '2.0',
   method: 'account_history_api.get_ops_in_block',
   params: {
@@ -145,7 +155,6 @@ const getOpsInBlockReqData = (blockNum) => ({
     only_virtual: false,
   },
   id: 1,
-
 });
 
 module.exports = {

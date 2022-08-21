@@ -20,6 +20,7 @@ class SocketClient {
     });
 
     this.ws.on('error', () => {
+      console.error('error socket closed');
       this.ws.close();
     });
 
@@ -61,6 +62,22 @@ class SocketClient {
         jsonrpc: '2.0',
         method: 'condenser_api.get_block',
         params: [blockNum],
+      });
+      return result;
+    } catch (error) {
+      return { error };
+    }
+  }
+
+  async getOpsInBlock(blockNum) {
+    try {
+      const result = await this.sendMessage({
+        jsonrpc: '2.0',
+        method: 'account_history_api.get_ops_in_block',
+        params: {
+          block_num: blockNum,
+          only_virtual: false,
+        },
       });
       return result;
     } catch (error) {
