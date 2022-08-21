@@ -1,21 +1,31 @@
 const { parseSwitcher, parseOrders } = require('parsers/mainParser');
 const redisSetter = require('utilities/redis/redisSetter');
 const redisGetter = require('utilities/redis/redisGetter');
-const { nodeUrls } = require('constants/appData');
+const { nodeUrls: urls } = require('constants/appData');
 const { Client } = require('@hiveio/dhive');
 const axios = require('axios');
 const _ = require('lodash');
+const { socketHiveClient } = require('../utilities/webSoket/hiveSocket');
 
-const hive = new Client(nodeUrls[0], { timeout: 8000 });
+const nodeUrls = [
+  'https://api.deathwing.me',
+  'https://hived.emre.sh',
+  'https://api.pharesim.me',
+  'https://blocks.waivio.com',
+  ...urls];
+
 let CURRENT_NODE_URL = nodeUrls[0];
+
+let hiveUrl = nodeUrls[0];
 
 const getBlockNumberStream = async ({
   startFromBlock, startFromCurrent, loadBlock, redisTitle,
 }) => {
   if (startFromCurrent) {
+    const hive2 = new Client(CURRENT_NODE_URL, { timeout: 8000 });
     await loadNextBlock({
       startBlock: (
-        await hive.database.getDynamicGlobalProperties()).last_irreversible_block_num,
+        await hive2.database.getDynamicGlobalProperties()).last_irreversible_block_num,
       loadBlock,
       redisTitle,
     });
@@ -47,15 +57,14 @@ const loadNextBlock = async ({ startBlock, loadBlock, redisTitle }) => {
 };
 
 const loadBlock = async (blockNum) => {
-  let block;
+  const { block, error } = await getBlock(blockNum, CURRENT_NODE_URL);
 
-  try {
-    block = await hive.database.getBlock(blockNum);
-  } catch (error) {
+  if (error) {
     console.error(error);
     changeNodeUrl();
     return false;
   }
+
   if (block && (!block.transactions || !block.transactions[0])) {
     console.error(`EMPTY BLOCK: ${blockNum}`);
     return true;
@@ -68,16 +77,32 @@ const loadBlock = async (blockNum) => {
   } return false;
 };
 
+const getBlock = async (blockNum, currenturl) => {
+  try {
+    const resp = await socketHiveClient.getBlock(blockNum);
+    if (!resp.error) return { block: resp };
+    const hive = new Client(currenturl);
+    const block = await hive.database.call('get_block', [blockNum]);
+    console.log();
+    return { block };
+  } catch (error) {
+    return { error };
+  }
+};
+
 const loadBlockRest = async (blockNum) => { // return true if block exist and parsed, else - false
   const block = [];
   try {
-    const currentBlock = await hive.database.getDynamicGlobalProperties();
-    if (blockNum > currentBlock.last_irreversible_block_num) return false;
+    console.log(`start loadBlock  REST${blockNum}`);
+    const lastBlockNum = await redisGetter.getLastBlockNum('last_block_num');
+    // const hive2 = new Client(nodeUrls, { failoverThreshold: 0, timeout: 8000 });
+    // const currentBlock = await hive2.database.getDynamicGlobalProperties();
+    if (blockNum > (lastBlockNum - 30)) return false;
     const instance = axios.create();
     const result = await instance.post(
       CURRENT_NODE_URL,
       getOpsInBlockReqData(blockNum),
-      { timeout: 8000 },
+      // { timeout: 8000 },
     );
 
     if (!_.get(result, 'data.result.ops')) throw ({ message: 'No result from request' });
@@ -98,11 +123,10 @@ const loadBlockRest = async (blockNum) => { // return true if block exist and pa
 };
 
 const changeNodeUrl = () => {
-  const index = nodeUrls.indexOf(hive.address);
-  const address = index === nodeUrls.length - 1 ? nodeUrls[0] : nodeUrls[index + 1];
-  hive.address = address;
-  hive.currentAddress = address;
-  console.error(`Node URL was changed to ${hive.address}`);
+  const index = nodeUrls.indexOf(hiveUrl);
+
+  hiveUrl = index === nodeUrls.length - 1 ? nodeUrls[0] : nodeUrls[index + 1];
+  console.error(`Node URL was changed to ${hiveUrl}`);
 };
 
 const changeRestNodeUrl = () => {
