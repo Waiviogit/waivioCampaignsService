@@ -77,7 +77,7 @@ const loadBlock = async (blockNum) => {
 const getBlock = async (blockNum, currenturl) => {
   try {
     const resp = await socketHiveClient.getBlock(blockNum);
-    if (!resp.error) return { block: resp };
+    if (!_.get(resp, 'error')) return { block: resp };
     const hive = new Client(
       currenturl,
       { timeout: 8000 },
@@ -118,7 +118,7 @@ const loadBlockRest = async (blockNum) => { // return true if block exist and pa
 const getBlockREST = async (blockNum) => {
   try {
     const resp = await socketHiveClient.getOpsInBlock(blockNum);
-    if (!resp.error) return { result: resp };
+    if (!_.get(resp, 'error')) return { result: resp };
     const instance = axios.create();
     const result = await instance.post(
       CURRENT_NODE_URL,

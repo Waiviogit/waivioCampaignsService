@@ -1,6 +1,7 @@
 const WebSocket = require('ws');
 const EventEmitterHIVE = require('events').EventEmitter;
 const jsonHelper = require('utilities/helpers/jsonHelper');
+const _ = require('lodash');
 
 const HIVE_SOCKET = 'wss://blocks.waivio.com:8084';
 
@@ -63,7 +64,9 @@ class SocketClient {
         method: 'condenser_api.get_block',
         params: [blockNum],
       });
-      if (data.error) return { error: data.error };
+      if (_.get(data, 'error')) {
+        return { error: data.error };
+      }
       return data.result;
     } catch (error) {
       return { error };
@@ -80,7 +83,9 @@ class SocketClient {
           only_virtual: false,
         },
       });
-      if (data.error) return { error: data.error };
+      if (_.get(data, 'error')) {
+        return { error: data.error };
+      }
       return data.result;
     } catch (error) {
       return { error };
