@@ -10,33 +10,41 @@ const emitter = new EventEmitterHIVE();
 class SocketClient {
   constructor(url) {
     this.url = url;
-    this.newConnection();
   }
 
-  newConnection() {
-    this.ws = new WebSocket(this.url);
+  async init() {
+    return new Promise((resolve, reject) => {
+      this.ws = new WebSocket(this.url);
 
-    this.ws.on('open', () => {
-      console.info('socket connection open');
-    });
+      this.ws.on('error', () => {
+        console.error('error socket closed');
+        this.ws.close();
+        reject();
+      });
 
-    this.ws.on('error', () => {
-      console.error('error socket closed');
-      this.ws.close();
-    });
+      this.ws.on('message', (message) => {
+        const data = jsonHelper.parseJson(message.toString());
+        emitter.emit(data.id, { data, error: data.error });
+      });
 
-    this.ws.on('message', (message) => {
-      const data = jsonHelper.parseJson(message.toString());
-      emitter.emit(data.id, { data, error: data.error });
+      this.ws.on('open', () => {
+        setTimeout(() => {
+          console.info('socket connection open');
+          resolve(this.ws);
+        }, 100);
+      });
     });
   }
 
   async sendMessage(message = {}) {
+    if (_.get(this, 'ws.readyState') !== 1) {
+      await this.init();
+    }
     return new Promise((resolve, reject) => {
       if (this.ws.readyState !== 1) {
-        this.newConnection();
         resolve({ error: new Error('connection close') });
       }
+
       const id = this.getUniqId();
       message.id = id;
       this.ws.send(JSON.stringify(message));
