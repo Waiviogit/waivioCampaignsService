@@ -26,7 +26,7 @@ class SocketClient {
 
     this.ws.on('message', (message) => {
       const data = jsonHelper.parseJson(message.toString());
-      emitter.emit(data.id, { data: data.result, error: data.error });
+      emitter.emit(data.id, { data, error: data.error });
     });
   }
 
@@ -58,12 +58,13 @@ class SocketClient {
 
   async getBlock(blockNum) {
     try {
-      const result = await this.sendMessage({
+      const data = await this.sendMessage({
         jsonrpc: '2.0',
         method: 'condenser_api.get_block',
         params: [blockNum],
       });
-      return result;
+      if (data.error) return { error: data.error };
+      return data.result;
     } catch (error) {
       return { error };
     }
@@ -71,7 +72,7 @@ class SocketClient {
 
   async getOpsInBlock(blockNum) {
     try {
-      const result = await this.sendMessage({
+      const data = await this.sendMessage({
         jsonrpc: '2.0',
         method: 'account_history_api.get_ops_in_block',
         params: {
@@ -79,7 +80,8 @@ class SocketClient {
           only_virtual: false,
         },
       });
-      return result;
+      if (data.error) return { error: data.error };
+      return data.result;
     } catch (error) {
       return { error };
     }

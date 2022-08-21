@@ -8,9 +8,6 @@ const _ = require('lodash');
 const { socketHiveClient } = require('../utilities/webSoket/hiveSocket');
 
 const nodeUrls = [
-  // 'https://api.deathwing.me',
-  // 'https://hived.emre.sh',
-  // 'https://api.pharesim.me',
   'https://blocks.waivio.com',
   ...urls];
 
@@ -60,7 +57,7 @@ const loadBlock = async (blockNum) => {
   const { block, error } = await getBlock(blockNum, CURRENT_NODE_URL);
 
   if (error) {
-    console.error(error);
+    console.error(error.message);
     changeNodeUrl();
     return false;
   }
@@ -81,9 +78,11 @@ const getBlock = async (blockNum, currenturl) => {
   try {
     const resp = await socketHiveClient.getBlock(blockNum);
     if (!resp.error) return { block: resp };
-    const hive = new Client(currenturl);
+    const hive = new Client(
+      currenturl,
+      { timeout: 8000 },
+    );
     const block = await hive.database.call('get_block', [blockNum]);
-    console.log();
     return { block };
   } catch (error) {
     return { error };
@@ -124,7 +123,7 @@ const getBlockREST = async (blockNum) => {
     const result = await instance.post(
       CURRENT_NODE_URL,
       getOpsInBlockReqData(blockNum),
-      // { timeout: 8000 },
+      { timeout: 8000 },
     );
     console.log();
     return { result: _.get(result, 'data.result.ops') };
