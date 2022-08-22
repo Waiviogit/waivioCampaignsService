@@ -47,7 +47,7 @@ exports.getTransactionsHistory = async (name) => {
 };
 
 const getProcessHistorySocket = (result) => {
-  if (result.error && result.error.data.message === 'Assert Exception') {
+  if (_.get(result, 'error') && _.get(result, 'error.data.message') === 'Assert Exception') {
     const next = _.get(result, 'error.data.stack[0].data.sequence');
     return { next, result: [] };
   }
@@ -60,7 +60,7 @@ exports.getAccountHistory = async (name, id, limit) => {
       name, id, limit, filterLow: historyFilter[0], filterHigh: historyFilter[1],
     });
     if (
-      !socketResp.error || !_.includes(Object.values(HIVE_SOCKET_ERR), _.get(socketResp, 'error.message'))
+      !_.get(socketResp, 'error') || !_.includes(Object.values(HIVE_SOCKET_ERR), _.get(socketResp, 'error.message'))
     ) {
       return getProcessHistorySocket(socketResp);
     }
