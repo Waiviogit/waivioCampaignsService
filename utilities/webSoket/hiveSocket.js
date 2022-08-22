@@ -7,19 +7,22 @@ const HIVE_SOCKET = 'wss://blocks.waivio.com:8084';
 
 const emitter = new EventEmitterHIVE();
 
+/**
+ * Not using reject in order not to wrap an instance of the class in a try catch
+ */
 class SocketClient {
   constructor(url) {
     this.url = url;
   }
 
   async init() {
-    return new Promise((resolve, reject) => {
+    return new Promise((resolve) => {
       this.ws = new WebSocket(this.url);
 
       this.ws.on('error', () => {
         console.error('error socket closed');
         this.ws.close();
-        reject();
+        resolve({ error: new Error('error socket closed') });
       });
 
       this.ws.on('message', (message) => {
@@ -37,10 +40,11 @@ class SocketClient {
   }
 
   async sendMessage(message = {}) {
+    if (process.env.SOCKET_HIVE !== 'true') return { error: new Error('socket disabled') };
     if (_.get(this, 'ws.readyState') !== 1) {
       await this.init();
     }
-    return new Promise((resolve, reject) => {
+    return new Promise((resolve) => {
       if (this.ws.readyState !== 1) {
         resolve({ error: new Error('connection close') });
       }
@@ -49,13 +53,12 @@ class SocketClient {
       message.id = id;
       this.ws.send(JSON.stringify(message));
       emitter.once(id, ({ data, error }) => {
-        data
-          ? resolve(data)
-          : reject(error || new Error('Unexpected server response.'));
+        if (error) resolve({ error: new Error('Unexpected server response.') });
+        resolve(data);
       });
 
       setTimeout(() => {
-        reject(new Error('Timeout exceed'));
+        resolve({ error: new Error('Timeout exceed') });
         emitter.off(id, resolve);
       }, 2 * 1000);
     });
@@ -66,38 +69,43 @@ class SocketClient {
   }
 
   async getBlock(blockNum) {
-    try {
-      const data = await this.sendMessage({
-        jsonrpc: '2.0',
-        method: 'condenser_api.get_block',
-        params: [blockNum],
-      });
-      if (_.get(data, 'error')) {
-        return { error: data.error };
-      }
-      return data.result;
-    } catch (error) {
-      return { error };
+    const data = await this.sendMessage({
+      jsonrpc: '2.0',
+      method: 'condenser_api.get_block',
+      params: [blockNum],
+    });
+    if (_.get(data, 'error')) {
+      return { error: data.error };
     }
+    return data.result;
   }
 
   async getOpsInBlock(blockNum) {
-    try {
-      const data = await this.sendMessage({
-        jsonrpc: '2.0',
-        method: 'account_history_api.get_ops_in_block',
-        params: {
-          block_num: blockNum,
-          only_virtual: false,
-        },
-      });
-      if (_.get(data, 'error')) {
-        return { error: data.error };
-      }
-      return data.result;
-    } catch (error) {
-      return { error };
+    const data = await this.sendMessage({
+      jsonrpc: '2.0',
+      method: 'account_history_api.get_ops_in_block',
+      params: {
+        block_num: blockNum,
+        only_virtual: false,
+      },
+    });
+    if (_.get(data, 'error')) {
+      return { error: data.error };
     }
+    return data.result;
+  }
+
+  async getAccounts(accounts = []) {
+    const data = await this.sendMessage({
+      jsonrpc: '2.0',
+      method: 'condenser_api.get_accounts',
+      params: [accounts],
+      id: 1,
+    });
+    if (_.get(data, 'error')) {
+      return { error: data.error };
+    }
+    return data.result;
   }
 }
 
