@@ -19,10 +19,10 @@ const getBlockNumberStream = async ({
   startFromBlock, startFromCurrent, loadBlock, redisTitle,
 }) => {
   if (startFromCurrent) {
-    const hive2 = new Client(CURRENT_NODE_URL, { timeout: 8000 });
+    const hive = new Client(CURRENT_NODE_URL, { timeout: 8000 });
     await loadNextBlock({
       startBlock: (
-        await hive2.database.getDynamicGlobalProperties()).last_irreversible_block_num,
+        await hive.database.getDynamicGlobalProperties()).last_irreversible_block_num,
       loadBlock,
       redisTitle,
     });
@@ -92,10 +92,7 @@ const getBlock = async (blockNum, currenturl) => {
 const loadBlockRest = async (blockNum) => { // return true if block exist and parsed, else - false
   const block = [];
 
-  console.log(`start loadBlock  REST${blockNum}`);
   const lastBlockNum = await redisGetter.getLastBlockNum('last_block_num');
-  // const hive2 = new Client(nodeUrls, { failoverThreshold: 0, timeout: 8000 });
-  // const currentBlock = await hive2.database.getDynamicGlobalProperties();
   if (blockNum > (lastBlockNum - 30)) return false;
   const { result, error } = await getBlockREST(blockNum);
 
@@ -111,7 +108,9 @@ const loadBlockRest = async (blockNum) => { // return true if block exist and pa
     console.error(`NO DATA FROM BLOCK BY REST: ${blockNum}`);
     return true;
   }
+  console.time(`BLOCK OPS ${blockNum}`);
   await parseOrders(block);
+  console.timeEnd(`BLOCK OPS ${blockNum}`);
   return true;
 };
 
