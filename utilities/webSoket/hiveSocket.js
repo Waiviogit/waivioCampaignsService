@@ -3,9 +3,15 @@ const EventEmitterHIVE = require('events').EventEmitter;
 const jsonHelper = require('utilities/helpers/jsonHelper');
 const _ = require('lodash');
 
+const emitter = new EventEmitterHIVE();
+
 const HIVE_SOCKET = 'wss://blocks.waivio.com:8084';
 
-const emitter = new EventEmitterHIVE();
+const HIVE_SOCKET_ERR = {
+  ERROR: 'error socket closed',
+  DISABLED: 'socket disabled',
+  CLOSED: 'connection close',
+};
 
 /**
  * Not using reject in order not to wrap an instance of the class in a try catch
@@ -22,7 +28,7 @@ class SocketClient {
       this.ws.on('error', () => {
         console.error('error socket closed');
         this.ws.close();
-        resolve({ error: new Error('error socket closed') });
+        resolve({ error: new Error(HIVE_SOCKET_ERR.ERROR) });
       });
 
       this.ws.on('message', (message) => {
@@ -40,20 +46,20 @@ class SocketClient {
   }
 
   async sendMessage(message = {}) {
-    if (process.env.SOCKET_HIVE !== 'true') return { error: new Error('socket disabled') };
+    if (process.env.SOCKET_HIVE !== 'true') return { error: new Error(HIVE_SOCKET_ERR.DISABLED) };
     if (_.get(this, 'ws.readyState') !== 1) {
       await this.init();
     }
     return new Promise((resolve) => {
       if (this.ws.readyState !== 1) {
-        resolve({ error: new Error('connection close') });
+        resolve({ error: new Error(HIVE_SOCKET_ERR.CLOSED) });
       }
 
       const id = this.getUniqId();
       message.id = id;
       this.ws.send(JSON.stringify(message));
       emitter.once(id, ({ data, error }) => {
-        if (error) resolve({ error: new Error('Unexpected server response.') });
+        if (error) resolve({ error });
         resolve(data);
       });
 
@@ -99,8 +105,22 @@ class SocketClient {
     const data = await this.sendMessage({
       jsonrpc: '2.0',
       method: 'condenser_api.get_accounts',
-      params: [accounts],
+      params: [_.compact(accounts)],
       id: 1,
+    });
+    if (_.get(data, 'error')) {
+      return { error: data.error };
+    }
+    return data.result;
+  }
+
+  async getAccountHistory({
+    name, id, limit, filterLow, filterHigh,
+  }) {
+    const data = await this.sendMessage({
+      jsonrpc: '2.0',
+      method: 'condenser_api.get_account_history',
+      params: _.compact([name, id, limit, filterLow, filterHigh]),
     });
     if (_.get(data, 'error')) {
       return { error: data.error };
@@ -113,4 +133,5 @@ const socketHiveClient = new SocketClient(HIVE_SOCKET);
 
 module.exports = {
   socketHiveClient,
+  HIVE_SOCKET_ERR,
 };
