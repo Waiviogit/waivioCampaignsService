@@ -2,6 +2,7 @@ const axios = require('axios');
 const _ = require('lodash');
 const chainTypes = require('@hiveio/hive-js/lib/auth/serializer/src/ChainTypes');
 const makeBitMaskFilter = require('@hiveio/hive-js/lib/auth/serializer/src/makeBitMaskFilter');
+const { socketHiveClient, HIVE_SOCKET_ERR } = require('../webSoket/hiveSocket');
 
 const op = chainTypes.operations;
 const historyFilter = makeBitMaskFilter([
@@ -45,8 +46,25 @@ exports.getTransactionsHistory = async (name) => {
   }
 };
 
+const getProcessHistorySocket = (result) => {
+  if (_.get(result, 'error') && _.get(result, 'error.data.message') === 'Assert Exception') {
+    const next = _.get(result, 'error.data.stack[0].data.sequence');
+    return { next, result: [] };
+  }
+  return { result };
+};
+
 exports.getAccountHistory = async (name, id, limit) => {
   try {
+    const socketResp = await socketHiveClient.getAccountHistory({
+      name, id, limit, filterLow: historyFilter[0], filterHigh: historyFilter[1],
+    });
+    if (
+      !_.get(socketResp, 'error') || !_.includes(Object.values(HIVE_SOCKET_ERR), _.get(socketResp, 'error.message'))
+    ) {
+      return getProcessHistorySocket(socketResp);
+    }
+
     const result = await axios.post(hiveUrl, {
       id: 0,
       jsonrpc: '2.0',

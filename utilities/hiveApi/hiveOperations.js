@@ -4,6 +4,7 @@ const { specialTransferBeneficiaries } = require('constants/constants');
 const { broadcastClient, databaseClient } = require('utilities/hiveApi/hiveClient');
 const { postModel } = require('models');
 const redisGetter = require('utilities/redis/redisGetter');
+const { socketHiveClient } = require('../webSoket/hiveSocket');
 
 exports.likePost = async ({
   key, voter, author, permlink, weight,
@@ -47,6 +48,9 @@ exports.transfer = async ({
  */
 exports.getAccountsInfo = async (names) => {
   try {
+    const result = await socketHiveClient.getAccounts(names);
+    if (!_.get(result, 'error')) return result;
+
     return databaseClient.database.call('get_accounts', [names]);
   } catch (error) {
     return { error };
@@ -59,6 +63,8 @@ exports.getAccountsInfo = async (names) => {
  */
 exports.getAccountInfo = async (name) => {
   try {
+    const result = await socketHiveClient.getAccounts([name]);
+    if (!_.get(result, 'error')) return result[0];
     const accounts = await databaseClient.database.call('get_accounts', [[name]]);
 
     if (!_.isEmpty(accounts)) return accounts[0];
