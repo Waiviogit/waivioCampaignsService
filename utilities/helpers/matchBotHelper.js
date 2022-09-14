@@ -9,7 +9,7 @@ const {
 } = require('models');
 const { hiveOperations } = require('utilities/hiveApi');
 const {
-  MATCH_BOT_TYPES, BOT_ENV_KEY, MANA_CHECK_TYPES, BOTS_QUEUE,
+  MATCH_BOT_TYPES, BOT_ENV_KEY, MANA_CHECK_TYPES, BOTS_QUEUE, GREY_LIST_KEY,
 } = require('constants/matchBotsData');
 const { voteCoefficients, SUPPORTED_CRYPTO_CURRENCIES } = require('constants/constants');
 const jsonHelper = require('utilities/helpers/jsonHelper');
@@ -734,6 +734,12 @@ const voteEngineCurator = async (vote) => {
   const now = moment().valueOf();
 
   await redisSetter.zremrangebyscore({ key, start: -Infinity, end: expire });
+  const isInGreyList = !!await redisGetter.sismember({
+    key: GREY_LIST_KEY,
+    member: author,
+  });
+  if (isInGreyList) return;
+
   const { result: votedPosts } = await redisGetter
     .zrevrange({ key, start: 0, end: -1 });
 
