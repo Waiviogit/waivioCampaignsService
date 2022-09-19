@@ -37,3 +37,5 @@ exports.MANA_CHECK_TYPES = [
   'HIVE',
   'WAIV',
 ];
+
+exports.GREY_LIST_KEY = 'vote_grey_list';
