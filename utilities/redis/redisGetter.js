@@ -48,6 +48,8 @@ const zrevrangebyscore = async ({
   }
 };
 
+const sismember = async ({ key, member, client = demoPosts }) => client.sismemberAsync(key, member);
+
 module.exports = {
   getTTLCampaignsData,
   zrevrangebyscore,
@@ -56,4 +58,5 @@ module.exports = {
   getHashAll,
   zrevrange,
   smembers,
+  sismember,
 };
