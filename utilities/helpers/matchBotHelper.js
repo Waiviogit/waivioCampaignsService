@@ -796,6 +796,7 @@ module.exports = {
   checkForPayed,
   checkDisable,
   removeVotes,
+  removeVote,
   unsetBot,
   setRule,
   canVote,
