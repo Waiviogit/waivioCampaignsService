@@ -117,7 +117,13 @@ const getUpvotes = async () => BotUpvote.aggregate([
  */
 const getExpiredUpvotes = async (permlink = null) => {
   const pipeline = [
-    { $match: { status: 'upvoted', executed: false } },
+    {
+      $match: {
+        status: 'upvoted',
+        executed: !!permlink,
+        ...(permlink && { permlink }),
+      },
+    },
     {
       $project: {
         botName: 1,
@@ -130,7 +136,6 @@ const getExpiredUpvotes = async (permlink = null) => {
       },
     },
   ];
-  if (permlink) pipeline[0].$match.permlink = permlink;
   return BotUpvote.aggregate(pipeline);
 };
 
