@@ -32,6 +32,7 @@ exports.removeVotes = async () => {
     const filtered = _.filter(upvotes, (u) => _.some(activeVotes, (p) => p.voter === u.botName));
     for (const upvote of filtered) {
       await matchBotHelper.removeVote(upvote);
+      await new Promise((resolve) => setTimeout(resolve, 5000));
       console.log(`${upvote.botName} removed vote on ${payment.rootAuthor}, ${payment.postPermlink}`);
     }
   }
