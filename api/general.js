@@ -7,9 +7,7 @@ const axios = require('axios');
 const _ = require('lodash');
 const { socketHiveClient } = require('../utilities/webSoket/hiveSocket');
 
-const nodeUrls = [
-  'https://blocks.waivio.com',
-  ...urls];
+const nodeUrls = [...urls];
 
 let CURRENT_NODE_URL = nodeUrls[0];
 
