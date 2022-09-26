@@ -110,6 +110,7 @@ const campaignSchema = new Schema({
   rewardInCurrency: {
     type: Float, required: true, min: 0.001, max: 50000,
   },
+  migrated: { type: Boolean },
 },
 {
   timestamps: true,
