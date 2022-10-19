@@ -51,7 +51,7 @@ class SocketClient {
   }
 
   async sendMessage(message = {}) {
-    if (process.env.NODE_ENV !== 'production') return { error: new Error(HIVE_SOCKET_ERR.DISABLED) };
+    if (process.env.NODE_ENV !== 'disabled') return { error: new Error(HIVE_SOCKET_ERR.DISABLED) };
     if (this.timeoutCount >= REQUESTS_TO_DISABLE) {
       this.timeoutCount++;
       if (this.timeoutCount > REQUESTS_TO_RENEW) {
