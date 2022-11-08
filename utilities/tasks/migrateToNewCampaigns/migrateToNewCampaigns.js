@@ -77,6 +77,12 @@ const migrateCampaign = async (oldCampaign) => {
 
   for (const oldKey in oldCampaign) {
     if (ignoredKeys.includes(oldKey)) continue;
+    if (oldKey === 'match_bots') {
+      if (!_.isEmpty(oldCampaign.match_bots)) {
+        campaign.matchBots = ['waivio.com'];
+        continue;
+      }
+    }
     campaign[getNewKey(oldKey)] = oldCampaign[oldKey];
   }
   const { result, error } = await createCampaign(campaign);
