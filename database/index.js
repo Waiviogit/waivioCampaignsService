@@ -8,6 +8,7 @@ module.exports = {
   Mongoose: mongoose,
   models: {
     Campaign: require('./schemas/CampaignSchema'),
+    CampaignV2: require('./schemas/CampaignV2Schema'),
     PaymentHistory: require('./schemas/PaymentHistorySchema'),
     User: require('./schemas/UserSchema'),
     Post: require('./schemas/PostSchema'),

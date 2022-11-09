@@ -277,6 +277,6 @@ const getPostVoteRhares = async ({ author, permlink }) => {
   const postVoteRhares = _.get(post, 'vote_rshares')
     ? parseFloat(post.vote_rshares)
     : 0;
-  const isPost = !post.parent_author;
+  const isPost = !_.get(post, 'parent_author');
   return { postVoteRhares, isPost };
 };

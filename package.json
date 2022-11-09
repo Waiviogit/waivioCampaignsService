@@ -20,6 +20,7 @@
     "setRewardInCurrency": "NODE_PATH=. node ./utilities/tasks/setRewardInCurrencyField/run.js",
     "setDeactivationDate": "NODE_PATH=. node utilities/tasks/setDeactivationDate/run.js",
     "unvoteRejected": "NODE_PATH=. node utilities/tasks/removeVotesOnRejected/run.js",
+    "migrateToNewCampaigns": "NODE_PATH=. node utilities/tasks/migrateToNewCampaigns/run.js",
     "test": "NODE_PATH=. NODE_ENV=test nyc --reporter=html mocha"
   },
   "dependencies": {

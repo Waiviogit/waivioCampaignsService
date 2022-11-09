@@ -18,6 +18,7 @@ exports.expirePendingTransfer = async (id) => {
  */
 exports.expireDemoPost = async ({ author, permlink }) => {
   const post = await hiveOperations.getPostInfo({ author, permlink });
+  if (!post) return;
   const metadata = JSON.parse(post.json_metadata);
   const payoutPercent = _.get(post, 'percent_steem_dollars', post.percent_hive_dollars);
   const authorPayout = parseFloat(post.total_payout_value);
