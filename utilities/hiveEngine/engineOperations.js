@@ -7,9 +7,10 @@ const tokensContract = require('./tokensContract');
 const marketPools = require('./marketPools');
 const { MAX_VOTING_POWER, VOTE_REGENERATION_DAYS, DOWNVOTE_REGENERATION_DAYS } = require('../../constants/hiveEngine');
 
+//'https://accounts.hive-engine.com/accountHistory'
 exports.accountHistory = async (params) => {
   try {
-    return await axios.get('https://accounts.hive-engine.com/accountHistory', { params });
+    return await axios.get('https://history.hive-engine.com/accountHistory', { params });
   } catch (error) {
     return error;
   }
