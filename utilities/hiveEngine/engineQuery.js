@@ -18,6 +18,8 @@ exports.engineQuery = async ({
         method,
         params,
         id,
+      }, {
+        timeout: 5000,
       },
     );
     return _.get(resp, 'data.result');
