@@ -18,4 +18,5 @@ module.exports = {
   currenciesRateModel: require('./currenciesRateModel'),
   extendedMatchBotModel: require('./extendedMatchBotModel'),
   engineAccountHistoryModel: require('./engineAccountHistoryModel'),
+  sponsorsUpvoteModel: require('./sponsorsUpvoteModel'),
 };

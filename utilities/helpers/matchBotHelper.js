@@ -6,6 +6,7 @@ const {
   matchBotModel,
   campaignModel,
   postModel,
+  sponsorsUpvoteModel,
 } = require('models');
 const { hiveOperations } = require('utilities/hiveApi');
 const {
@@ -631,6 +632,10 @@ const canVote = async ({
     { botName: name, author, permlink },
   );
   if (sponsorsVote) return false;
+
+  const newCampaignsVote = await sponsorsUpvoteModel
+    .getCampaignUpvote({ voter: name, author, permlink });
+  if (newCampaignsVote) return false;
 
   if (botKey === BOT_ENV_KEY.CURATOR) {
     const { result: authorsBot } = await extendedMatchBotModel.findOne(

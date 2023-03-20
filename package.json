@@ -3,7 +3,7 @@
   "version": "0.0.0",
   "private": true,
   "scripts": {
-    "start": "node ./bin/service.js",
+    "start": "node --max-old-space-size=400 ./bin/service.js",
     "fillPaymentBeneficiaries": "NODE_PATH=. node ./utilities/tasks/paymentsBeneficiaries/run.js",
     "fillServiceCommissions": "NODE_PATH=. node ./utilities/tasks/serviceCommissions/run.js",
     "suspendedStatus": "NODE_PATH=. node ./utilities/tasks/suspendedStatus/run.js",
