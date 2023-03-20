@@ -27,7 +27,7 @@ const historyFilter = makeBitMaskFilter([
 
 // so far only api.hive.blog returns no error history on large accounts
 // supposed it has config on node to process all data at once
-const hiveUrl = 'https://api.hive.blog';
+const hiveUrl = 'https://anyx.io';
 
 exports.getTransactionsHistory = async (name) => {
   try {

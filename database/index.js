@@ -26,5 +26,6 @@ module.exports = {
     WalletExemptions: require('./schemas/WalletExemptions'),
     ExtendedMatchBot: require('./schemas/ExtendedMatchBotSchema'),
     EngineAccountHistories: require('./schemas/EngineAccountHistorySchema'),
+    SponsorsUpvoteSchema: require('./schemas/SponsorsUpvoteSchema'),
   },
 };
