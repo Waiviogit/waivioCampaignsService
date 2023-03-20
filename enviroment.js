@@ -34,13 +34,13 @@ module.exports = function (app, express) {
   if (process.env.NODE_ENV !== 'test') {
     runStream().catch((err) => {
       Sentry.captureException(err);
-  //    sendSentryNotification();
+      sendSentryNotification();
       console.error(err);
       process.exit(1);
     });
     runStreamRest().catch((err) => {
       Sentry.captureException(err);
-    //  sendSentryNotification();
+      sendSentryNotification();
       console.error(err);
       process.exit(1);
     });
@@ -81,7 +81,6 @@ module.exports = function (app, express) {
   }));
 
   process.on('unhandledRejection', (error) => {
-    sendSentryNotification();
     Sentry.captureException(error);
   });
 

@@ -21,7 +21,6 @@ const mailerRoutes = new Router();
 const apiRoutes = new Router();
 const hiveEngineRoutes = new Router();
 
-
 apiRoutes.use('/campaigns-api/referrals', referralRoutes);
 apiRoutes.use('/campaigns-api/withdraw', withdrawRoutes);
 apiRoutes.use('/campaigns-api/mailer', mailerRoutes);
@@ -46,7 +45,7 @@ campaignsRoutes.route('/statistics').post(campaignsController.getCampaignsStatis
 campaignsRoutes.route('/tab-type').post(campaignsController.getCampaignsTabType);
 
 campaignsRoutes.route('/rewards/:userName').get(campaignsController.userRewards);
-campaignsRoutes.route('/create_campaign').post(campaignsController.create);
+// campaignsRoutes.route('/create_campaign').post(campaignsController.create);
 
 campaignsRoutes.route('/validate_reject_reservation').post(campaignsController.validateRejectAssignCampaign);
 campaignsRoutes.route('/validate_activation').post(campaignsController.validateActivationCampaign);
