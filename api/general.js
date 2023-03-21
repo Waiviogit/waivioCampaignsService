@@ -123,7 +123,7 @@ const getBlockREST = async (blockNum) => {
       { timeout: 8000 },
     );
     console.log();
-    return { result: _.get(result, 'data.result.ops') };
+    return { result: _.get(result, 'data.result') };
   } catch (error) {
     return { error };
   }
