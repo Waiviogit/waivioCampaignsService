@@ -76,10 +76,7 @@ const getBlock = async (blockNum, currenturl) => {
   try {
     const resp = await socketHiveClient.getBlock(blockNum);
     if (!_.get(resp, 'error')) return { block: resp };
-    const hive = new Client(
-      currenturl,
-      { timeout: 8000 },
-    );
+    const hive = new Client(currenturl);
     const block = await hive.database.call('get_block', [blockNum]);
     return { block };
   } catch (error) {
@@ -120,7 +117,6 @@ const getBlockREST = async (blockNum) => {
     const result = await instance.post(
       CURRENT_NODE_URL,
       getOpsInBlockReqData(blockNum),
-      { timeout: 8000 },
     );
     console.log();
     return { result: _.get(result, 'data.result') };
