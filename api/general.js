@@ -10,14 +10,14 @@ const { socketHiveClient } = require('../utilities/webSoket/hiveSocket');
 const nodeUrls = [...urls];
 
 let CURRENT_NODE_URL = nodeUrls[0];
-
-let hiveUrl = nodeUrls[0];
+let CURRENT_NODE_URL_REST = nodeUrls[1];
+let errorCount = 0;
 
 const getBlockNumberStream = async ({
   startFromBlock, startFromCurrent, loadBlock, redisTitle,
 }) => {
   if (startFromCurrent) {
-    const hive = new Client(CURRENT_NODE_URL, { timeout: 8000 });
+    const hive = new Client(CURRENT_NODE_URL);
     await loadNextBlock({
       startBlock: (
         await hive.database.getDynamicGlobalProperties()).last_irreversible_block_num,
@@ -55,6 +55,8 @@ const loadBlock = async (blockNum) => {
   const { block, error } = await getBlock(blockNum, CURRENT_NODE_URL);
 
   if (error) {
+    errorCount++;
+    if (errorCount > 5) process.exit();
     console.error(error.message);
     changeNodeUrl();
     return false;
@@ -74,9 +76,9 @@ const loadBlock = async (blockNum) => {
 
 const getBlock = async (blockNum, currenturl) => {
   try {
-    const resp = await socketHiveClient.getBlock(blockNum);
-    if (!_.get(resp, 'error')) return { block: resp };
-    const hive = new Client(currenturl);
+    // const resp = await socketHiveClient.getBlock(blockNum);
+    // if (!_.get(resp, 'error')) return { block: resp };
+    const hive = new Client(currenturl, { timeout: 8000 });
     const block = await hive.database.call('get_block', [blockNum]);
     return { block };
   } catch (error) {
@@ -111,11 +113,11 @@ const loadBlockRest = async (blockNum) => { // return true if block exist and pa
 
 const getBlockREST = async (blockNum) => {
   try {
-    const resp = await socketHiveClient.getOpsInBlock(blockNum);
-    if (!_.get(resp, 'error')) return { result: resp };
-    const instance = axios.create();
-    const result = await instance.post(
-      CURRENT_NODE_URL,
+    // const resp = await socketHiveClient.getOpsInBlock(blockNum);
+    // if (!_.get(resp, 'error')) return { result: resp };
+
+    const result = await axios.post(
+      CURRENT_NODE_URL_REST,
       getOpsInBlockReqData(blockNum),
     );
     console.log();
@@ -126,17 +128,17 @@ const getBlockREST = async (blockNum) => {
 };
 
 const changeNodeUrl = () => {
-  const index = nodeUrls.indexOf(hiveUrl);
-
-  hiveUrl = index === nodeUrls.length - 1 ? nodeUrls[0] : nodeUrls[index + 1];
-  console.error(`Node URL was changed to ${hiveUrl}`);
-};
-
-const changeRestNodeUrl = () => {
   const index = nodeUrls.indexOf(CURRENT_NODE_URL);
 
   CURRENT_NODE_URL = index === nodeUrls.length - 1 ? nodeUrls[0] : nodeUrls[index + 1];
-  console.error(`REST Node URL was changed to ${CURRENT_NODE_URL}`);
+  console.error(`Node URL was changed to ${CURRENT_NODE_URL}`);
+};
+
+const changeRestNodeUrl = () => {
+  const index = nodeUrls.indexOf(CURRENT_NODE_URL_REST);
+
+  CURRENT_NODE_URL_REST = index === nodeUrls.length - 1 ? nodeUrls[0] : nodeUrls[index + 1];
+  console.error(`REST Node URL was changed to ${CURRENT_NODE_URL_REST}`);
 };
 
 const getOpsInBlockReqData = (blockNum) => ({
