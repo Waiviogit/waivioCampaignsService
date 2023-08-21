@@ -89,7 +89,7 @@ const getBlock = async (blockNum, currenturl) => {
 const loadBlockRest = async (blockNum) => { // return true if block exist and parsed, else - false
   const block = [];
 
-  const lastBlockNum = await redisGetter.getLastBlockNum('last_block_num');
+  const lastBlockNum = await redisGetter.getLastBlockNum('campaign_last_block_num');
   if (blockNum > (lastBlockNum - 30)) return false;
   const { result, error } = await getBlockREST(blockNum);
 
