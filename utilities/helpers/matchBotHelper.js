@@ -596,6 +596,7 @@ const voteExtendedMatchBots = async (voteData) => {
     voter, author, permlink, voteWeight, minVotingPower,
     minHBD, botKey, voteComments, minVotingPowerCurrencies,
   } = params;
+
   const validVote = await canVote({
     minVotingPowerCurrencies,
     voteWeight: Math.abs(voteWeight / 100),
@@ -608,6 +609,7 @@ const voteExtendedMatchBots = async (voteData) => {
     botKey,
   });
   if (!validVote) return { result: false };
+
   const { result: vote, error: votingError } = await hiveOperations.likePost(
     {
       key: process.env[botKey],
@@ -663,6 +665,12 @@ const canVote = async ({
   if (!manaCheck) return false;
   if (voteValueHBD + engineVoteValueHBD < minHBD) return false;
   if (!isPost && !voteComments) return false;
+
+  const { post } = await postModel.getOne({ author, permlink });
+  if (post) {
+    const existingVote = _.find(post.active_votes, (v) => v.voter === name);
+    if (existingVote) return false;
+  }
 
   return true;
 };
