@@ -66,7 +66,8 @@ exports.DOWNVOTE_REGENERATION_DAYS = 5;
 exports.HIVE_ENGINE_NODES = [
   'https://engine.waivio.com',
   'https://herpc.dtools.dev',
-  'https://api2.hive-engine.com/rpc',
   'https://api.primersion.com',
   'https://herpc.kanibot.com',
+  'https://engine.deathwing.me',
+  'https://he.ausbit.dev',
 ];
