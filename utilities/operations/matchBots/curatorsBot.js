@@ -3,8 +3,35 @@ const {
 } = require('constants/matchBotsData');
 const { curatorsBotQueue } = require('utilities/redis/queues');
 const validators = require('controllers/validators');
-const { extendedMatchBotModel } = require('models');
+const { extendedMatchBotModel, wobjectModel } = require('models');
 const _ = require('lodash');
+
+const commentIsObjectField = async ({ author, permlink }) => {
+  const { result } = await wobjectModel.findOne({ 'fields.author': author, 'fields.permlink': permlink });
+
+  return !!result;
+};
+
+const getWeightFromRatio = ({ curatorWeight, ratio }) => {
+  const weight = curatorWeight * ratio;
+  if (Math.abs(weight) > 10000) {
+    const sign = Math.sign(weight);
+    if (sign === -1) return -10000;
+    if (sign === 1) return 10000;
+    return 0;
+  }
+  return parseInt(weight, 10);
+};
+
+const adjustVoteWeight = ({ reject, voteWeight }) => {
+  const isEvenWeight = voteWeight % 2 === 0;
+
+  if (voteWeight === 10000) {
+    return reject ? voteWeight : voteWeight - 1;
+  }
+
+  return reject === isEvenWeight ? voteWeight : voteWeight + 1;
+};
 
 exports.processCuratorsMatchBot = async (vote) => {
   if (!_.includes(WORK_BOTS_ENV, process.env.NODE_ENV)) return;
@@ -18,10 +45,22 @@ exports.processCuratorsMatchBot = async (vote) => {
 };
 
 exports.sendToCuratorsQueue = async ({ vote, bots }) => {
+  const voteForField = await commentIsObjectField({ author: vote.author, permlink: vote.permlink });
+  if (voteForField && Math.sign(vote.weight) === -1) return;
+  const reject = vote.weight % 2 === 0;
+
   for (const bot of bots) {
     if (vote.weight < 0 && !_.get(bot, 'accounts[0].enablePowerDown')) continue;
+    let voteWeight = getWeightFromRatio({ curatorWeight: vote.weight, ratio: _.get(bot, 'accounts[0].voteRatio') });
+    if (voteForField) {
+      voteWeight = adjustVoteWeight({ reject, voteWeight });
+    }
+
     const { params, validationError } = validators
-      .validate(getCuratorVoteData({ vote, bot }), validators.matchBots.matchBotVoteSchema);
+      .validate(
+        getCuratorVoteData({ vote, bot, voteWeight }),
+        validators.matchBots.matchBotVoteSchema,
+      );
     if (validationError) {
       continue;
     }
@@ -30,9 +69,9 @@ exports.sendToCuratorsQueue = async ({ vote, bots }) => {
   }
 };
 
-const getCuratorVoteData = ({ vote, bot }) => ({
+const getCuratorVoteData = ({ vote, bot, voteWeight }) => ({
   minVotingPowerCurrencies: _.get(bot, 'accounts[0].minVotingPowerCurrencies'),
-  voteWeight: getWeightFromRatio({ curatorWeight: vote.weight, ratio: _.get(bot, 'accounts[0].voteRatio') }),
+  voteWeight,
   minVotingPower: _.get(bot, 'accounts[0].minVotingPower'),
   voteComments: _.get(bot, 'accounts[0].voteComments', false),
   minHBD: BOTS_QUEUE.CURATOR.MIN_HBD,
@@ -41,14 +80,3 @@ const getCuratorVoteData = ({ vote, bot }) => ({
   author: vote.author,
   voter: bot.botName,
 });
-
-const getWeightFromRatio = ({ curatorWeight, ratio }) => {
-  const weight = curatorWeight * ratio;
-  if (Math.abs(weight) > 10000) {
-    const sign = Math.sign(weight);
-    if (sign === -1) return -10000;
-    if (sign === 1) return 10000;
-    return 0;
-  }
-  return parseInt(weight, 10);
-};
