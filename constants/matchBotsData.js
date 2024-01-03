@@ -7,12 +7,12 @@ exports.BOTS_QUEUE = {
   CURATOR: {
     NAME: 'curatorsBotQueue',
     DELAY: 300,
-    MIN_HBD: 0.01,
+    MIN_HBD: 0.0001,
   },
   AUTHOR: {
     NAME: 'authorsBotQueue',
     DELAY: 300,
-    MIN_HBD: 0.01,
+    MIN_HBD: 0.0001,
   },
   ENGINE_CURATOR: {
     NAME: 'engineCuratorBotQueue',
