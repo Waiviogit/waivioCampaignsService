@@ -23,14 +23,14 @@ const getWeightFromRatio = ({ curatorWeight, ratio }) => {
   return parseInt(weight, 10);
 };
 
-const adjustVoteWeight = ({ reject, voteWeight }) => {
+const adjustVoteWeight = ({ approve, voteWeight }) => {
   const isEvenWeight = voteWeight % 2 === 0;
 
   if (voteWeight === 10000) {
-    return reject ? voteWeight : voteWeight - 1;
+    return approve ? voteWeight : voteWeight - 1;
   }
 
-  return reject === isEvenWeight ? voteWeight : voteWeight + 1;
+  return approve === isEvenWeight ? voteWeight : voteWeight + 1;
 };
 
 exports.processCuratorsMatchBot = async (vote) => {
@@ -47,13 +47,13 @@ exports.processCuratorsMatchBot = async (vote) => {
 exports.sendToCuratorsQueue = async ({ vote, bots }) => {
   const voteForField = await commentIsObjectField({ author: vote.author, permlink: vote.permlink });
   if (voteForField && Math.sign(vote.weight) === -1) return;
-  const reject = vote.weight % 2 === 0;
+  const approve = vote.weight % 2 === 0;
 
   for (const bot of bots) {
     if (vote.weight < 0 && !_.get(bot, 'accounts[0].enablePowerDown')) continue;
     let voteWeight = getWeightFromRatio({ curatorWeight: vote.weight, ratio: _.get(bot, 'accounts[0].voteRatio') });
     if (voteForField) {
-      voteWeight = adjustVoteWeight({ reject, voteWeight });
+      voteWeight = adjustVoteWeight({ approve, voteWeight });
     }
 
     const { params, validationError } = validators
