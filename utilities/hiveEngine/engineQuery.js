@@ -3,7 +3,7 @@ const _ = require('lodash');
 const { HIVE_ENGINE_NODES } = require('constants/hiveEngine');
 
 exports.engineQuery = async ({
-  hostUrl = 'https://engine.waivio.com',
+  hostUrl,
   method = 'find',
   params,
   endpoint = '/contracts',
@@ -29,12 +29,12 @@ exports.engineQuery = async ({
 };
 
 exports.engineProxy = async ({
-  hostUrl,
+  hostUrl = _.sample(HIVE_ENGINE_NODES),
   method,
   params,
   endpoint,
   id,
-  attempts = 5,
+  attempts = HIVE_ENGINE_NODES.length,
 }) => {
   const response = await this.engineQuery({
     hostUrl,
