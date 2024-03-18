@@ -641,7 +641,12 @@ const canVote = async ({
 
   if (botKey === BOT_ENV_KEY.CURATOR) {
     const { result: authorsBot } = await extendedMatchBotModel.findOne(
-      { botName: name, 'accounts.name': author, type: MATCH_BOT_TYPES.AUTHOR },
+      {
+        botName: name,
+        'accounts.name': author,
+        type: MATCH_BOT_TYPES.AUTHOR,
+        enabled: true,
+      },
     );
     if (authorsBot) return false;
   }

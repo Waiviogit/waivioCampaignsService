@@ -1,6 +1,7 @@
 const nodeUrls = [
   'https://api.hive.blog',
   'https://anyx.io',
+  'https://hived.emre.sh',
   'https://api.openhive.network',
   'https://hive-api.arcange.eu',
 ];
