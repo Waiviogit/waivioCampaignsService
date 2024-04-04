@@ -50,6 +50,14 @@ const zrevrangebyscore = async ({
 
 const sismember = async ({ key, member, client = demoPosts }) => client.sismemberAsync(key, member);
 
+const get = async ({ key, client = lastBlockClient }) => {
+  try {
+    return client.getAsync(key);
+  } catch (error) {
+    return '';
+  }
+};
+
 module.exports = {
   getTTLCampaignsData,
   zrevrangebyscore,
@@ -59,4 +67,5 @@ module.exports = {
   zrevrange,
   smembers,
   sismember,
+  get,
 };
