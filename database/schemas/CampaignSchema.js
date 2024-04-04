@@ -2,7 +2,6 @@ const {
   CAMPAIGN_TYPES, CAMPAIGN_STATUSES, RESERVATION_STATUSES, SUPPORTED_CURRENCIES,
 } = require('constants/constants');
 const mongoose = require('mongoose');
-const Float = require('mongoose-float').loadType(mongoose, 4);
 const db = require('database/db_Connection');
 const config = require('config');
 const _ = require('lodash');
@@ -60,10 +59,10 @@ const campaignSchema = new Schema({
   compensationAccount: { type: String },
   campaign_server: { type: String, default: config.appHost },
   budget: {
-    type: Float, required: true, min: 0.001, max: 10000,
+    type: Number, required: true, min: 0.001, max: 10000,
   },
   reward: {
-    type: Float, required: true, min: 0.001, max: 500,
+    type: Number, required: true, min: 0.001, max: 500,
   },
   count_reservation_days: { type: Number, default: 1 },
   agreementObjects: { type: [String] },
@@ -108,7 +107,7 @@ const campaignSchema = new Schema({
     default: SUPPORTED_CURRENCIES.USD,
   },
   rewardInCurrency: {
-    type: Float, required: true, min: 0.001, max: 50000,
+    type: Number, required: true, min: 0.001, max: 50000,
   },
   migrated: { type: Boolean },
 },

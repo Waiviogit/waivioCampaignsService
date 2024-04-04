@@ -1,4 +1,4 @@
-const Joi = require('@hapi/joi');
+const Joi = require('joi');
 const {
   RESERVATION_STATUSES, CAMPAIGN_STATUSES, CAMPAIGN_SORTS, SUPPORTED_CURRENCIES,
 } = require('constants/constants');

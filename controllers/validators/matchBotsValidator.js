@@ -1,5 +1,5 @@
 const { BOT_ENV_KEY, MATCH_BOT_TYPES, MANA_CHECK_TYPES } = require('constants/matchBotsData');
-const Joi = require('@hapi/joi');
+const Joi = require('joi');
 const moment = require('moment');
 
 const options = { allowUnknown: true, stripUnknown: true };

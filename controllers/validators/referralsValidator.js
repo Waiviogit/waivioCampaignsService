@@ -1,4 +1,4 @@
-const Joi = require('@hapi/joi');
+const Joi = require('joi');
 const { SORT_TYPES } = require('constants/constants');
 
 const options = { allowUnknown: true, stripUnknown: true };
