@@ -1,4 +1,4 @@
-const Joi = require('@hapi/joi');
+const Joi = require('joi');
 const { availableCoins, availableCrypto } = require('constants/withdraw');
 
 const options = { allowUnknown: true, stripUnknown: true };

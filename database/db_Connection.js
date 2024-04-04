@@ -5,7 +5,13 @@ const URI = process.env.MONGO_URI_WAIVIO
   ? process.env.MONGO_URI_WAIVIO
   : `mongodb://${config.db.host}:${config.db.port}/${config.db.database}`;
 
-module.exports = mongoose.createConnection(URI, {
-  useNewUrlParser: true, useFindAndModify: false, useUnifiedTopology: true, useCreateIndex: true,
-},
-() => console.log('WaivioDB connection successful!'));
+const waivioDb = mongoose.createConnection(URI);
+
+waivioDb.on('error', console.error.bind(console, 'connection error:'));
+waivioDb.once('open', () => {
+  console.log(`${config.db.database} connected`);
+});
+
+waivioDb.on('close', () => console.log(`closed ${config.db.database}`));
+
+module.exports = waivioDb;

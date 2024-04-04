@@ -1,8 +1,20 @@
 const axios = require('axios');
 const _ = require('lodash');
+const redisGetter = require('utilities/redis/redisGetter');
+const jsonHelper = require('utilities/helpers/jsonHelper');
 const { HIVE_ENGINE_NODES } = require('constants/hiveEngine');
 
-exports.engineQuery = async ({
+const ENGINE_NODES_LIST = 'engine_nodes_list';
+
+const getNewNodeUrl = (hostUrl, nodes) => {
+  const index = hostUrl ? nodes.indexOf(hostUrl) : 0;
+
+  return index === nodes.length - 1
+    ? nodes[0]
+    : nodes[index + 1];
+};
+
+const engineQuery = async ({
   hostUrl,
   method = 'find',
   params,
@@ -28,15 +40,16 @@ exports.engineQuery = async ({
   }
 };
 
-exports.engineProxy = async ({
-  hostUrl = _.sample(HIVE_ENGINE_NODES),
+const engineQueryRecursive = async ({
+  hostUrl,
   method,
   params,
   endpoint,
   id,
-  attempts = HIVE_ENGINE_NODES.length,
+  attempts,
+  nodes,
 }) => {
-  const response = await this.engineQuery({
+  const response = await engineQuery({
     hostUrl,
     method,
     params,
@@ -45,22 +58,45 @@ exports.engineProxy = async ({
   });
   if (_.has(response, 'error')) {
     if (attempts <= 0) return response;
-    return this.engineProxy({
-      hostUrl: getNewNodeUrl(hostUrl),
+    return engineQueryRecursive({
+      hostUrl: getNewNodeUrl(hostUrl, nodes),
       method,
       params,
       endpoint,
       id,
       attempts: attempts - 1,
+      nodes,
     });
   }
   return response;
 };
 
-const getNewNodeUrl = (hostUrl) => {
-  const index = hostUrl ? HIVE_ENGINE_NODES.indexOf(hostUrl) : 0;
+const getEngineNodes = async () => {
+  const nodesString = await redisGetter.get({ key: ENGINE_NODES_LIST });
+  if (!nodesString) return HIVE_ENGINE_NODES;
 
-  return index === HIVE_ENGINE_NODES.length - 1
-    ? HIVE_ENGINE_NODES[0]
-    : HIVE_ENGINE_NODES[index + 1];
+  return jsonHelper.parseJson(nodesString, HIVE_ENGINE_NODES);
+};
+
+const engineProxy = async ({
+  method,
+  params,
+  endpoint,
+  id,
+}) => {
+  const nodes = await getEngineNodes();
+
+  return engineQueryRecursive({
+    hostUrl: _.sample(nodes),
+    attempts: nodes.length,
+    method,
+    params,
+    endpoint,
+    id,
+    nodes,
+  });
+};
+
+module.exports = {
+  engineProxy,
 };

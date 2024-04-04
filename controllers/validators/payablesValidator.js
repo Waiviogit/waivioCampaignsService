@@ -1,5 +1,5 @@
 const moment = require('moment');
-const Joi = require('@hapi/joi');
+const Joi = require('joi');
 const {
   WALLET_TYPES_FOR_PARSE, SUPPORTED_CURRENCIES, PAYABLES_CURRENCIES,
   PAYMENT_HISTORIES_TYPES, GUEST_WALLET_OPERATIONS, SUPPORTED_CRYPTO_CURRENCIES,
