@@ -22,7 +22,8 @@
     "setRewardInCurrency": "NODE_PATH=. node ./utilities/tasks/setRewardInCurrencyField/run.js",
     "suspendedStatus": "NODE_PATH=. node ./utilities/tasks/suspendedStatus/run.js",
     "unassignUsers": "NODE_PATH=. node ./utilities/tasks/unassignUsersFromCampaign/run.js",
-    "unvoteRejected": "NODE_PATH=. node utilities/tasks/removeVotesOnRejected/run.js"
+    "unvoteRejected": "NODE_PATH=. node utilities/tasks/removeVotesOnRejected/run.js",
+    "suspendToExpired": "NODE_PATH=. node utilities/tasks/suspendToExpired/run.js"
   },
   "dependencies": {
     "@hiveio/dhive": "^1.0.1",
