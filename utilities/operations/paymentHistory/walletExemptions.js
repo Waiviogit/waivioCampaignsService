@@ -7,7 +7,7 @@ exports.addOrDeleteExemption = async (data) => (data.checked
   : removeExemption(_.omit(data, ['checked', 'symbol'])));
 
 const createExemption = async (data) => {
-  if (data.recordId) data.recordId = ObjectId(data.recordId);
+  if (data.recordId) data.recordId = new ObjectId(data.recordId);
   const { result, error } = await walletExemptionsModel.updateOne(data, data);
   if (error) return { error };
   return { result: !!result };
