@@ -61,6 +61,9 @@ exports.getWalletData = async ({
             && _.get(record, '[1].op[0]') === HIVE_OPERATIONS_TYPES.TRANSFER
             && (_.get(record, '[1].op[1].from') === SWAP_HIVE_ACC || _.get(record, '[1].op[1].to') === SWAP_HIVE_ACC)
         ) continue;
+        const duplicate = _.find(walletOperations, (op) => op?.[0] === record?.[0]);
+        if(duplicate) continue;
+
         walletOperations.push(record);
       }
     }

@@ -26,7 +26,6 @@ module.exports = async ({
   const usersJointArr = _
     .chain(accounts)
     .reduce((acc, el) => _.concat(acc, el.wallet), [])
-    .uniqBy('operationNum')
     .orderBy(['timestamp'], ['desc'])
     .value();
 
@@ -108,6 +107,7 @@ const accumulateHiveAcc = (resultArray, account, acc) => {
   const filterWallet = _.filter(account.wallet,
     (record) => !_.some(resultArray, (result) => _.isEqual(result, record)));
   if (_.isEmpty(filterWallet) && account.hasMore === false) return acc;
+
   account.operationNum = _.isEmpty(filterWallet)
     ? lastOpNum - 1
     : _.get(filterWallet, '[0].operationNum');
