@@ -26,6 +26,7 @@ module.exports = async ({
   const usersJointArr = _
     .chain(accounts)
     .reduce((acc, el) => _.concat(acc, el.wallet), [])
+    .uniqBy('operationNum')
     .orderBy(['timestamp'], ['desc'])
     .value();
 
