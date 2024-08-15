@@ -27,6 +27,7 @@ exports.MARKET_OPERATION = {
 };
 
 exports.HISTORY_API_OPS = [
+  'tokenfunds_checkPendingDtfs',
   'tokens_create',
   'tokens_issue',
   'tokens_transfer',
