@@ -12,7 +12,7 @@ exports.processAuthorsMatchBot = async (post) => {
   if (!_.includes(WORK_BOTS_ENV, process.env.NODE_ENV)) return;
 
   const metadata = parseJson(post.json_metadata, null);
-  const guestName = metadata?.comment?.usedId;
+  const guestName = metadata?.comment?.userId;
   const name = guestName || post.author;
 
   if (post.parent_author) return { result: false };
