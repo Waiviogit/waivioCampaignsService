@@ -4,6 +4,7 @@ const { CUSTOM_JSON_TYPES } = require('constants/parsersData');
 const jsonHelper = require('utilities/helpers/jsonHelper');
 const moment = require('moment');
 const _ = require('lodash');
+const { processCuratorsGuestMatchBot } = require('../utilities/operations/matchBots/curatorsBot');
 
 /**
  * match_bot_set_rule => check conditions =>
@@ -62,8 +63,10 @@ const parse = async (data) => {
     case CUSTOM_JSON_TYPES.REMOVE_USERS_FROM_BLACK_LIST:
     case CUSTOM_JSON_TYPES.REMOVE_USERS_FROM_WHITE_LIST:
       if (json.names) {
-        await blacklistModel.updateOne({ user: authorizedUser },
-          { $pull: { [data.id === 'removeUsersFromWhiteList' ? 'whiteList' : 'blackList']: { $in: json.names } } });
+        await blacklistModel.updateOne(
+          { user: authorizedUser },
+          { $pull: { [data.id === 'removeUsersFromWhiteList' ? 'whiteList' : 'blackList']: { $in: json.names } } },
+        );
       }
       break;
     case CUSTOM_JSON_TYPES.ADD_USERS_TO_BLACK_LIST:
@@ -87,6 +90,9 @@ const parse = async (data) => {
 
         await blacklistModel.updateOne({ user: authorizedUser }, updateData);
       }
+      break;
+    case CUSTOM_JSON_TYPES.WAIVIO_GUEST_VOTE:
+      await processCuratorsGuestMatchBot({ operation: data, vote: json });
       break;
   }
 };
