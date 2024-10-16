@@ -146,8 +146,10 @@ const updateCompensationFee = async (upvote, campaign, voteAmount) => {
     userName: campaign.compensationAccount,
     'details.reservation_permlink': upvote.reservationPermlink,
   };
-  const reservation = _.find(campaign.users,
-    (user) => user.permlink === upvote.reservationPermlink);
+  const reservation = _.find(
+    campaign.users,
+    (user) => user.permlink === upvote.reservationPermlink,
+  );
   const { result } = await paymentHistoryModel.findOne(condition);
 
   if (voteAmount + _.get(result, 'amount', 0) > campaign.reward / reservation.hiveCurrency) {
@@ -160,13 +162,17 @@ const updateCompensationFee = async (upvote, campaign, voteAmount) => {
     payed: false,
   });
   if (_.get(transfer, 'details.remaining', 0) >= voteAmount) {
-    await paymentHistoryModel.updateOne({ _id: transfer._id },
-      { payed: transfer.details.remaining === voteAmount, 'details.remaining': transfer.details.remaining - voteAmount });
+    await paymentHistoryModel.updateOne(
+      { _id: transfer._id },
+      { payed: transfer.details.remaining === voteAmount, 'details.remaining': transfer.details.remaining - voteAmount },
+    );
   }
 
   if (result) {
-    return paymentHistoryModel.updateOne(condition,
-      { $inc: { amount: voteAmount }, payed: _.get(transfer, 'details.remaining', 0) >= voteAmount });
+    return paymentHistoryModel.updateOne(
+      condition,
+      { $inc: { amount: voteAmount }, payed: _.get(transfer, 'details.remaining', 0) >= voteAmount },
+    );
   }
 
   return paymentHistoryModel.addPaymentHistory({
@@ -338,21 +344,23 @@ const updateUpvotedRecord = async ({ botUpvote, voteWeight }) => {
       currentVote = amount;
     }
 
-    await updatePaymentHistories(_.filter(result,
-      (res) => res.type !== 'compensation_fee'), _.round(currentVote / 2, 3), 'add', payed);
+    await updatePaymentHistories(_.filter(
+      result,
+      (res) => res.type !== 'compensation_fee',
+    ), _.round(currentVote / 2, 3), 'add', payed);
 
     if (compensationFee) {
       if (voteWeight <= 0 && compensationFee.amount <= (botUpvote.currentVote) / 2) {
         await paymentHistoryModel.deleteMany({ _id: compensationFee._id });
       } else {
-        await paymentHistoryModel.updateOne(
-          { _id: compensationFee._id }, { $inc: { amount: _.round(currentVote / 2, 3) } },
-        );
+        await paymentHistoryModel.updateOne({ _id: compensationFee._id }, { $inc: { amount: _.round(currentVote / 2, 3) } });
       }
     }
   }
-  return botUpvoteModel.update({ author: botUpvote.author, permlink: botUpvote.permlink },
-    { $inc: { totalVotesWeight: currentVote } });
+  return botUpvoteModel.update(
+    { author: botUpvote.author, permlink: botUpvote.permlink },
+    { $inc: { totalVotesWeight: currentVote } },
+  );
 };
 
 const updatePaymentHistories = async (histories, voteWeight, marker, payed, afterVote = true) => {
@@ -367,8 +375,10 @@ const updatePaymentHistories = async (histories, voteWeight, marker, payed, afte
       amount = _.round(voteWeight, 4);
     }
     if (history.type === 'beneficiary_fee') {
-      const beneficiarie = _.find(history.details.beneficiaries,
-        (acc) => acc.account === history.userName);
+      const beneficiarie = _.find(
+        history.details.beneficiaries,
+        (acc) => acc.account === history.userName,
+      );
       amount = _.round(voteWeight * (beneficiarie.weight / 10000), 4);
     }
     if (!payed) insidePayed = await checkForPayed({ history, amount, marker: marker === 'add' ? 'subtract' : 'add' });
@@ -462,32 +472,32 @@ const removePaymentHistories = async (operation) => {
       });
       break;
     case 'completed':
-      const payment = _.find(campaign.payments,
-        (member) => member.userName === user.name && member.objectPermlink === user.object_permlink && member.status === 'active');
+      const payment = _.find(
+        campaign.payments,
+        (member) => member.userName === user.name && member.objectPermlink === user.object_permlink && member.status === 'active',
+      );
 
       const upvoteResult = await removeVotes(payment, user.permlink);
       if (upvoteResult) {
         await checkAndRemoveHistories(operation.parent_permlink);
       }
-      await campaignModel.updateOne(
-        {
-          _id: campaign._id,
-          users,
-          payments: {
-            $elemMatch: {
-              userName: user.name,
-              objectPermlink: user.object_permlink,
-            },
-          },
-        }, {
-          $set: {
-            'users.$.status': 'rejected',
-            'users.$.rejection_permlink': operation.permlink,
-            'payments.$.status': 'rejected',
-            'payments.$.rejectionPermlink': operation.permlink,
+      await campaignModel.updateOne({
+        _id: campaign._id,
+        users,
+        payments: {
+          $elemMatch: {
+            userName: user.name,
+            objectPermlink: user.object_permlink,
           },
         },
-      );
+      }, {
+        $set: {
+          'users.$.status': 'rejected',
+          'users.$.rejection_permlink': operation.permlink,
+          'payments.$.status': 'rejected',
+          'payments.$.rejectionPermlink': operation.permlink,
+        },
+      });
       break;
   }
 };
@@ -498,8 +508,10 @@ const checkAndRemoveHistories = async (permlink) => {
   const ids = [];
   for (const history of result) {
     if (_.get(history, 'details.votesAmount', 0) > 0) {
-      await paymentHistoryModel.updateOne({ _id: history._id },
-        { $set: { amount: -history.details.votesAmount, 'details.votesAmount': 0 } });
+      await paymentHistoryModel.updateOne(
+        { _id: history._id },
+        { $set: { amount: -history.details.votesAmount, 'details.votesAmount': 0 } },
+      );
       continue;
     }
     ids.push(history._id);
@@ -557,10 +569,14 @@ const reVoteOnReview = async (upvote, newAmountToVote) => {
       },
     );
     if (vote) {
-      await botUpvoteModel.update({ _id: upvote._id },
-        { currentVote: voteWeight, votePercent: weight });
-      await botUpvoteModel.update({ author: upvote.author, permlink: upvote.permlink },
-        { $inc: { totalVotesWeight: voteWeight - upvote.currentVote } });
+      await botUpvoteModel.update(
+        { _id: upvote._id },
+        { currentVote: voteWeight, votePercent: weight },
+      );
+      await botUpvoteModel.update(
+        { author: upvote.author, permlink: upvote.permlink },
+        { $inc: { totalVotesWeight: voteWeight - upvote.currentVote } },
+      );
     }
   } catch (e) {
     return false;
@@ -700,10 +716,11 @@ const setBot = async ({ botName, json }) => {
   const { params, validationError } = validators
     .validate({ botName, ...json }, validators.matchBots.matchBotSetSchema);
   if (validationError) return { result: false };
+  const guestAcc = params.name.includes('_');
   const [botAcc, watchAcc] = await hiveOperations.getAccountsInfo(
     [params.botName, params.name],
   );
-  if (!botAcc || !watchAcc) return { result: false };
+  if (!botAcc || (!watchAcc && !guestAcc)) return { result: false };
   params.enabled = params.enabled
     && _.flattenDepth(botAcc.posting.account_auths).includes(getMatchBotName(params.type));
 

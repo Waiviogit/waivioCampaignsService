@@ -5,6 +5,7 @@ const { curatorsBotQueue } = require('utilities/redis/queues');
 const validators = require('controllers/validators');
 const { extendedMatchBotModel, wobjectModel } = require('models');
 const _ = require('lodash');
+const { verifySignature, VERIFY_SIGNATURE_TYPE } = require('../../helpers/signatureHelper');
 
 const commentIsObjectField = async ({ author, permlink }) => {
   const { result } = await wobjectModel.findOne({ 'fields.author': author, 'fields.permlink': permlink });
@@ -31,6 +32,24 @@ const adjustVoteWeight = ({ approve, voteWeight }) => {
   }
 
   return approve === isEvenWeight ? voteWeight : voteWeight + 1;
+};
+
+exports.processCuratorsGuestMatchBot = async ({ operation, vote }) => {
+  if (!_.includes(WORK_BOTS_ENV, process.env.NODE_ENV)) return;
+
+  const accountsCondition = { accounts: { $elemMatch: { name: vote.voter, enabled: true } } };
+  const { result: bots } = await extendedMatchBotModel.find(
+    { $and: [accountsCondition, { type: MATCH_BOT_TYPES.CURATOR }] },
+    { ...accountsCondition, botName: 1 },
+  );
+  if (_.isEmpty(bots)) return { result: false };
+
+  const validSignature = await verifySignature({
+    operation, type: VERIFY_SIGNATURE_TYPE.CUSTOM_JSON,
+  });
+  if (!validSignature) return { result: false };
+
+  return this.sendToCuratorsQueue({ vote, bots });
 };
 
 exports.processCuratorsMatchBot = async (vote) => {

@@ -92,6 +92,20 @@ const zremrangebyscore = async ({
   key, start, end, client = demoPosts,
 }) => client.zremrangebyscoreAsync(key, start, end);
 
+const setEx = ({
+  key,
+  value,
+  ttlSeconds,
+  client = lastBlockClient,
+}) => {
+  try {
+    client.setAsync(key, value);
+    client.expireAsync(key, ttlSeconds);
+  } catch (error) {
+
+  }
+};
+
 module.exports = {
   setDemoPost,
   setLastBlockNum,
@@ -105,4 +119,5 @@ module.exports = {
   zremrangebyscore,
   zadd,
   publishAssignFalse,
+  setEx,
 };

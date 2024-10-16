@@ -10,4 +10,5 @@ exports.CUSTOM_JSON_TYPES = {
   FOLLOW_ANOTHER_BLACK_LIST: 'followAnotherBlacklist',
   MATCH_BOT_SET: 'matchBotSet',
   MATCH_BOT_UNSET: 'matchBotUnset',
+  WAIVIO_GUEST_VOTE: 'waivio_guest_vote',
 };
