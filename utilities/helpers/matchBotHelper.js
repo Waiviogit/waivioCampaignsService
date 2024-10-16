@@ -717,9 +717,11 @@ const setBot = async ({ botName, json }) => {
     .validate({ botName, ...json }, validators.matchBots.matchBotSetSchema);
   if (validationError) return { result: false };
   const guestAcc = params.name.includes('_');
-  const [botAcc, watchAcc] = await hiveOperations.getAccountsInfo(
-    [params.botName, params.name],
-  );
+  const names = [params.botName];
+  if (!guestAcc) names.push(params.name);
+
+  const [botAcc, watchAcc] = await hiveOperations.getAccountsInfo(names);
+
   if (!botAcc || (!watchAcc && !guestAcc)) return { result: false };
   params.enabled = params.enabled
     && _.flattenDepth(botAcc.posting.account_auths).includes(getMatchBotName(params.type));
