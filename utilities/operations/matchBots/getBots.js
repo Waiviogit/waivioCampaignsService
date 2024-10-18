@@ -11,5 +11,8 @@ exports.getBotByType = async ({
   if (error) return { error };
   if (_.isEmpty(_.get(result, 'accounts'))) return { bots: [] };
 
-  return { result: _.take(result.accounts, limit), hasMore: result?.length > limit };
+  return {
+    result: _.take(result.accounts, limit),
+    hasMore: result.accounts?.length > limit,
+  };
 };
