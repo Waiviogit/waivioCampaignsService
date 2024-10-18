@@ -25,8 +25,8 @@ exports.getMatchBots = async (req, res) => {
     validationError,
   } = validators.validate({ ...req.query, ...req.params }, validators.matchBots.getMatchBotsSchema);
   if (validationError) return renderError(res, validationError);
-  const { bots, error } = await getBots.getBotByType(params);
+  const { result, hasMore, error } = await getBots.getBotByType(params);
 
   if (error) renderError(res, { error });
-  else renderSuccess(res, bots);
+  else renderSuccess(res, { result, hasMore });
 };
