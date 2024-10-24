@@ -6,10 +6,13 @@ exports.getBotByType = async ({
 }) => {
   const { result, error } = await extendedMatchBotModel.findOne(
     { botName, type },
-    { accounts: { $slice: [skip, limit] } },
+    { accounts: { $slice: [skip, limit + 1] } },
   );
   if (error) return { error };
   if (_.isEmpty(_.get(result, 'accounts'))) return { bots: [] };
 
-  return { bots: result.accounts };
+  return {
+    result: _.take(result.accounts, limit),
+    hasMore: result.accounts?.length > limit,
+  };
 };
