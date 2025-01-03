@@ -72,10 +72,12 @@ const engineQueryRecursive = async ({
 };
 
 const getEngineNodes = async () => {
-  const nodesString = await redisGetter.get({ key: ENGINE_NODES_LIST });
-  if (!nodesString) return HIVE_ENGINE_NODES;
 
-  return jsonHelper.parseJson(nodesString, HIVE_ENGINE_NODES);
+  return HIVE_ENGINE_NODES;
+  // const nodesString = await redisGetter.get({ key: ENGINE_NODES_LIST });
+  // if (!nodesString) return HIVE_ENGINE_NODES;
+  //
+  // return jsonHelper.parseJson(nodesString, HIVE_ENGINE_NODES);
 };
 
 const engineProxy = async ({

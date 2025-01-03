@@ -65,11 +65,7 @@ exports.VOTE_REGENERATION_DAYS = 5;
 exports.DOWNVOTE_REGENERATION_DAYS = 5;
 
 exports.HIVE_ENGINE_NODES = [
-  // 'https://herpc.dtools.dev',
   'https://api.primersion.com',
-  'https://herpc.kanibot.com',
-  'https://engine.rishipanthee.com',
-  'https://api.hive-engine.com/rpc',
-  // 'https://engine.deathwing.me',
-  // 'https://he.ausbit.dev',
+  'https://ha.herpc.dtools.dev',
+  'https://herpc.dtools.dev',
 ];
