@@ -23,6 +23,10 @@ const historyFilter = makeBitMaskFilter([
   op.convert,
   op.fill_convert_request,
   op.delegate_vesting_shares,
+  op.interest,
+  op.fill_transfer_from_savings,
+  op.cancel_transfer_from_savings,
+  op.transfer_to_vesting_completed,
 ]);
 
 // so far only api.hive.blog returns no error history on large accounts

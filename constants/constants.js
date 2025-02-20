@@ -75,6 +75,7 @@ const PAYMENT_HISTORIES_TYPES = {
   USER_TO_GUEST_TRANSFER: 'user_to_guest_transfer',
   COMPENSATION_FEE: 'compensation_fee',
   OVERPAYMENT_REFUND: 'overpayment_refund',
+  INTEREST: 'interest',
 };
 
 const TRANSFER_TYPES = [

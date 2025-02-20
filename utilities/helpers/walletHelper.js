@@ -193,6 +193,7 @@ exports.withdrawDeposit = ({
     [PAYMENT_HISTORIES_TYPES.USER_TO_GUEST_TRANSFER]: 'd',
     [PAYMENT_HISTORIES_TYPES.DEMO_POST]: 'd',
     [PAYMENT_HISTORIES_TYPES.DEMO_DEBT]: 'd',
+    [PAYMENT_HISTORIES_TYPES.INTEREST]: 'd',
   };
   return result[type] || '';
 };
