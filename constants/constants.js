@@ -145,6 +145,10 @@ const HIVE_OPERATIONS_TYPES = {
   CONVERT: 'convert',
   FILL_CONVERT_REQUEST: 'fill_convert_request',
   DELEGATE_VESTING_SHARES: 'delegate_vesting_shares',
+  INTEREST: 'interest',
+  FILL_TRANSFER_FROM_SAVINGS: 'fill_transfer_from_savings',
+  CANCEL_TRANSFER_FROM_SAVINGS: 'cancel_transfer_from_savings',
+  TRANSFER_TO_VESTING_COMPLETED: 'transfer_to_vesting_completed',
 };
 
 const SWAP_HIVE_ACC = 'honey-swap';
