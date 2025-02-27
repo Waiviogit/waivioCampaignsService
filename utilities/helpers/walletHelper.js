@@ -193,6 +193,7 @@ exports.withdrawDeposit = ({
     [PAYMENT_HISTORIES_TYPES.USER_TO_GUEST_TRANSFER]: 'd',
     [PAYMENT_HISTORIES_TYPES.DEMO_POST]: 'd',
     [PAYMENT_HISTORIES_TYPES.DEMO_DEBT]: 'd',
+    [PAYMENT_HISTORIES_TYPES.INTEREST]: 'd',
   };
   return result[type] || '';
 };
@@ -310,10 +311,12 @@ const calcWalletRecordRate = ({
 };
 
 const getPriceInUSD = (record) => {
-  if (!record.amount) return 0;
+  if (!record.amount && !record.interest) return 0;
   if (record.guest) return new BigNumber(record.amount).times(record.hiveUSD).toNumber();
 
-  const [value, currency] = record.amount.split(' ');
+  const amountString = record.amount || record.interest;
+
+  const [value, currency] = amountString.split(' ');
   return new BigNumber(value)
     .times(currency === SUPPORTED_CRYPTO_CURRENCIES.HBD ? record.hbdUSD : record.hiveUSD)
     .toNumber();
