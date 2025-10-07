@@ -649,11 +649,17 @@ const canVote = async ({
   const { result: sponsorsVote } = await botUpvoteModel.findOne(
     { botName: name, author, permlink },
   );
-  if (sponsorsVote) return false;
+  if (sponsorsVote) {
+    console.log(`[EXTENDED BOT]${name} vote for ${author}/${permlink} failure: pending mach bot vote`);
+    return false;
+  }
 
   const newCampaignsVote = await sponsorsUpvoteModel
     .getCampaignUpvote({ voter: name, author, permlink });
-  if (newCampaignsVote) return false;
+  if (newCampaignsVote) {
+    console.log(`[EXTENDED BOT]${name} vote for ${author}/${permlink} failure: pending mach bot vote`);
+    return false;
+  }
 
   if (botKey === BOT_ENV_KEY.CURATOR) {
     const { result: authorsBot } = await extendedMatchBotModel.findOne(
@@ -664,7 +670,10 @@ const canVote = async ({
         enabled: true,
       },
     );
-    if (authorsBot) return false;
+    if (authorsBot) {
+      console.log(`[EXTENDED BOT]${name} vote for ${author}/${permlink} failure: vote from curator queue and has author enabled`);
+      return false;
+    }
   }
 
   const { voteValueHBD, votePower, isPost } = await hiveOperations.calculateVotePower(
@@ -683,14 +692,26 @@ const canVote = async ({
   const manaCheck = checkMinVotingPowerCondition({
     minVotingPowerCurrencies, votePower, engineVotePower, minVotingPower,
   });
-  if (!manaCheck) return false;
-  if (voteValueHBD + engineVoteValueHBD < minHBD) return false;
-  if (!isPost && !voteComments) return false;
+  if (!manaCheck) {
+    console.log(`[EXTENDED BOT]${name} vote for ${author}/${permlink} failure: mana check failure`);
+    return false;
+  }
+  if (voteValueHBD + engineVoteValueHBD < minHBD) {
+    console.log(`[EXTENDED BOT]${name} vote for ${author}/${permlink} failure: vote value check failure $ < 0.001`);
+    return false;
+  }
+  if (!isPost && !voteComments) {
+    console.log(`[EXTENDED BOT]${name} vote for ${author}/${permlink} failure: not post && comments disabled`);
+    return false;
+  }
 
   const { post } = await postModel.getOne({ author, permlink });
   if (post) {
     const existingVote = _.find(post.active_votes, (v) => v.voter === name);
-    if (existingVote) return false;
+    if (existingVote) {
+      console.log(`[EXTENDED BOT]${name} vote for ${author}/${permlink} failure: post has ${name} vote`);
+      return false;
+    }
   }
 
   return true;
