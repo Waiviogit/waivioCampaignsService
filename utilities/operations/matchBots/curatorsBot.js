@@ -70,7 +70,10 @@ exports.sendToCuratorsQueue = async ({ vote, bots }) => {
 
   for (const bot of bots) {
     if (vote.weight < 0 && !_.get(bot, 'accounts[0].enablePowerDown')) continue;
-    let voteWeight = getWeightFromRatio({ curatorWeight: vote.weight, ratio: _.get(bot, 'accounts[0].voteRatio') });
+    let voteWeight = _.get(bot, 'accounts[0].voteRatio')
+      ? getWeightFromRatio({ curatorWeight: vote.weight, ratio: _.get(bot, 'accounts[0].voteRatio') })
+      : _.get(bot, 'accounts[0].voteWeight');
+
     if (voteForField) {
       voteWeight = adjustVoteWeight({ approve, voteWeight });
     }
