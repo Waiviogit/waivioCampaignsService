@@ -10,10 +10,12 @@ exports.likePost = async ({
   key, voter, author, permlink, weight,
 }) => {
   try {
-    const result = await broadcastClient.broadcast.vote({
-      voter, author, permlink, weight,
-    },
-    PrivateKey.fromString(key));
+    const result = await broadcastClient.broadcast.vote(
+      {
+        voter, author, permlink, weight,
+      },
+      PrivateKey.fromString(key),
+    );
     console.log(`Successfully liked. Included in block: ${result.block_num}`);
     return { result: true };
   } catch (error) {
@@ -131,9 +133,7 @@ exports.getPostState = async ({ author, permlink, category }) => {
 exports.sendOperations = async ({ operations, key }) => {
   try {
     return {
-      result: await broadcastClient.broadcast.sendOperations(
-        [operations], PrivateKey.fromString(key),
-      ),
+      result: await broadcastClient.broadcast.sendOperations([operations], PrivateKey.fromString(key)),
     };
   } catch (error) {
     return { error };
@@ -150,8 +150,10 @@ exports.getVoteValue = async (vote) => {
     return { weight: 0, voteValue: 0 };
   }
 
-  const currentVote = _.find(post.active_votes,
-    (hiveVote) => vote.voter === hiveVote.voter);
+  const currentVote = _.find(
+    post.active_votes,
+    (hiveVote) => vote.voter === hiveVote.voter,
+  );
   if (!currentVote || currentVote.percent === 0) {
     return {
       weight: _.get(currentVote, 'percent', 0),
@@ -189,9 +191,7 @@ exports.calculateVotePower = async ({
     + parseFloat(account.received_vesting_shares) - parseFloat(account.delegated_vesting_shares);
 
   const previousVoteTime = (new Date().getTime() - new Date(`${account.last_vote_time}Z`).getTime()) / 1000;
-  const accountVotingPower = Math.min(
-    10000, account.voting_power + (10000 * previousVoteTime) / 432000,
-  );
+  const accountVotingPower = Math.min(10000, account.voting_power + (10000 * previousVoteTime) / 432000);
 
   const power = (((accountVotingPower / 100) * voteWeight)) / 50;
   const rShares = (vests * power * 100) - 50000000;

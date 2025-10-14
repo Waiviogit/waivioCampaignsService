@@ -26,6 +26,7 @@ const ExtendedMatchBotSchema = new Schema({
       enablePowerDown: { type: Boolean, default: false },
       expiredAt: { type: Date },
       voteComments: { type: Boolean },
+      lastMomentVote: { type: Boolean },
     },
   ],
 }, { timestamps: true });

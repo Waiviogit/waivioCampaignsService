@@ -65,6 +65,7 @@ exports.matchBotSetSchema = Joi.object().keys({
     then: Joi.boolean(),
     otherwise: Joi.forbidden(),
   }),
+  lastMomentVote: Joi.boolean().default(false),
 }).custom((value, helpers) => {
   if (value.type === MATCH_BOT_TYPES.CURATOR) {
     const hasWeight = value.voteWeight !== undefined && value.voteWeight !== null;
