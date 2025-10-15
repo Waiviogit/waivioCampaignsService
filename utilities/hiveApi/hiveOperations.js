@@ -176,6 +176,38 @@ exports.getVoteValue = async (vote) => {
   };
 };
 
+const getNumberFromVests = (str) => parseFloat(String(str).split(' ')[0]);
+
+const calcEffectiveVests = (acc) => {
+  const own = getNumberFromVests(acc.vesting_shares);
+  const received = getNumberFromVests(acc.received_vesting_shares);
+  const delegated = getNumberFromVests(acc.delegated_vesting_shares);
+  return own + received - delegated; // in VESTS
+};
+
+// Generic manabar regen (Hive regenerates to full in 5 days = 432,000 seconds)
+const REGEN_SECONDS = 5 * 24 * 60 * 60; // 432000
+
+const regenMana = (currentMana, lastUpdateTs, maxMana, nowTs = Math.floor(Date.now() / 1000)) => {
+  const elapsed = Math.max(0, nowTs - lastUpdateTs);
+  const regenerated = (maxMana * elapsed) / REGEN_SECONDS;
+  return Math.min(maxMana, currentMana + regenerated);
+};
+const calcDownvoteMaxMana = (acc) => {
+  const effVests = calcEffectiveVests(acc); // VESTS
+  const maxVoteMana = effVests * 1_000_000; // manabar uses VESTS * 1e6
+  const maxDownvoteMana = maxVoteMana * 0.25; // 25% pool for downvotes
+  return maxDownvoteMana;
+};
+
+const getCurrentDownvotePower = (acc, nowTs = Math.floor(Date.now() / 1000)) => {
+  const maxDownMana = calcDownvoteMaxMana(acc);
+  const dv = acc.downvote_manabar;
+  const currMana = regenMana(Number(dv.current_mana), Number(dv.last_update_time), maxDownMana, nowTs);
+  const dvp = Math.floor((currMana / maxDownMana) * 10000); // 0..10000
+  return { dvp, currMana, maxDownMana };
+};
+
 /*
  It really works!Calculates the vote value in HIVE,
  if you need to calculate the value in HBD, add price in final calculation
@@ -184,6 +216,7 @@ exports.calculateVotePower = async ({
   name, voteWeight, author, permlink,
 }) => {
   const account = await this.getAccountInfo(name);
+  const { dvp } = getCurrentDownvotePower(account);
   // eslint-disable-next-line camelcase
   const { reward_balance, recent_claims, price } = await redisGetter.getHashAll('current_price_info');
   // const { rewardFund, currentPrice: price } = await this.getCurrentPriceInfo();
@@ -191,7 +224,7 @@ exports.calculateVotePower = async ({
     + parseFloat(account.received_vesting_shares) - parseFloat(account.delegated_vesting_shares);
 
   const previousVoteTime = (new Date().getTime() - new Date(`${account.last_vote_time}Z`).getTime()) / 1000;
-  const accountVotingPower = Math.min(10000, account.voting_power + (10000 * previousVoteTime) / 432000);
+  const accountVotingPower = Math.min(10000, account.voting_power + (10000 * previousVoteTime) / REGEN_SECONDS);
 
   const power = (((accountVotingPower / 100) * voteWeight)) / 50;
   const rShares = (vests * power * 100) - 50000000;
@@ -203,8 +236,13 @@ exports.calculateVotePower = async ({
   const rewards = parseFloat(reward_balance) / parseFloat(recent_claims);
   const postValue = tRShares * rewards; // *price - to calculate in HBD
   const voteValue = postValue * (rShares / tRShares);
+
   return {
-    voteValue, voteValueHBD: voteValue * price, votePower: accountVotingPower, isPost,
+    voteValue,
+    voteValueHBD: voteValue * price,
+    votePower: accountVotingPower,
+    isPost,
+    downvotePower: dvp,
   };
 };
 
