@@ -7,6 +7,7 @@ const { extendedMatchBotModel } = require('models');
 const _ = require('lodash');
 const { parseJson } = require('../../helpers/jsonHelper');
 const { verifySignature, VERIFY_SIGNATURE_TYPE } = require('../../helpers/signatureHelper');
+const { setExpireLastMomentVote } = require('./extendedBotHelper');
 
 exports.processAuthorsMatchBot = async (post) => {
   if (!_.includes(WORK_BOTS_ENV, process.env.NODE_ENV)) return;
@@ -37,6 +38,12 @@ exports.sendToAuthorsQueue = async ({ post, bots }) => {
     const { params, validationError } = validators
       .validate(getAuthorVoteData({ post, bot }), validators.matchBots.matchBotVoteSchema);
     if (validationError) {
+      continue;
+    }
+
+    const isLastMomentVote = bot.lastMomentVote;
+    if (isLastMomentVote) {
+      await setExpireLastMomentVote(params);
       continue;
     }
 

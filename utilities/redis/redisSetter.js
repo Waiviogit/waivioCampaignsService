@@ -74,12 +74,12 @@ const removeExpirationAssign = (assignPermlink) => {
   campaigns.del(`expire:assign_${assignPermlink}`);
 };
 
-const setSimpleTtl = async (data, timer) => {
-  await demoPosts.setexAsync(data, timer, '');
+const setSimpleTtl = async (key, timer) => {
+  await demoPosts.setexAsync(key, timer, '');
 };
 
-const saveTTL = async (data, timer, value = '') => {
-  await demoPosts.setAsync(data, value, 'EX', timer);
+const saveTTL = async (key, timer, value = '') => {
+  await demoPosts.setAsync(key, value, 'EX', timer);
 };
 
 const deleteCampaignsData = async (key) => {

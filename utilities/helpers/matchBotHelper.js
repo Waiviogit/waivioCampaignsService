@@ -676,12 +676,14 @@ const canVote = async ({
     }
   }
 
-  const { voteValueHBD, votePower, isPost } = await hiveOperations.calculateVotePower(
+  const {
+    voteValueHBD, votePower, isPost, downvotePower,
+  } = await hiveOperations.calculateVotePower(
     {
       name, voteWeight, author, permlink,
     },
   );
-  const { engineVoteValueHBD, engineVotePower } = await engineOperations.calculateVotePower({
+  const { engineVoteValueHBD, engineVotePower, engineDownvotePower } = await engineOperations.calculateVotePower({
     dieselPoolId: TOKEN_WAIV.DIESEL_POOL_ID,
     poolId: TOKEN_WAIV.POOL_ID,
     symbol: TOKEN_WAIV.SYMBOL,
@@ -690,7 +692,13 @@ const canVote = async ({
   });
 
   const manaCheck = checkMinVotingPowerCondition({
-    minVotingPowerCurrencies, votePower, engineVotePower, minVotingPower,
+    minVotingPowerCurrencies,
+    votePower,
+    engineVotePower,
+    minVotingPower,
+    voteWeight,
+    downvotePower,
+    engineDownvotePower,
   });
   if (!manaCheck) {
     console.log(`[EXTENDED BOT]${name} vote for ${author}/${permlink} failure: mana check failure`);
@@ -718,17 +726,34 @@ const canVote = async ({
 };
 
 const checkMinVotingPowerCondition = ({
-  minVotingPowerCurrencies, votePower, engineVotePower, minVotingPower,
+  minVotingPowerCurrencies,
+  votePower,
+  engineVotePower,
+  minVotingPower,
+  voteWeight,
+  downvotePower,
+  engineDownvotePower,
 }) => {
   const diff = _.difference(MANA_CHECK_TYPES, minVotingPowerCurrencies);
-  if (_.isEmpty(diff)) {
-    return engineVotePower > minVotingPower && votePower > minVotingPower;
+  const checkBoth = _.isEmpty(diff);
+  const checkEnginePower = _.includes(diff, SUPPORTED_CRYPTO_CURRENCIES.HIVE);
+  const checkHivePower = _.includes(diff, TOKEN_WAIV.SYMBOL);
+  const isNegativeVote = voteWeight < 0;
+
+  if (checkBoth) {
+    return isNegativeVote
+      ? engineDownvotePower > minVotingPower && downvotePower > minVotingPower
+      : engineVotePower > minVotingPower && votePower > minVotingPower;
   }
-  if (_.includes(diff, SUPPORTED_CRYPTO_CURRENCIES.HIVE)) {
-    return engineVotePower > minVotingPower;
+  if (checkEnginePower) {
+    return isNegativeVote
+      ? engineDownvotePower > minVotingPower
+      : engineVotePower > minVotingPower;
   }
-  if (_.includes(diff, TOKEN_WAIV.SYMBOL)) {
-    return votePower > minVotingPower;
+  if (checkHivePower) {
+    return isNegativeVote
+      ? downvotePower > minVotingPower
+      : votePower > minVotingPower;
   }
   return false;
 };
