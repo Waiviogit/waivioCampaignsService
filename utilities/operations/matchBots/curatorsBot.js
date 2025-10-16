@@ -6,6 +6,7 @@ const validators = require('controllers/validators');
 const { extendedMatchBotModel, wobjectModel } = require('models');
 const _ = require('lodash');
 const { verifySignature, VERIFY_SIGNATURE_TYPE } = require('../../helpers/signatureHelper');
+const { setExpireLastMomentVote } = require('./extendedBotHelper');
 
 const commentIsObjectField = async ({ author, permlink }) => {
   const { result } = await wobjectModel.findOne({ 'fields.author': author, 'fields.permlink': permlink });
@@ -84,6 +85,12 @@ exports.sendToCuratorsQueue = async ({ vote, bots }) => {
         validators.matchBots.matchBotVoteSchema,
       );
     if (validationError) {
+      continue;
+    }
+
+    const isLastMomentVote = bot.lastMomentVote;
+    if (isLastMomentVote) {
+      await setExpireLastMomentVote(params);
       continue;
     }
 

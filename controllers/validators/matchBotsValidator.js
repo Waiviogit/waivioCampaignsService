@@ -39,7 +39,7 @@ exports.matchBotSetSchema = Joi.object().keys({
   type: Joi.string().valid(...Object.values(MATCH_BOT_TYPES)).required(),
   voteWeight: Joi.when('type', {
     is: MATCH_BOT_TYPES.AUTHOR,
-    then: Joi.number().integer().min(1).max(10000)
+    then: Joi.number().integer().min(-10000).max(10000)
       .required(),
     otherwise: Joi.when('type', {
       is: MATCH_BOT_TYPES.CURATOR,
@@ -65,6 +65,7 @@ exports.matchBotSetSchema = Joi.object().keys({
     then: Joi.boolean(),
     otherwise: Joi.forbidden(),
   }),
+  lastMomentVote: Joi.boolean().default(false),
 }).custom((value, helpers) => {
   if (value.type === MATCH_BOT_TYPES.CURATOR) {
     const hasWeight = value.voteWeight !== undefined && value.voteWeight !== null;

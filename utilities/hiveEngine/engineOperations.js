@@ -5,9 +5,11 @@ const _ = require('lodash');
 const commentContract = require('./commentContract');
 const tokensContract = require('./tokensContract');
 const marketPools = require('./marketPools');
-const { MAX_VOTING_POWER, VOTE_REGENERATION_DAYS, DOWNVOTE_REGENERATION_DAYS } = require('../../constants/hiveEngine');
+const {
+  MAX_VOTING_POWER, VOTE_REGENERATION_DAYS, DOWNVOTE_REGENERATION_DAYS,
+} = require('../../constants/hiveEngine');
 
-//'https://accounts.hive-engine.com/accountHistory'
+// 'https://accounts.hive-engine.com/accountHistory'
 exports.accountHistory = async (params) => {
   try {
     return await axios.get('https://history.hive-engine.com/accountHistory', { params });
@@ -49,6 +51,7 @@ exports.calculateVotePower = async ({
 
   for (const req of requests) {
     if (_.has(req, 'error') || _.isEmpty(req)) {
+      console.log(`[ENGINE OPERATIONS] ${account} failed calculateVotePower ${_.has(req, 'error') ? req?.error?.message : ''}`);
       return {
         engineVoteValueHBD: 0,
         engineVotePower: 0,
@@ -57,7 +60,7 @@ exports.calculateVotePower = async ({
   }
   const [balances, votingPowers, dieselPools, smtPool, hiveCurrency] = requests;
   const { stake, delegationsIn } = balances[0];
-  const { votingPower } = this.calculateMana(votingPowers[0]);
+  const { votingPower, downvotingPower } = this.calculateMana(votingPowers[0]);
   const { quotePrice } = dieselPools[0];
   const { rewardPool, pendingClaims } = smtPool[0];
 
@@ -71,5 +74,5 @@ exports.calculateVotePower = async ({
   const rewards = parseFloat(rewardPool) / parseFloat(pendingClaims);
 
   const engineVoteValueHBD = rshares * price * rewards;
-  return { engineVoteValueHBD, engineVotePower: votingPower };
+  return { engineVoteValueHBD, engineVotePower: votingPower, engineDownvotePower: downvotingPower };
 };

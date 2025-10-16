@@ -9,6 +9,7 @@ const {
 } = require('constants/ttlData');
 const { sendSentryNotification } = require('utilities/requests/telegramNotificationsRequest');
 const redis = require('./redis');
+const { LAST_MOMENT_VOTE_KEY, lastMomentVote } = require('../operations/matchBots/extendedBotHelper');
 
 exports.startExpiredListener = () => {
   redis.subscribeCampaignExpired(subscribeCampaignsEx);
@@ -74,6 +75,9 @@ const subscribeDemoPostsEx = async (chan, msg) => {
         break;
       case `expire:${DOWNVOTE_ON_REVIEW}`:
         await revoteOnPost({ author, permlink });
+        break;
+      case `expire:${LAST_MOMENT_VOTE_KEY}`:
+        await lastMomentVote(author);
         break;
     }
   } catch (e) {
