@@ -51,6 +51,7 @@ exports.calculateVotePower = async ({
 
   for (const req of requests) {
     if (_.has(req, 'error') || _.isEmpty(req)) {
+      console.log(`[ENGINE OPERATIONS] ${account} failed calculateVotePower ${_.has(req, 'error') ? req?.error?.message : ''}`);
       return {
         engineVoteValueHBD: 0,
         engineVotePower: 0,
