@@ -41,12 +41,15 @@ exports.matchBotSetSchema = Joi.object().keys({
     is: MATCH_BOT_TYPES.AUTHOR,
     then: Joi.number().integer().min(1).max(10000)
       .required(),
-    otherwise: Joi.forbidden(),
+    otherwise: Joi.when('type', {
+      is: MATCH_BOT_TYPES.CURATOR,
+      then: Joi.number().integer().min(1).max(10000),
+      otherwise: Joi.forbidden(),
+    }),
   }),
   voteRatio: Joi.when('type', {
     is: MATCH_BOT_TYPES.CURATOR,
-    then: Joi.number().min(0.01).max(100)
-      .required(),
+    then: Joi.number().min(0.01).max(100),
     otherwise: Joi.forbidden(),
   }),
   note: Joi.string(),
@@ -62,6 +65,13 @@ exports.matchBotSetSchema = Joi.object().keys({
     then: Joi.boolean(),
     otherwise: Joi.forbidden(),
   }),
+}).custom((value, helpers) => {
+  if (value.type === MATCH_BOT_TYPES.CURATOR) {
+    const hasWeight = value.voteWeight !== undefined && value.voteWeight !== null;
+    const hasRatio = value.voteRatio !== undefined && value.voteRatio !== null;
+    if (hasWeight === hasRatio) return helpers.error('object.xor', { peers: ['voteWeight', 'voteRatio'] });
+  }
+  return value;
 }).options(options);
 
 exports.matchBotUnsetSchema = Joi.object().keys({
