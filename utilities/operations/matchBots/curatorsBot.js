@@ -88,7 +88,7 @@ exports.sendToCuratorsQueue = async ({ vote, bots }) => {
       continue;
     }
 
-    const isLastMomentVote = bot.lastMomentVote;
+    const isLastMomentVote = _.get(bot, 'accounts[0].lastMomentVote');
     if (isLastMomentVote) {
       await setExpireLastMomentVote(params);
       continue;
