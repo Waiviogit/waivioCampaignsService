@@ -1,9 +1,8 @@
 const nodeUrls = [
+  'https://api.deathwing.me',
   'https://api.hive.blog',
-  'https://anyx.io',
-  'https://hived.emre.sh',
   'https://api.openhive.network',
-  'https://hive-api.arcange.eu',
+  'https://rpc.mahdiyari.info',
 ];
 
 const notificationsApi = {
