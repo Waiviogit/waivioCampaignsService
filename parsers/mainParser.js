@@ -4,7 +4,7 @@ const {
   accountUpdateParser, ordersParser, voteParser,
 } = require('parsers');
 
-const parseSwitcher = async (transactions) => {
+const parseSwitcher = async (transactions, timestamp) => {
   const votesOps = [];
   for (const transaction of transactions) {
     if (transaction && transaction.operations && transaction.operations[0]) {
@@ -15,13 +15,13 @@ const parseSwitcher = async (transactions) => {
               votesOps.push(operation[1]);
               break;
             case 'comment':
-              await commentParser.parse(operation[1], transaction.operations[1]);
+              await commentParser.parse(operation[1], transaction.operations[1], timestamp);
               break;
             case 'transfer':
               await transferParser.parse(operation[1], transaction.transaction_id);
               break;
             case 'custom_json':
-              await customJsonParser.parse(operation[1]);
+              await customJsonParser.parse(operation[1], timestamp);
               break;
             case 'account_update':
               await accountUpdateParser.parse(operation[1]);
@@ -33,7 +33,7 @@ const parseSwitcher = async (transactions) => {
       }
     }
   }
-  await voteParser.parse(votesOps);
+  await voteParser.parse(votesOps, timestamp);
 };
 
 const parseOrders = async (operations) => {

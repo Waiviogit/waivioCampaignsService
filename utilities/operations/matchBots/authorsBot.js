@@ -9,7 +9,7 @@ const { parseJson } = require('../../helpers/jsonHelper');
 const { verifySignature, VERIFY_SIGNATURE_TYPE } = require('../../helpers/signatureHelper');
 const { setExpireLastMomentVote } = require('./extendedBotHelper');
 
-exports.processAuthorsMatchBot = async (post) => {
+exports.processAuthorsMatchBot = async (post, timestamp) => {
   if (!_.includes(WORK_BOTS_ENV, process.env.NODE_ENV)) return;
 
   const metadata = parseJson(post.json_metadata, null);
@@ -30,10 +30,10 @@ exports.processAuthorsMatchBot = async (post) => {
     });
     if (!validSignature) return { result: false };
   }
-  return this.sendToAuthorsQueue({ post, bots });
+  return this.sendToAuthorsQueue({ post, bots, timestamp });
 };
 
-exports.sendToAuthorsQueue = async ({ post, bots }) => {
+exports.sendToAuthorsQueue = async ({ post, bots, timestamp }) => {
   for (const bot of bots) {
     const { params, validationError } = validators
       .validate(getAuthorVoteData({ post, bot }), validators.matchBots.matchBotVoteSchema);
@@ -43,7 +43,7 @@ exports.sendToAuthorsQueue = async ({ post, bots }) => {
 
     const isLastMomentVote = _.get(bot, 'accounts[0].lastMomentVote');
     if (isLastMomentVote) {
-      await setExpireLastMomentVote(params);
+      await setExpireLastMomentVote(params, timestamp);
       continue;
     }
 

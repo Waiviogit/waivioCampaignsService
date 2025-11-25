@@ -68,7 +68,7 @@ const loadBlock = async (blockNum) => {
   }
   if (block && block.transactions && block.transactions[0]) {
     console.time(block.transactions[0].block_num);
-    await parseSwitcher(block.transactions);
+    await parseSwitcher(block.transactions, block.timestamp);
     console.timeEnd(block.transactions[0].block_num);
     return true;
   } return false;
