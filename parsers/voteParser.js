@@ -7,10 +7,10 @@ const { hiveOperations } = require('utilities/hiveApi');
 const curatorsBot = require('utilities/operations/matchBots/curatorsBot');
 const hiveEngineCurator = require('utilities/operations/matchBots/hiveEngineCurator');
 
-exports.parse = async (votes) => {
+exports.parse = async (votes, timestamp) => {
   await hiveEngineCurator.processEngineCuratorMatchBot(votes);
   await Promise.all(votes.map(async (vote) => {
-    await curatorsBot.processCuratorsMatchBot(vote);
+    await curatorsBot.processCuratorsMatchBot(vote, timestamp);
     const { result: campaign } = await campaignModel.findOne({
       $or: [{ guideName: vote.voter }, { match_bots: vote.voter }],
       payments: { $elemMatch: { postPermlink: vote.permlink, rootAuthor: vote.author } },

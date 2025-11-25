@@ -7,30 +7,29 @@ const { voteExtendedMatchBots } = require('../../helpers/matchBotHelper');
 const SUPPOSED_DELAY_SEC = 6 + 1;
 const LAST_MOMENT_VOTE_KEY = 'lastMomentVote';
 
-const getsSecondsToCashout = async (author, permlink) => {
+const getCashoutTime = async ({ author, permlink, timestamp }) => {
+  const defaultCashout = moment.utc(timestamp).add(7, 'days');
   const post = await getPostInfo({ author, permlink });
-  if (post.error) return 0;
+  if (post.error) return defaultCashout;
   // eslint-disable-next-line camelcase
   const { cashout_time, created } = post;
-
-  let cashoutMoment;
   // eslint-disable-next-line camelcase
-  if (cashout_time) {
-    cashoutMoment = moment.utc(cashout_time);
-  } else {
-    cashoutMoment = moment.utc(created).add(7, 'days');
-  }
+  if (cashout_time) return moment.utc(cashout_time);
+  if (created) return moment.utc(created).add(7, 'days');
+  return defaultCashout;
+};
 
+const getsSecondsToCashout = async (author, permlink, timestamp) => {
+  const cashoutMoment = await getCashoutTime({ author, permlink, timestamp });
   const now = moment.utc();
   const ttlMs = cashoutMoment.valueOf() - now.valueOf();
   const ttlSeconds = Math.floor(ttlMs / 1000);
-
   return ttlSeconds > 0 ? ttlSeconds : 0;
 };
 
-const setExpireLastMomentVote = async (voteData) => {
+const setExpireLastMomentVote = async (voteData, timestamp) => {
   const { author, permlink } = voteData;
-  const secondsToCashout = await getsSecondsToCashout(author, permlink);
+  const secondsToCashout = await getsSecondsToCashout(author, permlink, timestamp);
   if (!secondsToCashout) return;
   const ttl = secondsToCashout - SUPPOSED_DELAY_SEC;
   if (ttl <= (1)) return;

@@ -15,7 +15,7 @@ const { processCuratorsGuestMatchBot } = require('../utilities/operations/matchB
  * @param data
  * @returns {Promise<void>}
  */
-const parse = async (data) => {
+const parse = async (data, timestamp) => {
   const json = jsonHelper.parseJson(data.json);
 
   const authorizedUser = data.required_posting_auths ? data.required_posting_auths[0] : null;
@@ -92,7 +92,7 @@ const parse = async (data) => {
       }
       break;
     case CUSTOM_JSON_TYPES.WAIVIO_GUEST_VOTE:
-      await processCuratorsGuestMatchBot({ operation: data, vote: json });
+      await processCuratorsGuestMatchBot({ operation: data, vote: json, timestamp });
       break;
   }
 };

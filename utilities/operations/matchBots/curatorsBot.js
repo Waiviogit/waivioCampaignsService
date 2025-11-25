@@ -35,7 +35,7 @@ const adjustVoteWeight = ({ approve, voteWeight }) => {
   return approve === isEvenWeight ? voteWeight : voteWeight + 1;
 };
 
-exports.processCuratorsGuestMatchBot = async ({ operation, vote }) => {
+exports.processCuratorsGuestMatchBot = async ({ operation, vote, timestamp }) => {
   if (!_.includes(WORK_BOTS_ENV, process.env.NODE_ENV)) return;
 
   const accountsCondition = { accounts: { $elemMatch: { name: vote.voter, enabled: true } } };
@@ -50,10 +50,10 @@ exports.processCuratorsGuestMatchBot = async ({ operation, vote }) => {
   });
   if (!validSignature) return { result: false };
 
-  return this.sendToCuratorsQueue({ vote, bots });
+  return this.sendToCuratorsQueue({ vote, bots, timestamp });
 };
 
-exports.processCuratorsMatchBot = async (vote) => {
+exports.processCuratorsMatchBot = async (vote, timestamp) => {
   if (!_.includes(WORK_BOTS_ENV, process.env.NODE_ENV)) return;
   const accountsCondition = { accounts: { $elemMatch: { name: vote.voter, enabled: true } } };
   const { result: bots } = await extendedMatchBotModel.find(
@@ -61,10 +61,10 @@ exports.processCuratorsMatchBot = async (vote) => {
     { ...accountsCondition, botName: 1 },
   );
   if (_.isEmpty(bots)) return { result: false };
-  return this.sendToCuratorsQueue({ vote, bots });
+  return this.sendToCuratorsQueue({ vote, bots, timestamp });
 };
 
-exports.sendToCuratorsQueue = async ({ vote, bots }) => {
+exports.sendToCuratorsQueue = async ({ vote, bots, timestamp }) => {
   const voteForField = await commentIsObjectField({ author: vote.author, permlink: vote.permlink });
   if (voteForField && Math.sign(vote.weight) === -1) return;
   const approve = vote.weight % 2 === 0;
@@ -90,7 +90,7 @@ exports.sendToCuratorsQueue = async ({ vote, bots }) => {
 
     const isLastMomentVote = _.get(bot, 'accounts[0].lastMomentVote');
     if (isLastMomentVote) {
-      await setExpireLastMomentVote(params);
+      await setExpireLastMomentVote(params, timestamp);
       continue;
     }
 
