@@ -40,9 +40,15 @@ const parseOrders = async (operations) => {
   let orders = [];
   for (let operation of operations) {
     operation = _.map(operation, (ops) => {
+      if (!ops?.op?.value) {
+        console.error('Invalid order operation payload', ops);
+        return null;
+      }
       ops.op.value.timestamp = ops.timestamp;
       return ops.op;
-    });
+    })
+      .filter(Boolean);
+    if (!operation[0]) continue;
     try {
       switch (operation[0].type) {
         case 'fill_order_operation':
