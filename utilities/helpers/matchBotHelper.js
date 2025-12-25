@@ -613,6 +613,8 @@ const voteExtendedMatchBots = async (voteData) => {
     minHBD, botKey, voteComments, minVotingPowerCurrencies,
   } = params;
 
+  console.log(`[EXTENDED BOT] ${voter} vote for ${author}/${permlink} before canVote`);
+
   const validVote = await canVote({
     minVotingPowerCurrencies,
     voteWeight: Math.abs(voteWeight / 100),
@@ -624,6 +626,7 @@ const voteExtendedMatchBots = async (voteData) => {
     author,
     botKey,
   });
+  console.log(`[EXTENDED BOT] ${voter} vote for ${author}/${permlink} after canVote`);
   if (!validVote) return { result: false };
 
   const { result: vote, error: votingError } = await hiveOperations.likePost(
@@ -635,6 +638,7 @@ const voteExtendedMatchBots = async (voteData) => {
       voter,
     },
   );
+  console.log(`[EXTENDED BOT] ${voter} vote for ${author}/${permlink} after vote on post`);
   if (votingError) {
     console.error(votingError.message);
     return { result: false };
