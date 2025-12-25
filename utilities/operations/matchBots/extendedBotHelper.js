@@ -4,7 +4,7 @@ const { redisSetter, redisGetter } = require('utilities/redis');
 const { getPostInfo } = require('../../hiveApi/hiveOperations');
 const { voteExtendedMatchBots } = require('../../helpers/matchBotHelper');
 // need to add our validation time?
-const SUPPOSED_DELAY_SEC = 6 + 1;
+const SUPPOSED_DELAY_SEC = 46 + 1;
 const LAST_MOMENT_VOTE_KEY = 'lastMomentVote';
 
 const getCashoutTime = async ({ author, permlink, timestamp }) => {
