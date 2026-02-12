@@ -1,6 +1,16 @@
 const { getNamespace } = require('cls-hooked');
 const hiveSignerRequests = require('utilities/requests/hiveSignerRequests');
 const guestRequests = require('utilities/requests/guestRequests');
+const keychainAuth = require('./keychain/authorise');
+const hiveAuthorise = require('./hiveAuth/authorise');
+
+const VALIDATION_METHOD = {
+  'hive-auth': hiveAuthorise.authorise,
+  'hive-signer': hiveSignerRequests.validateHiveUser,
+  'hive-keychain': keychainAuth.authorise,
+  'waivio-auth': guestRequests.validateUser,
+  default: () => false,
+};
 
 /**
  * Authorise particular user with "access-token" from session(if it exist)
@@ -13,19 +23,12 @@ const guestRequests = require('utilities/requests/guestRequests');
 exports.authorise = async (username) => {
   const session = getNamespace('request-session');
   const accessToken = session.get('access-token');
-  const isWaivioAuth = session.get('waivio-auth');
-  let isValidToken;
-
-  if (isWaivioAuth) {
-    isValidToken = await guestRequests.validateUser(accessToken, username);
-  } else {
-    isValidToken = await hiveSignerRequests.validateHiveUser(accessToken, username);
-  }
-
+  const authType = session.get('auth-type');
+  const validationMethod = VALIDATION_METHOD[authType] || VALIDATION_METHOD.default;
+  const isValidToken = await validationMethod(accessToken, username);
   if (isValidToken) {
     session.set('authorised_user', username);
     return { isValid: true };
   }
-
   return { error: { status: 401, message: 'Token not valid!' } };
 };
